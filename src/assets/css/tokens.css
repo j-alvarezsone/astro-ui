@@ -1,0 +1,23 @@
+:root {
+  --step--2: clamp(0.8247rem, 0.8445rem + -0.022vw, 0.8395rem);
+  --step--1: clamp(0.9444rem, 0.9294rem + 0.0669vw, 1rem);
+  --step-0: clamp(1.0625rem, 1.0208rem + 0.1852vw, 1.1875rem);
+  --step-1: clamp(1.1953rem, 1.1188rem + 0.3403vw, 1.425rem);
+  --step-2: clamp(1.3447rem, 1.223rem + 0.5411vw, 1.71rem);
+  --step-3: clamp(1.5128rem, 1.3331rem + 0.7988vw, 2.052rem);
+  --step-4: clamp(1.7019rem, 1.4484rem + 1.1266vw, 2.4624rem);
+  --step-5: clamp(1.9147rem, 1.5679rem + 1.5411vw, 2.9549rem);
+  --step-6: clamp(2.154rem, 1.69rem + 2.062vw, 3.5459rem);
+  /* Font Sizes */
+  --font-size-xs: var(--step--2);
+  --font-size-sm: var(--step--1);
+  --font-size-base: var(--step-0);
+  --font-size-lg: var(--step-1);
+  --font-size-xl: var(--step-2);
+  --font-size-2xl: var(--step-3);
+  --font-size-3xl: var(--step-4);
+  --font-size-4xl: var(--step-5);
+  --font-size-5xl: var(--step-6);
+  /* Colors */
+  --border-color-base: #d1d5db;
+}
