@@ -1,3 +1,64 @@
+/**
+ * Design Tokens
+ *
+ * Usage Guide:
+ *
+ * FONT SIZES:
+ * --font-size-xs to --font-size-5xl
+ * Fluid typography scale using clamp()
+ *
+ * SPACING:
+ * --spacing-0 to --spacing-12
+ * Use for margin, padding, gap
+ * Example: padding: var(--spacing-4);
+ *
+ * COLORS:
+ * Each color (primary, secondary, contrast, link, success, warning, danger) has these variants:
+ *
+ *   -text: For standalone text (input errors, messages, inline text)
+ *   Example: color: var(--color-danger-text);
+ *
+ *   -border: Universal border color
+ *   Example: border: 1px solid var(--color-success-border);
+ *
+ *   -subtle-surface: Light backgrounds (alerts, badges, highlights)
+ *   -subtle-text: Text on subtle surface
+ *   -subtle-surface-hover: Hover state for subtle surface
+ *   Example: background: var(--color-success-subtle-surface);
+ *            color: var(--color-success-subtle-text);
+ *            &:hover { background: var(--color-success-subtle-surface-hover); }
+ *
+ *   -solid-surface: Strong/filled backgrounds (buttons)
+ *   -solid-text: Text on solid surface (usually white)
+ *   -solid-surface-hover: Hover state for solid surface
+ *   Example: background: var(--color-primary-solid-surface);
+ *            color: var(--color-primary-solid-text);
+ *            &:hover { background: var(--color-primary-solid-surface-hover); }
+ *
+ * INTERACTION STATES:
+ * - Default: Use base surface tokens (-subtle-surface or -solid-surface)
+ * - Hover: Use hover tokens (-subtle-surface-hover or -solid-surface-hover)
+ * - Active/Pressed: Use solid-surface for subtle elements, or darken solid by 10-15%
+ * - Focus: Add outline using -border token or -solid-surface
+ * - Disabled: Use --color-disabled-* tokens
+ *
+ * COLOR ROLES:
+ * PRIMARY: Brand color for main CTAs, primary buttons, branded elements
+ * SECONDARY: Complementary color for secondary actions, filters, active states (20-30% of UI)
+ * CONTRAST: High contrast black/white for maximum readability on any background
+ * LINK: Hyperlinks and interactive text
+ * SUCCESS, WARNING, DANGER: Semantic feedback colors
+ *
+ * COLORS - Disabled:
+ * --color-disabled-text: Text for disabled elements
+ * --color-disabled-surface: Background for disabled elements
+ * --color-disabled-border: Border for disabled elements
+ * Example: input:disabled {
+ *            color: var(--color-disabled-text);
+ *            background: var(--color-disabled-surface);
+ *          }
+ */
+
 :root {
   --step--2: clamp(0.8247rem, 0.8445rem + -0.022vw, 0.8395rem);
   --step--1: clamp(0.9444rem, 0.9294rem + 0.0669vw, 1rem);
@@ -8,6 +69,7 @@
   --step-4: clamp(1.7019rem, 1.4484rem + 1.1266vw, 2.4624rem);
   --step-5: clamp(1.9147rem, 1.5679rem + 1.5411vw, 2.9549rem);
   --step-6: clamp(2.154rem, 1.69rem + 2.062vw, 3.5459rem);
+
   /****
   Font Sizes
   ****/
@@ -20,6 +82,7 @@
   --font-size-3xl: var(--step-4);
   --font-size-4xl: var(--step-5);
   --font-size-5xl: var(--step-6);
+
   /****
   Spacing
   ****/
@@ -36,8 +99,87 @@
   --spacing-10: 4rem;
   --spacing-11: 6rem;
   --spacing-12: 8rem;
+
   /****
   Colors
   ****/
-  --border-color-base: #d1d5db;
+
+  /* Primary (Brand color - Navy) */
+  --color-primary-text: #071d49;
+  --color-primary-border: #1e3a8a;
+  --color-primary-subtle-surface: #dbeafe;
+  --color-primary-subtle-surface-hover: #bfdbfe;
+  --color-primary-subtle-text: #071d49;
+  --color-primary-solid-surface: #071d49;
+  --color-primary-solid-surface-hover: #051534;
+  --color-primary-solid-text: #ffffff;
+
+  /* Secondary (Complementary - Blue) */
+  --color-secondary-text: #3b82f6;
+  --color-secondary-border: #93c5fd;
+  --color-secondary-subtle-surface: #eff6ff;
+  --color-secondary-subtle-surface-hover: #dbeafe;
+  --color-secondary-subtle-text: #1e40af;
+  --color-secondary-solid-surface: #3b82f6;
+  --color-secondary-solid-surface-hover: #2563eb;
+  --color-secondary-solid-text: #ffffff;
+
+  /* Contrast (High contrast black/white) */
+  --color-contrast-text: #09090b;
+  --color-contrast-border: #e5e7eb;
+  --color-contrast-subtle-surface: #f9fafb;
+  --color-contrast-subtle-surface-hover: #f3f4f6;
+  --color-contrast-subtle-text: #52525b;
+  --color-contrast-solid-surface: #18181b;
+  --color-contrast-solid-surface-hover: #09090b;
+  --color-contrast-solid-text: #fafafa;
+
+  /* Link */
+  --color-link-text: #2563eb;
+  --color-link-border: #93c5fd;
+  --color-link-subtle-surface: #dbeafe;
+  --color-link-subtle-surface-hover: #bfdbfe;
+  --color-link-subtle-text: #1e40af;
+  --color-link-solid-surface: #2563eb;
+  --color-link-solid-surface-hover: #1d4ed8;
+  --color-link-solid-text: #ffffff;
+
+  /* Success */
+  --color-success-text: #15803d;
+  --color-success-border: #86efac;
+  --color-success-subtle-surface: #dcfce7;
+  --color-success-subtle-surface-hover: #bbf7d0;
+  --color-success-subtle-text: #15803d;
+  --color-success-solid-surface: #16a34a;
+  --color-success-solid-surface-hover: #15803d;
+  --color-success-solid-text: #ffffff;
+
+  /* Warning */
+  --color-warning-text: #d97706;
+  --color-warning-border: #fde68a;
+  --color-warning-subtle-surface: #fef3c7;
+  --color-warning-subtle-surface-hover: #fde68a;
+  --color-warning-subtle-text: #d97706;
+  --color-warning-solid-surface: #f59e0b;
+  --color-warning-solid-surface-hover: #d97706;
+  --color-warning-solid-text: #18181b;
+
+  /* Danger */
+  --color-danger-text: #b91c1c;
+  --color-danger-border: #fca5a5;
+  --color-danger-subtle-surface: #fee2e2;
+  --color-danger-subtle-surface-hover: #fecaca;
+  --color-danger-subtle-text: #b91c1c;
+  --color-danger-solid-surface: #dc2626;
+  --color-danger-solid-surface-hover: #b91c1c;
+  --color-danger-solid-text: #ffffff;
+
+  /* Default border colors */
+  --color-border: #e5e7eb;
+  --color-border-strong: #d1d5db;
+
+  /* Disabled states */
+  --color-disabled-text: #a1a1aa;
+  --color-disabled-surface: #f4f4f5;
+  --color-disabled-border: #e4e4e7;
 }
