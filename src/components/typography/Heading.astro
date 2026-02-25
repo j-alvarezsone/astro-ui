@@ -1,0 +1,92 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import type { Keyof } from '@/types/index';
+
+export interface Props extends HTMLAttributes<'h1'> {
+  as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+  size?: Size;
+  weight?: Weight;
+}
+
+const sizes = {
+  '5xl': 'heading__font-5xl',
+  '4xl': 'heading__font-4xl',
+  '3xl': 'heading__font-3xl',
+  '2xl': 'heading__font-2xl',
+  xl: 'heading__font-xl',
+  lg: 'heading__font-lg',
+  base: 'heading__font-base',
+  sm: 'heading__font-sm',
+  xs: 'heading__font-xs',
+} as const;
+
+const weights = {
+  bold: 'heading__font-bold',
+  semibold: 'heading__font-semibold',
+  medium: 'heading__font-medium',
+  light: 'heading__font-light',
+} as const;
+
+type Size = Keyof<typeof sizes>;
+type Weight = Keyof<typeof weights>;
+
+const { as: As = 'h2', size = '2xl', weight = 'bold', ...rest } = Astro.props;
+---
+
+<As class:list={['heading', sizes[size], weights[weight]]} {...rest}>
+  <slot />
+</As>
+
+<style>
+  .heading__font-xs {
+    font-size: var(--font-size-xs);
+  }
+
+  .heading__font-sm {
+    font-size: var(--font-size-sm);
+  }
+
+  .heading__font-base {
+    font-size: var(--font-size-base);
+  }
+
+  .heading__font-lg {
+    font-size: var(--font-size-lg);
+  }
+
+  .heading__font-xl {
+    font-size: var(--font-size-xl);
+  }
+
+  .heading__font-2xl {
+    font-size: var(--font-size-2xl);
+  }
+
+  .heading__font-3xl {
+    font-size: var(--font-size-3xl);
+  }
+
+  .heading__font-4xl {
+    font-size: var(--font-size-4xl);
+  }
+
+  .heading__font-5xl {
+    font-size: var(--font-size-5xl);
+  }
+
+  .heading__font-light {
+    font-weight: var(--font-weight-light);
+  }
+
+  .heading__font-medium {
+    font-weight: var(--font-weight-medium);
+  }
+
+  .heading__font-semibold {
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .heading__font-bold {
+    font-weight: var(--font-weight-bold);
+  }
+</style>
