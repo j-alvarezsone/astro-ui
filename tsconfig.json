@@ -15,7 +15,10 @@
       ],
       "@/types/*": [
         "./src/share/types/*"
-      ]
+      ],
+      "@layouts/*": [
+        "./src/layouts/*"
+      ],
     }
   }
 }
