@@ -1,0 +1,190 @@
+---
+import type { Polymorphic } from 'astro/types';
+
+type Props<Tag extends 'button' | 'a'> = Polymorphic<{
+  as: Tag;
+  isLoading?: boolean;
+  disabled?: boolean;
+  type?: 'button' | 'submit' | 'reset';
+  label?: string;
+  variant?: 'primary' | 'secondary' | 'contrast' | 'success' | 'warning' | 'danger';
+  rounded?: boolean;
+  size?: 'sm' | 'md' | 'lg';
+}>;
+
+const {
+  as: Tag = 'button',
+  isLoading = false,
+  disabled = false,
+  type = 'button',
+  label,
+  variant = 'primary',
+  rounded = false,
+  size = 'md',
+  ...rest
+} = Astro.props as Props<'button' | 'a'>;
+
+type AriaBusy = 'polite' | 'off' | 'assertive' | undefined;
+
+const isButton = Tag === 'button';
+const isLink = Tag === 'a';
+
+const buttonClasses = [
+  'button',
+  `button--${variant}`,
+  `button--${size}`,
+  {
+    'button--rounded': rounded && isButton,
+    'button--disabled': disabled || isLoading,
+  },
+];
+
+const linkClasses = [
+  'button',
+  'button--link',
+  {
+    'button--link--disabled': disabled || isLoading,
+  },
+];
+
+const computedProps = {
+  ...rest,
+
+  ...(isButton && {
+    type,
+    disabled: disabled || isLoading,
+    'aria-disabled': disabled || isLoading,
+    'aria-busy': isLoading || undefined,
+    'aria-live': (isLoading ? 'polite' : undefined) as AriaBusy,
+  }),
+
+  ...(isLink && {
+    ...((disabled || isLoading) && {
+      'aria-disabled': true,
+      href: undefined,
+      style: 'pointer-events: none;',
+    }),
+  }),
+};
+---
+
+<Tag class:list={isButton ? buttonClasses : linkClasses} {...computedProps}>
+  <span class:list={[`button__label button__label--${size}`]}>
+    <slot>{label}</slot>
+  </span>
+</Tag>
+
+<style>
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+    border-radius: var(--border-radius-lg);
+    margin: var(--spacing-0);
+    border: none;
+  }
+
+  .button--rounded {
+    border-radius: var(--border-radius-full);
+  }
+  /****
+  Variants
+  ****/
+  .button--primary {
+    background-color: var(--color-primary-solid-surface);
+    color: var(--color-primary-solid-text);
+    border: 1px solid var(--color-primary-border);
+
+    &:hover {
+      background-color: var(--color-primary-solid-surface-hover);
+    }
+  }
+
+  .button--secondary {
+    background-color: var(--color-secondary-solid-surface);
+    color: var(--color-secondary-solid-text);
+    border: 1px solid var(--color-secondary-border);
+
+    &:hover {
+      background-color: var(--color-secondary-solid-surface-hover);
+    }
+  }
+
+  .button--contrast {
+    background-color: var(--color-contrast-solid-surface);
+    color: var(--color-contrast-solid-text);
+    border: 1px solid var(--color-contrast-border);
+
+    &:hover {
+      background-color: var(--color-contrast-solid-surface-hover);
+    }
+  }
+
+  .button--success {
+    background-color: var(--color-success-solid-surface);
+    color: var(--color-success-solid-text);
+    border: 1px solid var(--color-success-border);
+
+    &:hover {
+      background-color: var(--color-success-solid-surface-hover);
+    }
+  }
+
+  .button--warning {
+    background-color: var(--color-warning-solid-surface);
+    color: var(--color-warning-solid-text);
+    border: 1px solid var(--color-warning-border);
+
+    &:hover {
+      background-color: var(--color-warning-solid-surface-hover);
+    }
+  }
+
+  .button--danger {
+    background-color: var(--color-danger-solid-surface);
+    color: var(--color-danger-solid-text);
+    border: 1px solid var(--color-danger-border);
+
+    &:hover {
+      background-color: var(--color-danger-solid-surface-hover);
+    }
+  }
+  /****
+  Sizes
+  ****/
+  .button--sm {
+    padding-top: var(--spacing-1-5);
+    padding-bottom: var(--spacing-1-5);
+    padding-left: var(--spacing-2-5);
+    padding-right: var(--spacing-2-5);
+  }
+
+  .button--md {
+    padding-top: var(--spacing-2);
+    padding-bottom: var(--spacing-2);
+    padding-left: var(--spacing-3);
+    padding-right: var(--spacing-3);
+  }
+
+  .button--lg {
+    padding-top: var(--spacing-2-5);
+    padding-bottom: var(--spacing-2-5);
+    padding-left: var(--spacing-3-5);
+    padding-right: var(--spacing-3-5);
+  }
+
+  .button__label--sm {
+    font-size: var(--font-size-sm);
+  }
+
+  .button__label--md {
+    font-size: var(--font-size-base);
+  }
+
+  .button__label--lg {
+    font-size: var(--font-size-lg);
+  }
+</style>
