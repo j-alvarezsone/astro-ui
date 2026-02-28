@@ -34,16 +34,17 @@ const buttonClasses = [
   `button--${variant}`,
   `button--${size}`,
   {
-    'button--rounded': rounded && isButton,
+    'button--rounded': rounded,
     'button--disabled': disabled || isLoading,
   },
 ];
 
 const linkClasses = [
   'button',
-  'button--link',
+  'button__link',
+  `button__link--${size}`,
   {
-    'button--link--disabled': disabled || isLoading,
+    'button__link--disabled': disabled || isLoading,
   },
 ];
 
@@ -155,21 +156,24 @@ const computedProps = {
   /****
   Sizes
   ****/
-  .button--sm {
+  .button--sm,
+  .button__link--sm {
     padding-top: var(--spacing-1-5);
     padding-bottom: var(--spacing-1-5);
     padding-left: var(--spacing-2-5);
     padding-right: var(--spacing-2-5);
   }
 
-  .button--md {
+  .button--md,
+  .button__link--md {
     padding-top: var(--spacing-2);
     padding-bottom: var(--spacing-2);
     padding-left: var(--spacing-3);
     padding-right: var(--spacing-3);
   }
 
-  .button--lg {
+  .button--lg,
+  .button__link--lg {
     padding-top: var(--spacing-2-5);
     padding-bottom: var(--spacing-2-5);
     padding-left: var(--spacing-3-5);
@@ -186,5 +190,33 @@ const computedProps = {
 
   .button__label--lg {
     font-size: var(--font-size-lg);
+  }
+
+  /****
+  Link
+  ****/
+  .button--link {
+    text-decoration: none;
+    color: var(--color-link-text);
+
+    &:hover {
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+  }
+
+  /****
+  Disabled State
+  ****/
+  .button.button--disabled {
+    background-color: var(--color-disabled-surface);
+    color: var(--color-disabled-text);
+    border: 1px solid var(--color-disabled-border);
+    pointer-events: none;
+  }
+
+  .button__link--disabled {
+    color: var(--color-disabled-link-text);
+    opacity: 0.8;
   }
 </style>

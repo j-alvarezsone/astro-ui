@@ -211,7 +211,8 @@
   --color-border-strong: #d1d5db;
 
   /* Disabled states */
-  --color-disabled-text: #a1a1aa;
-  --color-disabled-surface: #f4f4f5;
+  --color-disabled-text: #ffffff;
+  --color-disabled-surface: #6b7280;
   --color-disabled-border: #e4e4e7;
+  --color-disabled-link-text: #6b7280;
 }
