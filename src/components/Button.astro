@@ -1,5 +1,6 @@
 ---
 import type { Polymorphic } from 'astro/types';
+import Loader from '@components/Loader.astro';
 
 type Props<Tag extends 'button' | 'a'> = Polymorphic<{
   as: Tag;
@@ -69,13 +70,27 @@ const computedProps = {
 ---
 
 <Tag class:list={isButton ? buttonClasses : linkClasses} {...computedProps}>
-  <span class:list={[`button__label button__label--${size}`]}>
+  <span
+    class:list={['button__label', `button__label--${size}`, { 'button__label--loading': isLoading }]}
+    aria-hidden={isLoading || undefined}
+  >
     <slot>{label}</slot>
   </span>
+  {
+    isLoading && (
+      <>
+        <span class="button__loader" aria-hidden="true">
+          <Loader size={size} color="neutral" isTextVisible={false} />
+        </span>
+        <span class="sr-only">Loading</span>
+      </>
+    )
+  }
 </Tag>
 
 <style>
   .button {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -177,6 +192,18 @@ const computedProps = {
     padding-bottom: var(--spacing-2-5);
     padding-left: var(--spacing-3-5);
     padding-right: var(--spacing-3-5);
+  }
+
+  .button__label--loading {
+    opacity: 0;
+  }
+
+  .button__loader {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .button__label--sm {
