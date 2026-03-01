@@ -1,0 +1,156 @@
+---
+interface Props {
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  color?: 'light' | 'dark' | 'neutral';
+  isTextVisible?: boolean;
+}
+
+const { size = 'lg', color = 'light', isTextVisible = true } = Astro.props;
+---
+
+<div class="loader" role="status" aria-label="Loading" aria-live="polite">
+  {
+    isTextVisible && (
+      <div class:list={['loader__wavy', `loader__wavy--${size}`, `loader__wavy--${color}`]} aria-hidden="true">
+        <span style="--i: 1">L</span>
+        <span style="--i: 2">o</span>
+        <span style="--i: 3">a</span>
+        <span style="--i: 4">d</span>
+        <span style="--i: 5">i</span>
+        <span style="--i: 6">n</span>
+        <span style="--i: 7">g</span>
+      </div>
+    )
+  }
+  <div class:list={['loader__spinner', `loader__spinner--${size}`, `loader__spinner--${color}`]} aria-hidden="true">
+  </div>
+</div>
+
+<style>
+  .loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /****
+  Wavy Text
+  ****/
+  .loader__wavy {
+    position: relative;
+    margin-right: 0.5rem;
+    -webkit-box-reflect: below -12px linear-gradient(transparent, rgba(255, 252, 252, 0.2));
+  }
+
+  .loader__wavy span {
+    position: relative;
+    display: inline-block;
+    text-transform: uppercase;
+    animation: wavy 1s ease-in-out infinite;
+    animation-delay: calc(0.1s * var(--i));
+  }
+
+  /* Wavy sizes */
+  .loader__wavy--sm {
+    font-size: var(--font-size-sm);
+  }
+
+  .loader__wavy--md {
+    font-size: var(--font-size-base);
+  }
+
+  .loader__wavy--lg {
+    font-size: var(--font-size-lg);
+  }
+
+  .loader__wavy--xl {
+    font-size: var(--font-size-xl);
+  }
+
+  /* Wavy colors */
+  .loader__wavy--light {
+    color: var(--color-secondary-text);
+  }
+
+  .loader__wavy--dark {
+    color: var(--color-contrast-solid-text);
+    -webkit-box-reflect: below -12px linear-gradient(transparent, rgb(255, 255, 255));
+  }
+
+  .loader__wavy--neutral {
+    color: var(--color-border-strong);
+  }
+
+  /****
+  Spinner
+  ****/
+  .loader__spinner {
+    border-style: solid;
+    border-radius: 9999px;
+    border-top-color: transparent;
+    animation: spin 0.75s linear infinite;
+  }
+
+  /* Spinner sizes */
+  .loader__spinner--sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 2px;
+  }
+
+  .loader__spinner--md {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-width: 2px;
+  }
+
+  .loader__spinner--lg {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-width: 2px;
+  }
+
+  .loader__spinner--xl {
+    width: 3rem;
+    height: 3rem;
+    border-width: 2px;
+  }
+
+  /* Spinner colors */
+  .loader__spinner--light {
+    border-color: var(--color-secondary-text);
+    border-top-color: transparent;
+  }
+
+  .loader__spinner--dark {
+    border-color: var(--color-contrast-solid-text);
+    border-top-color: transparent;
+  }
+
+  .loader__spinner--neutral {
+    border-color: var(--color-border-strong);
+    border-top-color: transparent;
+  }
+
+  /****
+  Animations
+  ****/
+  @keyframes wavy {
+    0% {
+      transform: translateY(0);
+    }
+    20% {
+      transform: translateY(-10px);
+    }
+    40%,
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+</style>
