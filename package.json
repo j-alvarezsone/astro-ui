@@ -15,18 +15,18 @@
   "dependencies": {
     "@astrojs/check": "^0.9.6",
     "@astrojs/vue": "^5.1.4",
-    "astro": "^5.17.1",
+    "astro": "^5.18.0",
     "typescript": "^5.9.3",
-    "vue": "^3.5.28"
+    "vue": "^3.5.29"
   },
   "devDependencies": {
     "husky": "^9.1.7",
-    "lint-staged": "^16.2.7",
-    "oxlint": "^1.46.0",
-    "oxlint-tsgolint": "^0.13.0"
+    "lint-staged": "^16.3.1",
+    "oxlint": "^1.50.0",
+    "oxlint-tsgolint": "^0.15.0"
   },
   "lint-staged": {
     "*.{js,ts,mjs,cjs,astro,vue}": "pnpm run lint"
   },
-  "packageManager": "pnpm@10.29.3+sha512.498e1fb4cca5aa06c1dcf2611e6fafc50972ffe7189998c409e90de74566444298ffe43e6cd2acdc775ba1aa7cc5e092a8b7054c811ba8c5770f84693d33d2dc"
+  "packageManager": "pnpm@10.30.3"
 }
