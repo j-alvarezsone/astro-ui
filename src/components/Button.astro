@@ -15,6 +15,7 @@ type Props<Tag extends 'button' | 'a'> = Polymorphic<{
   size?: 'sm' | 'md' | 'lg';
   icon?: IconProps;
   iconPos?: 'left' | 'right';
+  ripple?: boolean;
 }>;
 
 const {
@@ -28,6 +29,7 @@ const {
   size = 'md',
   icon,
   iconPos = 'left',
+  ripple = true,
   ...rest
 } = Astro.props as Props<'button' | 'a'>;
 
@@ -78,6 +80,7 @@ const computedProps = {
 ---
 
 <Tag class:list={isButton ? buttonClasses : linkClasses} {...computedProps}>
+  {isButton && ripple && <astro-ripple />}
   {icon && <Icon {...icon} class:list={['button__icon', { 'button__icon--right': iconPos === 'right' }]} />}
   <span
     class:list={['button__label', `button__label--${size}`, { 'button__label--loading': isLoading }]}
@@ -96,6 +99,10 @@ const computedProps = {
     )
   }
 </Tag>
+
+<script>
+  import '@web-components/ripple.web';
+</script>
 
 <style>
   .button {
