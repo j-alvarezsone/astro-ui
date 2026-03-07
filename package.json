@@ -16,14 +16,17 @@
     "@astrojs/check": "^0.9.6",
     "@astrojs/vue": "^5.1.4",
     "astro": "^5.18.0",
+    "astro-icon": "^1.1.5",
     "typescript": "^5.9.3",
     "vue": "^3.5.29"
   },
   "devDependencies": {
+    "@iconify-json/mdi": "^1.2.3",
     "husky": "^9.1.7",
     "lint-staged": "^16.3.1",
     "oxlint": "^1.50.0",
-    "oxlint-tsgolint": "^0.15.0"
+    "oxlint-tsgolint": "^0.15.0",
+    "tsx": "^3.14.0"
   },
   "lint-staged": {
     "*.{js,ts,mjs,cjs,astro,vue}": "pnpm run lint"
