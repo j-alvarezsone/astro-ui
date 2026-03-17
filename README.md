@@ -1,46 +1,57 @@
-# Astro Starter Kit: Basics
+<!-- Project README tailored for contributors and agentic tooling -->
 
-```sh
-pnpm create astro@latest -- --template basics
+# Astro UI — Component Library
+
+This repository contains a small UI component library built with Astro and Vue. It
+focuses on reusable components, TypeScript safety, and partial hydration (component
+islands) for optimal client performance.
+
+Quick start (from project root)
+
+1. Install dependencies: `pnpm install`
+2. Start dev server: `pnpm dev` (hot reload)
+3. Build: `pnpm build`
+4. Preview production build: `pnpm preview`
+
+Useful scripts
+
+- `pnpm run lint` — run linter (`oxlint`)
+- `pnpm run lint:fix` — auto-fix lint issues
+- `pnpm run type:check` — run TypeScript/Astro checks (`pnpm astro check`)
+- `pnpm run generate:icons` — regenerate icon name types (`./scripts/generate-icon-names.mts`)
+
+Testing
+
+This repo does not include a test runner by default. We recommend `vitest` for unit
+and DOM tests. To add it:
+
+```
+pnpm add -D vitest @testing-library/dom @testing-library/jest-dom
+# add a `test` script to package.json: "test": "vitest"
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+Developer notes
 
-## 🚀 Project Structure
+- Code style and linting are enforced via `oxlint` (see `.oxlintrc.json`). The project
+  uses strict TypeScript settings (`tsconfig.json` extends `astro/tsconfigs/strict`).
+- Use the configured path aliases: `@components/*`, `@layouts/*`, `@web-components/*`,
+  and `@/types/*` for imports from `src/`.
+- Prefer `import type` for type-only imports and avoid `any`. Handle floating promises
+  and always narrow `unknown` in `catch` blocks.
 
-Inside of your Astro project, you'll see the following folders and files:
+Agent guidance and automation
 
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
-```
+- This repo includes `AGENTS.md` with instructions for agentic coding tools. Agents
+  should read `AGENTS.md` before making changes.
+- Follow `.github/copilot-instructions.md` for project-specific Copilot rules and
+  architecture guidance.
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+Contributing
 
-## 🧞 Commands
+- Run `pnpm run lint` and `pnpm run type:check` before committing. Husky pre-commit
+  hooks run lint-staged to enforce linting on changed files.
+- Keep changes small and focused; add tests when introducing logic or public APIs.
 
-All commands are run from the root of the project, from a terminal:
+License
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Refer to the repository root for license information (if any).
