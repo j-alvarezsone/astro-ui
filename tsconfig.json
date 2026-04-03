@@ -22,6 +22,9 @@
       "@web-components/*": [
         "./src/web-components/*"
       ],
+      "@utils/*": [
+        "./src/share/utils/*"
+      ]
     }
   }
 }
