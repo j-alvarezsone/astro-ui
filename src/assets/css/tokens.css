@@ -215,4 +215,7 @@
   --color-disabled-surface: #6b7280;
   --color-disabled-border: #e4e4e7;
   --color-disabled-link-text: #6b7280;
+
+  /* Focus states */
+  --color-focus-outline: #005fcc;
 }

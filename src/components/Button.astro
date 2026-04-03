@@ -3,6 +3,7 @@ import type { Polymorphic } from 'astro/types';
 import type { IconProps } from 'astro-icon/components';
 import { Icon } from 'astro-icon/components';
 import Loader from '@components/Loader.astro';
+import { deriveAriaLabelFromIconName } from '@utils/icon/deriveAriaLabelFromIconName';
 
 type Props<Tag extends 'button' | 'a'> = Polymorphic<{
   as: Tag;
@@ -39,6 +40,9 @@ const isButton = Tag === 'button';
 const isLink = Tag === 'a';
 const hasLabel = Boolean(label) || Boolean(Astro.slots.default);
 
+const iconName = typeof icon?.name === 'string' ? icon.name : undefined;
+const autoIconAriaLabel = icon && !hasLabel ? deriveAriaLabelFromIconName(iconName) : undefined;
+
 const buttonClasses = [
   'button',
   `button--${variant}`,
@@ -61,6 +65,7 @@ const linkClasses = [
 
 const computedProps = {
   ...rest,
+  ...(autoIconAriaLabel && { 'aria-label': autoIconAriaLabel }),
 
   ...(isButton && {
     type,
@@ -262,6 +267,15 @@ const computedProps = {
     color: var(--color-disabled-link-text);
     opacity: 0.8;
     pointer-events: none;
+  }
+
+  /****
+  Focus State
+  ****/
+  .button:focus-visible {
+    outline: 2px solid var(--color-focus-outline);
+    outline-offset: 2px;
+    z-index: 1;
   }
 
   /****
