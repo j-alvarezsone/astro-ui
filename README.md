@@ -43,8 +43,8 @@ Agent guidance and automation
 
 - This repo includes `AGENTS.md` with instructions for agentic coding tools. Agents
   should read `AGENTS.md` before making changes.
-- Follow `.github/copilot-instructions.md` for project-specific Copilot rules and
-  architecture guidance.
+- Scoped instructions in `.github/instructions/` apply automatically for Astro files
+  and component authoring (`astro.instructions.md`, `components.instructions.md`).
 
 Contributing
 
