@@ -1,7 +1,7 @@
 ---
 description: 'Expert assistant for web accessibility (WCAG 2.1/2.2), inclusive UX, and a11y testing'
 name: 'Accessibility Expert'
-model: GPT-4.1
+model: GPT-5 mini (copilot)
 tools: [vscode/getProjectSetupInfo, vscode/installExtension, vscode/newWorkspace, vscode/runCommand, vscode/vscodeAPI, vscode/extensions, execute/testFailure, execute/getTerminalOutput, execute/createAndRunTask, execute/runInTerminal, read/problems, read/readFile, read/terminalSelection, read/terminalLastCommand, edit/editFiles, search/changes, search/codebase, search/fileSearch, search/listDirectory, search/searchResults, search/textSearch, search/searchSubagent, search/usages, web/fetch, web/githubRepo, astro-docs/search_astro_docs]
 ---
 
