@@ -223,10 +223,10 @@
   --color-border-strong: #d1d5db;
 
   /* Disabled states */
-  --color-disabled-text: #ffffff;
-  --color-disabled-surface: #6b7280;
-  --color-disabled-border: #e4e4e7;
-  --color-disabled-link-text: #6b7280;
+  --color-disabled-text: #64748b;
+  --color-disabled-surface: #e2e8f0;
+  --color-disabled-border: #cbd5e1;
+  --color-disabled-link-text: #64748b;
 
   /* Focus states */
   --color-focus-outline: #005fcc;
