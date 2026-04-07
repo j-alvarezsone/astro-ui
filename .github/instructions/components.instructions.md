@@ -120,6 +120,7 @@ Key rules:
 | Low-emphasis tinted surface: alerts, badges, tags | `--color-{role}-subtle` |
 | Hover state of a subtle surface | `--color-{role}-subtle-hover` |
 | Text / icon placed ON a subtle surface | `--color-{role}-on-subtle` |
+| Base neutral surface (inputs, cards, panels) | `--color-surface` |
 | Disabled surface (not interactive) | `--color-disabled-fill` |
 
 **Borders:**
@@ -147,8 +148,8 @@ Key rules:
 ```css
 /* Good */
 .button {
-  padding-inline: var(--spacing-md);
-  background-color: var(--color-primary);
+  padding-inline: var(--spacing-4);
+  background-color: var(--color-primary-fill);
 }
 
 /* Avoid */

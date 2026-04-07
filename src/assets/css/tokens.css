@@ -86,6 +86,7 @@
   --color-fg:          #18181b; /* default text — headings, labels, body */
   --color-fg-muted:    #52525b; /* secondary — help text, subtext, placeholders */
   --color-fg-disabled: #64748b; /* disabled element text */
+    --color-surface:     #ffffff; /* base neutral surface (inputs, cards, page sections) */
 
   /* ── Primary (Brand — Navy) ────────────────────────────────
    * fg           Colored ink on a light background
