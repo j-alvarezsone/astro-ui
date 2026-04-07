@@ -11,6 +11,7 @@ interface Props {
   icon?: IconProps;
   iconPos?: 'left' | 'right';
   sizes?: 'sm' | 'md' | 'lg';
+  errorText?: string;
   helpText?: string;
   labelPosition?: 'default' | 'over' | 'in' | 'on';
   disabled?: boolean;
@@ -29,6 +30,7 @@ const {
   icon,
   iconPos = 'right',
   sizes = 'md',
+  errorText,
   helpText,
   labelPosition = 'default',
   disabled = false,
@@ -39,7 +41,9 @@ const {
   ...rest
 } = Astro.props;
 
+const errorTextId = errorText ? `${name}-error` : undefined;
 const helpTextId = helpText ? `${name}-help` : undefined;
+const describedBy = [errorTextId, helpTextId].filter(Boolean).join(' ') || undefined;
 ---
 
 <InputField
@@ -49,6 +53,7 @@ const helpTextId = helpText ? `${name}-help` : undefined;
   sizes={sizes}
   icon={icon}
   iconPos={iconPos}
+  errorText={errorText}
   helpText={helpText}
   {...rest}
 >
@@ -63,6 +68,7 @@ const helpTextId = helpText ? `${name}-help` : undefined;
     maxlength={maxLength}
     min={min}
     max={max}
-    aria-describedby={helpTextId}
+    aria-describedby={describedBy}
+    aria-invalid={errorText ? 'true' : undefined}
   />
 </InputField>
