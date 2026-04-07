@@ -153,4 +153,11 @@ const { size = 'lg', color = 'light', isTextVisible = true } = Astro.props;
       transform: rotate(360deg);
     }
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loader__wavy span,
+    .loader__spinner {
+      animation: none;
+    }
+  }
 </style>
