@@ -149,7 +149,7 @@
 
 @layer base {
   body {
-    font-color: var(--color-text-primary);
+    font-color: var(--color-fg);
     font-size: var(--font-size-base);
     transition-property: background-color, color;
     transition-duration: 0.3s;

@@ -83,13 +83,13 @@ const labelStart =
   }
 
   .input-field__wrapper:focus-within {
-    border-color: var(--color-focus-outline);
-    outline: 2px solid var(--color-focus-outline);
+    border-color: var(--color-focus-border);
+    outline: 2px solid var(--color-focus-ring);
     outline-offset: 2px;
   }
 
   .input-field__wrapper:has(:disabled) {
-    background-color: var(--color-disabled-surface);
+    background-color: var(--color-disabled-fill);
     cursor: not-allowed;
   }
 
@@ -111,7 +111,7 @@ const labelStart =
   /* ── Help text ───────────────────────────────────────────── */
   .input-field__help {
     font-size: var(--font-size-sm);
-    color: var(--color-contrast-subtle-text);
+    color: var(--color-fg-muted);
     margin: 0;
   }
 
@@ -146,8 +146,8 @@ const labelStart =
 
   /* Disabled text */
   :global(.input-field__wrapper input:disabled) {
-    color: var(--color-disabled-text);
-    -webkit-text-fill-color: var(--color-disabled-text);
+    color: var(--color-fg-disabled);
+    -webkit-text-fill-color: var(--color-fg-disabled);
   }
 
   /* ── Placeholder ─────────────────────────────────────────────

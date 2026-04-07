@@ -19,8 +19,8 @@ const { for: htmlFor, label, position = 'default', class: className } = Astro.pr
     display: block;
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
-    color: var(--color-contrast-subtle-text);
-    line-height: 1;
+    color: var(--color-fg-muted);
+    line-height: 1.2;
   }
 
   /* ── Required / Optional indicators (CSS-only, no props) ──
@@ -30,19 +30,19 @@ const { for: htmlFor, label, position = 'default', class: className } = Astro.pr
   :global(.input-field:has(input:required)) .input-label::after {
     content: '*';
     margin-inline-start: var(--spacing-1);
-    color: var(--color-danger-text);
+    color: var(--color-danger-fg);
   }
 
   :global(.input-field:has(input:optional)) .input-label::after {
     content: '(Optional)';
     margin-inline-start: var(--spacing-1);
-    color: var(--color-contrast-subtle-text);
+    color: var(--color-fg-muted);
     font-size: var(--font-size-xs);
   }
 
   /* ── Default: static block above the wrapper ─────────────── */
   .input-label--default {
-    /* inherits base */
+    color: var(--color-fg);
   }
 
   /* ── Floating variants: shared RESTING position ─────────────
@@ -58,7 +58,7 @@ const { for: htmlFor, label, position = 'default', class: className } = Astro.pr
     inset-inline-start: var(--label-start, var(--spacing-3-5));
     transform: translateY(-50%);
     font-size: var(--font-size-sm);
-    color: var(--color-contrast-subtle-text);
+    color: var(--color-fg-muted);
     background-color: transparent;
     padding-inline: 0;
     white-space: nowrap;
@@ -84,7 +84,7 @@ const { for: htmlFor, label, position = 'default', class: className } = Astro.pr
     inset-inline-start: var(--spacing-3);
     transform: translateY(-100%);
     font-size: var(--font-size-xs);
-    color: var(--color-contrast-text);
+    color: var(--color-fg);
     padding-block-end: var(--spacing-2-5);
   }
 
@@ -98,7 +98,7 @@ const { for: htmlFor, label, position = 'default', class: className } = Astro.pr
     inset-inline-start: var(--label-start, var(--spacing-3-5));
     transform: none;
     font-size: var(--font-size-xs);
-    color: var(--color-contrast-text);
+    color: var(--color-fg);
   }
 
   /* ── On: sits centered ON the top border line ───────────────
@@ -113,6 +113,6 @@ const { for: htmlFor, label, position = 'default', class: className } = Astro.pr
     font-size: var(--font-size-xs);
     background-color: #ffffff;
     padding-inline: var(--spacing-1);
-    color: var(--color-contrast-text);
+    color: var(--color-fg);
   }
 </style>

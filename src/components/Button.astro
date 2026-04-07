@@ -133,62 +133,62 @@ const computedProps = {
   Variants
   ****/
   .button--primary {
-    background-color: var(--color-primary-solid-surface);
-    color: var(--color-primary-solid-text);
+    background-color: var(--color-primary-fill);
+    color: var(--color-primary-on-fill);
     border: 1px solid var(--color-primary-border);
 
     &:hover {
-      background-color: var(--color-primary-solid-surface-hover);
+      background-color: var(--color-primary-fill-hover);
     }
   }
 
   .button--secondary {
-    background-color: var(--color-secondary-solid-surface);
-    color: var(--color-secondary-solid-text);
+    background-color: var(--color-secondary-fill);
+    color: var(--color-secondary-on-fill);
     border: 1px solid var(--color-secondary-border);
 
     &:hover {
-      background-color: var(--color-secondary-solid-surface-hover);
+      background-color: var(--color-secondary-fill-hover);
     }
   }
 
   .button--contrast {
-    background-color: var(--color-contrast-solid-surface);
-    color: var(--color-contrast-solid-text);
+    background-color: var(--color-contrast-fill);
+    color: var(--color-contrast-on-fill);
     border: 1px solid var(--color-contrast-border);
 
     &:hover {
-      background-color: var(--color-contrast-solid-surface-hover);
+      background-color: var(--color-contrast-fill-hover);
     }
   }
 
   .button--success {
-    background-color: var(--color-success-solid-surface);
-    color: var(--color-success-solid-text);
+    background-color: var(--color-success-fill);
+    color: var(--color-success-on-fill);
     border: 1px solid var(--color-success-border);
 
     &:hover {
-      background-color: var(--color-success-solid-surface-hover);
+      background-color: var(--color-success-fill-hover);
     }
   }
 
   .button--warning {
-    background-color: var(--color-warning-solid-surface);
-    color: var(--color-warning-solid-text);
+    background-color: var(--color-warning-fill);
+    color: var(--color-warning-on-fill);
     border: 1px solid var(--color-warning-border);
 
     &:hover {
-      background-color: var(--color-warning-solid-surface-hover);
+      background-color: var(--color-warning-fill-hover);
     }
   }
 
   .button--danger {
-    background-color: var(--color-danger-solid-surface);
-    color: var(--color-danger-solid-text);
+    background-color: var(--color-danger-fill);
+    color: var(--color-danger-on-fill);
     border: 1px solid var(--color-danger-border);
 
     &:hover {
-      background-color: var(--color-danger-solid-surface-hover);
+      background-color: var(--color-danger-fill-hover);
     }
   }
   /****
@@ -241,7 +241,7 @@ const computedProps = {
   ****/
   .button--link {
     text-decoration: none;
-    color: var(--color-link-text);
+    color: var(--color-link-fg);
 
     &:hover {
       text-decoration: underline;
@@ -253,14 +253,14 @@ const computedProps = {
   Disabled State
   ****/
   .button.button--disabled {
-    background-color: var(--color-disabled-surface);
-    color: var(--color-disabled-text);
+    background-color: var(--color-disabled-fill);
+    color: var(--color-fg-disabled);
     border: 1px solid var(--color-disabled-border);
     pointer-events: none;
   }
 
   .button__link--disabled {
-    color: var(--color-disabled-link-text);
+    color: var(--color-fg-disabled);
     opacity: 0.8;
     pointer-events: none;
   }
@@ -269,7 +269,7 @@ const computedProps = {
   Focus State
   ****/
   .button:focus-visible {
-    outline: 2px solid var(--color-focus-outline);
+    outline: 2px solid var(--color-focus-ring);
     outline-offset: 2px;
     z-index: 1;
   }

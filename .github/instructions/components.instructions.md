@@ -99,6 +99,51 @@ Key rules:
 - Prefer CSS custom properties for theming over hard-coded values.
 - Keep component styles scoped; reach for `:global` only for utility or reset styles.
 
+### Token Selection Guide
+
+**Text and icons** — use global foreground tokens:
+
+| Situation | Token |
+|---|---|
+| Primary text: headings, labels, body | `--color-fg` |
+| Secondary / muted text: help text, subtext, placeholders | `--color-fg-muted` |
+| Text inside a disabled element | `--color-fg-disabled` |
+| Colored ink for a semantic role (e.g. danger label) | `--color-{role}-fg` |
+
+**Backgrounds (surfaces)** — choose by emphasis:
+
+| Situation | Token |
+|---|---|
+| Solid high-emphasis surface: buttons, active chips | `--color-{role}-fill` |
+| Hover state of a solid surface | `--color-{role}-fill-hover` |
+| Text / icon placed ON a solid surface | `--color-{role}-on-fill` |
+| Low-emphasis tinted surface: alerts, badges, tags | `--color-{role}-subtle` |
+| Hover state of a subtle surface | `--color-{role}-subtle-hover` |
+| Text / icon placed ON a subtle surface | `--color-{role}-on-subtle` |
+| Disabled surface (not interactive) | `--color-disabled-fill` |
+
+**Borders:**
+
+| Situation | Token |
+|---|---|
+| Default neutral border | `--color-border` |
+| Stronger neutral border (e.g. dividers) | `--color-border-strong` |
+| Semantic border (e.g. danger input outline) | `--color-{role}-border` |
+| Border on a disabled element | `--color-disabled-border` |
+
+**Interaction states:**
+
+| Situation | Token |
+|---|---|
+| `border-color` on a focused element | `--color-focus-border` |
+| `outline` ring around a focused element | `--color-focus-ring` |
+
+**Available roles:** `primary` · `secondary` · `contrast` · `link` · `success` · `warning` · `danger`
+
+**Spacing:** `--spacing-{n}` (0 → 12, with 0.5-step variants like `--spacing-1-5`).
+**Typography:** `--font-size-{xs|sm|base|lg|xl|2xl|3xl|4xl|5xl}` · `--font-weight-{light|normal|medium|semibold|bold}`.
+**Border radius:** `--rounded-{none|xs|sm|md|lg|xl|2xl|3xl|4xl|full}`.
+
 ```css
 /* Good */
 .button {

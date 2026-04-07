@@ -69,11 +69,11 @@ const { size = 'lg', color = 'light', isTextVisible = true } = Astro.props;
 
   /* Wavy colors */
   .loader__wavy--light {
-    color: var(--color-secondary-text);
+    color: var(--color-secondary-fg);
   }
 
   .loader__wavy--dark {
-    color: var(--color-contrast-solid-text);
+    color: var(--color-contrast-on-fill);
     -webkit-box-reflect: below -12px linear-gradient(transparent, rgb(255, 255, 255));
   }
 
@@ -118,12 +118,12 @@ const { size = 'lg', color = 'light', isTextVisible = true } = Astro.props;
 
   /* Spinner colors */
   .loader__spinner--light {
-    border-color: var(--color-secondary-text);
+    border-color: var(--color-secondary-fg);
     border-top-color: transparent;
   }
 
   .loader__spinner--dark {
-    border-color: var(--color-contrast-solid-text);
+    border-color: var(--color-contrast-on-fill);
     border-top-color: transparent;
   }
 
