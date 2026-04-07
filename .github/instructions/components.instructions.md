@@ -136,6 +136,7 @@ Key rules:
 
 | Situation | Token |
 |---|---|
+| `border-color` on hover for enabled elements | `--color-hover-border` |
 | `border-color` on a focused element | `--color-focus-border` |
 | `outline` ring around a focused element | `--color-focus-ring` |
 

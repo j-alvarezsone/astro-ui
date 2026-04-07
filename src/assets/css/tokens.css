@@ -137,13 +137,13 @@
 
   /* ── Success ────────────────────────────────────────────── */
   --color-success-fg:           #166534;
-  --color-success-fill:         #16a34a;
-  --color-success-fill-hover:   #15803d;
+  --color-success-fill:         #22c55e;
+  --color-success-fill-hover:   #16a34a;
   --color-success-on-fill:      #ffffff;
-  --color-success-subtle:       #dcfce7;
-  --color-success-subtle-hover: #bbf7d0;
+  --color-success-subtle:       #ecfdf3;
+  --color-success-subtle-hover: #d1fadf;
   --color-success-on-subtle:    #166534;
-  --color-success-border:       #86efac;
+  --color-success-border:       #88e788;
 
   /* ── Warning ────────────────────────────────────────────── */
   --color-warning-fg:           #b45309;
@@ -173,7 +173,8 @@
   --color-disabled-fill:   #e2e8f0; /* use --color-fg-disabled for text */
   --color-disabled-border: #cbd5e1;
 
-  /* ── Focus ──────────────────────────────────────────────── */
-  --color-focus-border: #005fcc; /* border-color highlight on the focused element */
+  /* ── Interaction borders ───────────────────────────────── */
+  --color-hover-border: #94a3b8;
+  --color-focus-border: #020617;
   --color-focus-ring:   #005fcc; /* outline / external ring around the focused element */
 }
