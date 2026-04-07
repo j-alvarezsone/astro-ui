@@ -1,0 +1,118 @@
+---
+interface Props {
+  for: string;
+  label: string;
+  position?: 'default' | 'over' | 'in' | 'on';
+  class?: string | string[];
+}
+
+const { for: htmlFor, label, position = 'default', class: className } = Astro.props;
+---
+
+<label for={htmlFor} class:list={['input-label', `input-label--${position}`, className]}>
+  {label}
+</label>
+
+<style>
+  /* ── Base ─────────────────────────────────────────────────── */
+  .input-label {
+    display: block;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-contrast-subtle-text);
+    line-height: 1;
+  }
+
+  /* ── Required / Optional indicators (CSS-only, no props) ──
+   * Reads the real input state from the ancestor .input-text.
+   * Works for both default and floating label positions.
+  ────────────────────────────────────────────────────────────── */
+  :global(.input-field:has(input:required)) .input-label::after {
+    content: '*';
+    margin-inline-start: var(--spacing-1);
+    color: var(--color-danger-text);
+  }
+
+  :global(.input-field:has(input:optional)) .input-label::after {
+    content: '(Optional)';
+    margin-inline-start: var(--spacing-1);
+    color: var(--color-contrast-subtle-text);
+    font-size: var(--font-size-xs);
+  }
+
+  /* ── Default: static block above the wrapper ─────────────── */
+  .input-label--default {
+    /* inherits base */
+  }
+
+  /* ── Floating variants: shared RESTING position ─────────────
+   * Label starts inside the input, acting as a placeholder.
+   * The parent wrapper triggers float via :has() on focus/value.
+   * --label-start is set by InputText to account for left icons.
+  ────────────────────────────────────────────────────────────── */
+  .input-label--over,
+  .input-label--in,
+  .input-label--on {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: var(--label-start, var(--spacing-3-5));
+    transform: translateY(-50%);
+    font-size: var(--font-size-sm);
+    color: var(--color-contrast-subtle-text);
+    background-color: transparent;
+    padding-inline: 0;
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+    transition:
+      inset-block-start 0.18s ease,
+      inset-inline-start 0.18s ease,
+      transform 0.18s ease,
+      font-size 0.18s ease,
+      color 0.18s ease,
+      background-color 0.12s ease,
+      padding-inline 0.12s ease;
+    z-index: 1;
+  }
+
+  /* ── Over: floats ABOVE the top border (fully outside) ──────
+   * translateY(-100%) from top:0 puts the label above the box.
+  ────────────────────────────────────────────────────────────── */
+  :global(.input-field__wrapper):has(input:focus) .input-label--over,
+  :global(.input-field__wrapper):has(input:not(:placeholder-shown)) .input-label--over {
+    inset-block-start: 0;
+    inset-inline-start: var(--spacing-3);
+    transform: translateY(-100%);
+    font-size: var(--font-size-xs);
+    color: var(--color-contrast-text);
+    padding-block-end: var(--spacing-2-5);
+  }
+
+  /* ── In: floats to the top-left area inside the wrapper ─────
+   * Stays inside the box; input gets extra top padding to avoid
+   * overlapping (applied in InputText.astro).
+  ────────────────────────────────────────────────────────────── */
+  :global(.input-field__wrapper):has(input:focus) .input-label--in,
+  :global(.input-field__wrapper):has(input:not(:placeholder-shown)) .input-label--in {
+    inset-block-start: var(--spacing-1);
+    inset-inline-start: var(--label-start, var(--spacing-3-5));
+    transform: none;
+    font-size: var(--font-size-xs);
+    color: var(--color-contrast-text);
+  }
+
+  /* ── On: sits centered ON the top border line ───────────────
+   * translateY(-50%) from top:0 = centered on the border.
+   * White background masks the border behind the text.
+  ────────────────────────────────────────────────────────────── */
+  :global(.input-field__wrapper):has(input:focus) .input-label--on,
+  :global(.input-field__wrapper):has(input:not(:placeholder-shown)) .input-label--on {
+    inset-block-start: 0;
+    inset-inline-start: var(--spacing-3);
+    transform: translateY(-50%);
+    font-size: var(--font-size-xs);
+    background-color: #ffffff;
+    padding-inline: var(--spacing-1);
+    color: var(--color-contrast-text);
+  }
+</style>

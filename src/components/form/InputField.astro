@@ -1,0 +1,179 @@
+---
+import { Icon, type IconProps } from 'astro-icon/components';
+import InputLabel from './InputLabel.astro';
+
+interface Props {
+  name: string;
+  label: string;
+  labelPosition?: 'default' | 'over' | 'in' | 'on';
+  sizes?: 'sm' | 'md' | 'lg';
+  icon?: IconProps;
+  iconPos?: 'left' | 'right';
+  helpText?: string;
+  class?: string | string[];
+}
+
+const {
+  name,
+  label,
+  labelPosition = 'default',
+  sizes = 'md',
+  icon,
+  iconPos = 'right',
+  helpText,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const isFloating = labelPosition !== 'default';
+const helpTextId = helpText ? `${name}-help` : undefined;
+
+// Offset floating label past a left icon (icon ≈ 1.25rem + gap).
+const labelStart =
+  isFloating && icon && iconPos !== 'right' ? 'calc(var(--spacing-3-5) + 1.25rem + var(--spacing-2))' : undefined;
+---
+
+<div class:list={['input-field', className]} {...rest}>
+  {!isFloating && <InputLabel for={name} label={label} position="default" />}
+  <div
+    class:list={[
+      'input-field__wrapper',
+      isFloating && `input-field__wrapper--${labelPosition}`,
+      `input-field__wrapper--${sizes}`,
+    ]}
+    style={labelStart ? `--label-start: ${labelStart}` : undefined}
+  >
+    {isFloating && <InputLabel for={name} label={label} position={labelPosition} />}
+    {
+      icon && (
+        <div class:list={['input-field__icon', `input-field__icon--${iconPos}`]} aria-hidden="true">
+          <Icon {...icon} />
+        </div>
+      )
+    }
+    <slot />
+  </div>
+  {
+    helpText && (
+      <p id={helpTextId} class="input-field__help">
+        {helpText}
+      </p>
+    )
+  }
+</div>
+
+<style>
+  /* ── Layout ─────────────────────────────────────────────── */
+  .input-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1-5);
+  }
+
+  .input-field__wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-lg);
+    background-color: #ffffff;
+    padding-inline: var(--spacing-3-5);
+  }
+
+  .input-field__wrapper:focus-within {
+    border-color: var(--color-focus-outline);
+    outline: 2px solid var(--color-focus-outline);
+    outline-offset: 2px;
+  }
+
+  .input-field__wrapper:has(:disabled) {
+    background-color: var(--color-disabled-surface);
+    cursor: not-allowed;
+  }
+
+  .input-field__wrapper:has(:disabled) .input-field__icon {
+    opacity: 0.4;
+  }
+
+  /* ── Icon ────────────────────────────────────────────────── */
+  .input-field__icon {
+    display: inline-grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .input-field__icon--right {
+    order: 1;
+  }
+
+  /* ── Help text ───────────────────────────────────────────── */
+  .input-field__help {
+    font-size: var(--font-size-sm);
+    color: var(--color-contrast-subtle-text);
+    margin: 0;
+  }
+
+  /* ── Slotted input base ──────────────────────────────────────
+   * Targets any input slotted inside the wrapper — no class
+   * required on the concrete input elements.
+  ─────────────────────────────────────────────────────────── */
+  :global(.input-field__wrapper input) {
+    flex: 1;
+    min-width: 0;
+    padding-block: var(--spacing-2-5);
+    border: none;
+    outline: none;
+    background-color: transparent;
+    font-size: inherit;
+  }
+
+  /* Sizes - applied via wrapper modifier, targets slotted input */
+  :global(.input-field__wrapper--sm input) {
+    height: var(--spacing-9);
+    font-size: var(--font-size-sm);
+  }
+
+  :global(.input-field__wrapper--md input) {
+    height: var(--spacing-10);
+  }
+
+  :global(.input-field__wrapper--lg input) {
+    height: var(--spacing-11);
+    font-size: var(--font-size-lg);
+  }
+
+  /* Disabled text */
+  :global(.input-field__wrapper input:disabled) {
+    color: var(--color-disabled-text);
+    -webkit-text-fill-color: var(--color-disabled-text);
+  }
+
+  /* ── Placeholder ─────────────────────────────────────────────
+   * Default mode: always visible.
+   * Floating variants: hidden at rest, fades in on focus.
+  ─────────────────────────────────────────────────────────── */
+  :global(.input-field__wrapper input::placeholder) {
+    opacity: 1;
+  }
+
+  :global(.input-field__wrapper--over input::placeholder),
+  :global(.input-field__wrapper--in input::placeholder),
+  :global(.input-field__wrapper--on input::placeholder) {
+    opacity: 0;
+    transition: opacity 0.18s ease;
+  }
+
+  :global(.input-field__wrapper--over input:focus::placeholder),
+  :global(.input-field__wrapper--in input:focus::placeholder),
+  :global(.input-field__wrapper--on input:focus::placeholder) {
+    opacity: 1;
+  }
+
+  /* ── "In" variant: push cursor below the floated label ────── */
+  :global(.input-field__wrapper--in input) {
+    padding-block-start: var(--spacing-5);
+    padding-block-end: var(--spacing-1);
+  }
+</style>

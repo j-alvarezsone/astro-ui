@@ -1,9 +1,10 @@
 ---
-import { Icon, type IconProps } from 'astro-icon/components';
+import type { IconProps } from 'astro-icon/components';
+import InputField from './InputField.astro';
 
 interface Props {
   name: string;
-  placeholder?: string;
+  placeholder: string;
   label: string;
   required?: boolean;
   type?: 'text' | 'number';
@@ -11,6 +12,7 @@ interface Props {
   iconPos?: 'left' | 'right';
   sizes?: 'sm' | 'md' | 'lg';
   helpText?: string;
+  labelPosition?: 'default' | 'over' | 'in' | 'on';
   disabled?: boolean;
   minLength?: number;
   maxLength?: number;
@@ -28,6 +30,7 @@ const {
   iconPos = 'right',
   sizes = 'md',
   helpText,
+  labelPosition = 'default',
   disabled = false,
   minLength,
   maxLength,
@@ -37,148 +40,29 @@ const {
 } = Astro.props;
 
 const helpTextId = helpText ? `${name}-help` : undefined;
-
-const inputClasses = [
-  'input-text__input',
-  {
-    'input-text__input--sm': sizes === 'sm',
-    'input-text__input--md': sizes === 'md',
-    'input-text__input--lg': sizes === 'lg',
-  },
-];
 ---
 
-<div class="input-text" {...rest}>
-  <slot name="label">
-    <label for={name} class="input-text__label">{label}</label>
-  </slot>
-  <div class="input-text__wrapper">
-    {
-      icon && (
-        <div class:list={['input-text__icon', `input-text__icon--${iconPos}`]} aria-hidden="true">
-          <Icon {...icon} />
-        </div>
-      )
-    }
-    <input
-      id={name}
-      name={name}
-      type={type}
-      placeholder={placeholder}
-      required={required}
-      disabled={disabled}
-      minlength={minLength}
-      maxlength={maxLength}
-      min={min}
-      max={max}
-      aria-describedby={helpTextId}
-      class:list={inputClasses}
-    />
-  </div>
-  {
-    helpText && (
-      <p id={helpTextId} class="input-text__help">
-        {helpText}
-      </p>
-    )
-  }
-</div>
-
-<style>
-  .input-text {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-1-5);
-  }
-
-  .input-text__label {
-    font-size: var(--font-size-sm);
-  }
-
-  .input-text__wrapper {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-2);
-    width: 100%;
-    border: 1px solid var(--color-border);
-    border-radius: var(--rounded-lg);
-    background-color: #ffffff;
-    padding-inline: var(--spacing-3-5);
-  }
-
-  .input-text__wrapper:focus-within {
-    border-color: var(--color-focus-outline);
-    outline: 2px solid var(--color-focus-outline);
-    outline-offset: 2px;
-  }
-
-  .input-text__wrapper:has(:disabled) {
-    background-color: var(--color-disabled-surface);
-    cursor: not-allowed;
-  }
-
-  .input-text__wrapper:has(:disabled) .input-text__icon {
-    opacity: 0.4;
-  }
-
-  /* Sizes */
-  .input-text__input--sm {
-    height: var(--spacing-9);
-  }
-
-  .input-text__input--md {
-    height: var(--spacing-10);
-  }
-
-  .input-text__input--lg {
-    height: var(--spacing-11);
-    font-size: var(--font-size-lg);
-  }
-
-  /* Icon */
-  .input-text__icon {
-    display: inline-grid;
-    place-items: center;
-    flex-shrink: 0;
-  }
-
-  .input-text__icon--right {
-    order: 1;
-  }
-
-  .input-text__input {
-    flex: 1;
-    min-width: 0;
-    padding-block: var(--spacing-2-5);
-    border: none;
-    outline: none;
-    background-color: transparent;
-    font-size: inherit;
-  }
-
-  .input-text__input:disabled {
-    color: var(--color-disabled-text);
-    -webkit-text-fill-color: var(--color-disabled-text);
-  }
-
-  .input-text__label::after {
-    margin-inline-start: var(--spacing-1);
-  }
-
-  .input-text:has(input:required) .input-text__label::after {
-    content: '*';
-    color: var(--color-danger-text);
-  }
-
-  .input-text:has(input:optional) .input-text__label::after {
-    content: '(Optional)';
-    color: var(--color-contrast-subtle-text);
-    font-size: var(--font-size-xs);
-  }
-
-  .input-text__help {
-    font-size: var(--font-size-sm);
-    color: var(--color-contrast-subtle-text);
-    margin: 0;
-  }
-</style>
+<InputField
+  name={name}
+  label={label}
+  labelPosition={labelPosition}
+  sizes={sizes}
+  icon={icon}
+  iconPos={iconPos}
+  helpText={helpText}
+  {...rest}
+>
+  <input
+    id={name}
+    name={name}
+    type={type}
+    placeholder={placeholder}
+    required={required}
+    disabled={disabled}
+    minlength={minLength}
+    maxlength={maxLength}
+    min={min}
+    max={max}
+    aria-describedby={helpTextId}
+  />
+</InputField>
