@@ -87,7 +87,7 @@ const computedProps = {
 ---
 
 <Tag class:list={isButton ? buttonClasses : linkClasses} {...computedProps}>
-  {isButton && ripple && <astro-ripple />}
+  {isButton && ripple && <ripple-effect />}
   {icon && isButton && <Icon {...icon} class:list={['button__icon', { 'button__icon--right': iconPos === 'right' }]} />}
   <span
     class:list={['button__label', `button__label--${size}`, { 'button__label--loading': isLoading }]}
