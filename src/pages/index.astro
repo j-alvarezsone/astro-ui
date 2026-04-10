@@ -1,11 +1,78 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Button from '@components/Button.astro';
+import FormGroup from '@components/form/FormGroup.astro';
+import InputAddon from '@components/form/InputAddon.astro';
+import InputGroup from '@components/form/InputGroup.astro';
+import InputText from '@components/form/InputText.astro';
+import Heading from '@components/typography/Heading.astro';
+import Layout from '@layouts/Layout.astro';
+import { Icon } from 'astro-icon/components';
 ---
 
 <Layout>
-  <h1>Welcome to Astro!</h1>
-  <p>
-    This is a starter template for building your first Astro project. It comes with a few example pages and components
-    to help you get started.
-  </p>
+  <div class="container">
+    <Heading weight="bold">Hello world</Heading>
+    <Button class="test" as="button" icon={{ name: 'mdi:account-alert' }} />
+    <p>
+      This is a starter template for building your first Astro project. It comes with a few example pages and components
+      to help you get started.
+    </p>
+    <form class="demo-form">
+      <FormGroup legend="Validation states demo">
+        <InputText
+          name="test"
+          label="Test"
+          icon={{ name: 'mdi:account-alert' }}
+          iconPos="right"
+          helpText="Required. Minimum 4 characters."
+          labelPosition="on"
+          placeholder="Type at least 4 chars"
+          sizes="md"
+          required
+          minLength={4}
+        />
+        <InputText
+          name="age"
+          label="Age"
+          helpText="Required. Must be between 18 and 99."
+          labelPosition="default"
+          placeholder="18"
+          sizes="md"
+          type="number"
+          required
+        />
+      </FormGroup>
+      <Button as="button" type="submit" label="Submit Form" />
+    </form>
+
+    <div class="demo-form">
+      <InputGroup>
+        <InputAddon>
+          <Icon name="mdi:account" />
+        </InputAddon>
+        <InputText name="username" label="Username" placeholder="Username" />
+      </InputGroup>
+
+      <InputGroup>
+        <InputAddon>$</InputAddon>
+        <InputText name="price" label="Price" placeholder="Price" type="number" />
+        <InputAddon>.00</InputAddon>
+      </InputGroup>
+    </div>
+  </div>
 </Layout>
+
+<style>
+  .container {
+    padding: var(--spacing-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+  }
+
+  .demo-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+  }
+</style>

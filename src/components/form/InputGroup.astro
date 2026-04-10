@@ -1,67 +1,93 @@
 ---
 interface Props {
-  legend: string;
   class?: string;
-  disabled?: boolean;
-  form?: string;
 }
 
-const { legend, class: className, disabled = false, form } = Astro.props;
+const { class: className } = Astro.props;
 ---
 
-<fieldset class:list={['input-group', className]} disabled={disabled} form={form}>
-  <legend class="input-group__legend">{legend}</legend>
-  <div class="input-group__fields">
-    <slot />
-  </div>
-</fieldset>
+<div class:list={['input-group', className]}>
+  <slot />
+</div>
 
 <style>
-  /* ── Reset ─────────────────────────────────────────────────
-   * Browsers apply margins/padding/border to fieldset by
-   * default; strip everything so layout is fully intentional.
-  ─────────────────────────────────────────────────────────── */
+  /* ── Container ───────────────────────────────────────────── */
   .input-group {
-    margin: 0;
-    padding: 0;
-    border: none;
-    min-inline-size: 0;
+    position: relative; /* anchor for the out-of-flow label */
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-1-5);
-  }
-
-  /* ── Legend ─────────────────────────────────────────────── */
-  .input-group__legend {
-    float: left; /* float trick: keeps legend in flow without shrinking */
+    align-items: stretch;
     width: 100%;
-    padding: 0;
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-fg);
-    line-height: 1.2;
-    margin-block-end: var(--spacing-1-5);
+    /*
+     * Reserve block space for the absolutely-positioned label so it
+     * doesn't overlap content above. The label height =
+     *   font-size-sm (1 lh) × 1.2 line-height + the gap below it.
+     */
+    padding-block-start: calc(var(--font-size-sm) * 1.2 + var(--spacing-1-5));
   }
 
-  /* Clear the float so .input-group__fields starts below */
-  .input-group__legend + .input-group__fields {
-    clear: left;
+  /* Collapse the shared border between adjacent elements */
+  .input-group > :global(* + *) {
+    margin-inline-start: -1px;
   }
 
-  /* Only grouped floating-over fields should reserve space for the lifted label. */
-  .input-group__fields :global(.input-field__wrapper--over) {
-    transition: margin-block-start 0.2s ease;
+  /* ── Strip all corner radii from child elements ──────────── */
+  .input-group > :global(.input-addon) {
+    border-radius: 0;
   }
 
-  .input-group__fields :global(.input-field__wrapper--over:focus-within),
-  .input-group__fields :global(.input-field__wrapper--over:has(input:not(:placeholder-shown))) {
-    margin-block-start: var(--spacing-4);
+  /* InputText/InputField renders a .input-field > .input-field__wrapper */
+  .input-group :global(.input-field__wrapper) {
+    border-radius: 0;
   }
 
-  /* ── Fields container ───────────────────────────────────── */
-  .input-group__fields {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-3);
+  /* ── Restore left radii for the first child ─────────────── */
+  .input-group > :global(.input-addon:first-child) {
+    border-start-start-radius: var(--rounded-lg);
+    border-end-start-radius: var(--rounded-lg);
+  }
+
+  .input-group > :global(.input-field:first-child .input-field__wrapper) {
+    border-start-start-radius: var(--rounded-lg);
+    border-end-start-radius: var(--rounded-lg);
+  }
+
+  /* ── Restore right radii for the last child ─────────────── */
+  .input-group > :global(.input-addon:last-child) {
+    border-start-end-radius: var(--rounded-lg);
+    border-end-end-radius: var(--rounded-lg);
+  }
+
+  .input-group > :global(.input-field:last-child .input-field__wrapper) {
+    border-start-end-radius: var(--rounded-lg);
+    border-end-end-radius: var(--rounded-lg);
+  }
+
+  /* ── Input field: pull default label out of the flex flow
+   * so .input-field's height = wrapper height only, letting
+   * the addon auto-stretch to match via align-items: stretch.
+   ─────────────────────────────────────────────────────────────
+   * NO position:relative on .input-field so the label anchors
+   * to .input-group (position:relative above) instead — that
+   * makes it span the full group width including the addon.
+   * Flex items support z-index without position, so focus
+   * ring stacking still works fine.
+  ─────────────────────────────────────────────────────────── */
+  .input-group > :global(.input-field) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Default label: sits inside the top padding area of the group */
+  .input-group > :global(.input-field > .input-label) {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    white-space: nowrap;
+  }
+
+  /* ── Focus: bring the input above addons so the ring is
+        fully visible and not clipped by the adjacent border ── */
+  .input-group > :global(.input-field:focus-within) {
+    z-index: 1;
   }
 </style>
