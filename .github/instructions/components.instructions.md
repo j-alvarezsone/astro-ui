@@ -60,36 +60,51 @@ Key rules:
 
 ## Web Components (`*.web.ts`)
 
-Use `connectedCallback` / `disconnectedCallback` for lifecycle and always clean up side effects:
+Use `connectedCallback` / `disconnectedCallback` for lifecycle and always clean up side effects.
+
+### Event listener cleanup with `AbortController`
+
+Use a private `AbortController` field (initialised to `null`) to manage all event listeners. Pass its `signal` to every `addEventListener` call. Abort and nullify in `disconnectedCallback` — this removes all registered listeners in one call, with no manual `removeEventListener` needed.
 
 ```ts
-// src/web-components/ripple.web.ts
-class RippleElement extends HTMLElement {
-  #controller = new AbortController();
+class MyElement extends HTMLElement {
+  #controller: AbortController | null = null;
 
-  connectedCallback() {
-    this.addEventListener('click', this.#handleClick, {
-      signal: this.#controller.signal,
-    });
+  connectedCallback(): void {
+    this.#controller = new AbortController();
+    const { signal } = this.#controller;
+
+    this.addEventListener('click', this.#handleClick, { signal });
+    window.addEventListener('resize', this.#handleResize, { signal });
+    // Add as many listeners as needed — all cleaned up by a single abort().
   }
 
-  disconnectedCallback() {
-    this.#controller.abort();
+  disconnectedCallback(): void {
+    this.#controller?.abort();
+    this.#controller = null;
   }
 
-  #handleClick = (e: MouseEvent) => {
-    // side effect logic
+  #handleClick = (e: MouseEvent): void => {
+    // handler logic
+  };
+
+  #handleResize = (): void => {
+    // handler logic
   };
 }
 
-customElements.define('ui-ripple', RippleElement);
+customElements.define('ui-my-element', MyElement);
 ```
 
 Key rules:
+- Always type the field as `AbortController | null` and initialise to `null`.
+- Create a **new** `AbortController` in `connectedCallback` (the element may reconnect after disconnecting).
+- Destructure `signal` immediately and pass it to every `addEventListener` — never store `signal` separately.
+- In `disconnectedCallback`: call `abort()` then set the field back to `null`.
+- Never call `removeEventListener` manually when using this pattern — `abort()` handles it.
 - File naming: `*.web.ts` (enforced by the project structure).
-- Use private `AbortController` to clean up listeners.
 - Use `observedAttributes` and `attributeChangedCallback` for reactive attributes.
-- Register with a namespaced custom element name (e.g., `ui-*`).
+- Register with a descriptive, hyphenated custom element name that reflects the component's purpose (e.g., `form-control`, `ripple-button`). The name must contain at least one hyphen (HTML spec requirement). Do not use framework names (`astro-*`, `vue-*`) or generic prefixes (`ui-*`) as namespaces.
 
 ## CSS / Design Token Conventions
 
