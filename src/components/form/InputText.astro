@@ -19,6 +19,7 @@ interface Props {
   maxLength?: number;
   min?: number;
   max?: number;
+  pattern?: string;
 }
 
 const {
@@ -38,6 +39,7 @@ const {
   maxLength,
   min,
   max,
+  pattern,
   ...rest
 } = Astro.props;
 
@@ -68,6 +70,7 @@ const describedBy = [errorTextId, helpTextId].filter(Boolean).join(' ') || undef
     maxlength={maxLength}
     min={min}
     max={max}
+    pattern={pattern}
     aria-describedby={describedBy}
     aria-invalid={errorText ? 'true' : undefined}
   />
