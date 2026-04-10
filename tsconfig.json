@@ -9,6 +9,9 @@
   ],
   "compilerOptions": {
     "jsx": "preserve",
+    "types": [
+      "vitest/globals"
+    ],
     "paths": {
       "@components/*": [
         "./src/components/*"

@@ -316,6 +316,7 @@ export default defineConfig({
   },
   test: {
     environment: 'happy-dom',              // Fast DOM + custom-elements support
+    globals: true,                         // Auto-injects describe/it/expect/vi — no imports needed
     include: ['src/**/*.{test,spec}.ts'],  // Only test files — no accidental picks
     reporters: ['verbose'],                // Show every test name, not just counts
     coverage: {
@@ -357,8 +358,21 @@ export default defineConfig({
 | Explicit `include` glob | Prevents Vitest picking up non-test `.ts` files and slowing the run |
 | Path aliases in `resolve.alias` | Tests can use `@components/Button` the same way source files do |
 | 80% thresholds | Catches gaps without blocking development; raise project-by-project |
+| `globals: true` + `"types": ["vitest/globals"]` | Eliminates boilerplate import lines in every test file; IDE sees the globals via tsconfig |
 
-Do **not** add `globals: true` — always import `describe`, `it`, `expect`, `vi`, `beforeEach`, `afterEach` explicitly. This keeps tests self-documenting and avoids IDE "undeclared global" warnings.
+#### Enabling `globals: true` (auto-import)
+
+With `globals: true`, Vitest injects `describe`, `it`, `expect`, `vi`, `beforeEach`, and `afterEach` automatically — no import line needed in test files.
+
+TypeScript also needs to know about these globals. Add `"vitest/globals"` to the `types` array in `tsconfig.json`:
+
+```json
+"compilerOptions": {
+  "types": ["vitest/globals"]
+}
+```
+
+With this in place, test files only import the module under test — nothing from `vitest` itself.
 
 ---
 
