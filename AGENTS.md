@@ -62,3 +62,4 @@ Always load and follow the relevant skill(s) before proceeding with tasks in the
 | Senior TypeScript architecture and type debugging            | `typescript-wizard`         |
 | Complex TypeScript types, generics, mapped/conditional types | `typescript-advanced-types` |
 | SEO, meta tags, structured data, sitemap                     | `seo`                       |
+| Writing Vitest unit tests, test coverage, test setup         | `vitest-unit-wizard`        |
