@@ -1,0 +1,67 @@
+---
+interface Props {
+  legend: string;
+  class?: string;
+  disabled?: boolean;
+  form?: string;
+}
+
+const { legend, class: className, disabled = false, form } = Astro.props;
+---
+
+<fieldset class:list={['form-group', className]} disabled={disabled} form={form}>
+  <legend class="form-group__legend">{legend}</legend>
+  <div class="form-group__fields">
+    <slot />
+  </div>
+</fieldset>
+
+<style>
+  /* ── Reset ─────────────────────────────────────────────────
+   * Browsers apply margins/padding/border to fieldset by
+   * default; strip everything so layout is fully intentional.
+  ─────────────────────────────────────────────────────────── */
+  .form-group {
+    margin: 0;
+    padding: 0;
+    border: none;
+    min-inline-size: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1-5);
+  }
+
+  /* ── Legend ─────────────────────────────────────────────── */
+  .form-group__legend {
+    float: left; /* float trick: keeps legend in flow without shrinking */
+    width: 100%;
+    padding: 0;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-fg);
+    line-height: 1.2;
+    margin-block-end: var(--spacing-1-5);
+  }
+
+  /* Clear the float so .input-group__fields starts below */
+  .form-group__legend + .form-group__fields {
+    clear: left;
+  }
+
+  /* Only grouped floating-over fields should reserve space for the lifted label. */
+  .form-group__fields :global(.input-field__wrapper--over) {
+    transition: margin-block-start 0.2s ease;
+  }
+
+  .form-group__fields :global(.input-field__wrapper--over:focus-within),
+  .form-group__fields :global(.input-field__wrapper--over:has(input:not(:placeholder-shown))) {
+    margin-block-start: var(--spacing-4);
+  }
+
+  /* ── Fields container ───────────────────────────────────── */
+  .form-group__fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+  }
+</style>
