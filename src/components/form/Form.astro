@@ -1,0 +1,84 @@
+---
+interface Props {
+  action?: string;
+  method?: 'get' | 'post';
+  initialValues?: Record<string, unknown>;
+  /** Useful for file uploads. */
+  enctype?: 'application/x-www-form-urlencoded' | 'multipart/form-data' | 'text/plain';
+  actionsLayout?: 'row' | 'column' | 'full-width';
+  id?: string;
+  class?: string;
+}
+
+const { action, method = 'post', initialValues, enctype, actionsLayout = 'row', id, class: className } = Astro.props;
+
+const hasActions = Astro.slots.has('submit') || Astro.slots.has('reset');
+---
+
+<form-control>
+  <form
+    id={id}
+    action={action}
+    method={method}
+    enctype={enctype}
+    class:list={['form', className]}
+    data-initial-values={initialValues ? JSON.stringify(initialValues) : undefined}
+  >
+    <div class="form__fields">
+      <slot />
+    </div>
+
+    {
+      hasActions && (
+        <div class:list={['form__actions', `form__actions--${actionsLayout}`]}>
+          <slot name="reset" />
+          <slot name="submit" />
+        </div>
+      )
+    }
+  </form>
+</form-control>
+
+<script>
+  import '@web-components/form-control.web';
+</script>
+
+<style>
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+  }
+
+  .form__fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+  }
+
+  .form__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+  }
+
+  /* row: buttons side by side (default) */
+  .form__actions--row {
+    flex-direction: row;
+  }
+
+  /* column: buttons stacked */
+  .form__actions--column {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* full-width: single row, each button fills equal space */
+  .form__actions--full-width {
+    flex-direction: row;
+  }
+
+  .form__actions--full-width > :global(*) {
+    flex: 1;
+  }
+</style>

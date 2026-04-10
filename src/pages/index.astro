@@ -1,5 +1,6 @@
 ---
 import Button from '@components/Button.astro';
+import Form from '@components/form/Form.astro';
 import FormGroup from '@components/form/FormGroup.astro';
 import InputAddon from '@components/form/InputAddon.astro';
 import InputGroup from '@components/form/InputGroup.astro';
@@ -45,7 +46,7 @@ import { Icon } from 'astro-icon/components';
       <Button as="button" type="submit" label="Submit Form" />
     </form>
 
-    <div class="demo-form">
+    <Form initialValues={{ username: 'test', price: 42 }}>
       <InputGroup>
         <InputAddon>
           <Icon name="mdi:account" />
@@ -58,7 +59,10 @@ import { Icon } from 'astro-icon/components';
         <InputText name="price" label="Price" placeholder="Price" type="number" />
         <InputAddon>.00</InputAddon>
       </InputGroup>
-    </div>
+
+      <Button slot="reset" as="button" type="reset" label="Reset" />
+      <Button slot="submit" as="button" type="submit" label="Submit" />
+    </Form>
   </div>
 </Layout>
 
