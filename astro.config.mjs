@@ -9,7 +9,8 @@ export default defineConfig({
   fonts: [{
     provider: fontProviders.google(),
     name: "Roboto",
-    cssVariable: "--font-roboto"
+    cssVariable: "--font-roboto",
+    weights: [400, 500, 600, 700],
+    fallbacks: ["sans-serif"],
   }]
-
 });
