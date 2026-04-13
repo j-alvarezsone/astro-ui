@@ -21,8 +21,10 @@
 - Lint: `pnpm run lint`
 - Autofix lint: `pnpm run lint:fix`
 - Type check: `pnpm run type:check`
+- Unit tests: `pnpm test`
+- Unit tests (watch): `pnpm run test:watch`
+- Unit tests (coverage): `pnpm run test:coverage`
 - Regenerate icon name types: `pnpm run generate:icons`
-- This repo currently has no test runner configured. If adding tests, use Vitest.
 
 ## Code Style
 
@@ -62,4 +64,4 @@ Always load and follow the relevant skill(s) before proceeding with tasks in the
 | Senior TypeScript architecture and type debugging            | `typescript-wizard`         |
 | Complex TypeScript types, generics, mapped/conditional types | `typescript-advanced-types` |
 | SEO, meta tags, structured data, sitemap                     | `seo`                       |
-| Writing Vitest unit tests, test coverage, test setup         | `vitest-unit-wizard`        |
+| Writing Vitest unit tests, test coverage, test setup         | `vitest`                    |
