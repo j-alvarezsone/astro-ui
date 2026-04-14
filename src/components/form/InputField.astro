@@ -111,16 +111,16 @@ const labelStart =
   }
 
   /* Validation states
-   * - Invalid border only after user interaction, when unfocused,
+   * - Invalid border only after user interaction,
    *   and only once the field has a value.
    * - Valid border only after user interaction, while focused,
    *   and only once the field has a value.
   */
-  .input-field__wrapper:has(input:user-invalid:not(:focus):not(:placeholder-shown)) {
+  :global(form:not([novalidate]) .input-field__wrapper:has(input:user-invalid:not(:placeholder-shown))) {
     border-color: var(--color-danger-border);
   }
 
-  .input-field__wrapper:has(input:user-valid:focus:not(:placeholder-shown)) {
+  :global(form:not([novalidate]) .input-field__wrapper:has(input:user-valid:focus:not(:placeholder-shown))) {
     border-color: var(--color-success-border);
   }
 
@@ -203,8 +203,8 @@ const labelStart =
     color: var(--color-danger-fg);
   }
 
-  /* Keep placeholder in danger color only when user interacts */
-  :global(.input-field__wrapper input:user-invalid::placeholder) {
+  /* Show invalid placeholder color only for forms using native validation UX. */
+  :global(form:not([novalidate]) .input-field__wrapper input:user-invalid::placeholder) {
     color: var(--color-danger-fg);
   }
 
