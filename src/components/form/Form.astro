@@ -7,10 +7,20 @@ interface Props {
   enctype?: 'application/x-www-form-urlencoded' | 'multipart/form-data' | 'text/plain';
   actionsLayout?: 'row' | 'column' | 'full-width';
   id?: string;
+  novalidate?: boolean;
   class?: string;
 }
 
-const { action, method = 'post', initialValues, enctype, actionsLayout = 'row', id, class: className } = Astro.props;
+const {
+  action,
+  method = 'post',
+  initialValues,
+  enctype,
+  actionsLayout = 'row',
+  id,
+  novalidate = false,
+  class: className,
+} = Astro.props;
 
 const hasActions = Astro.slots.has('submit') || Astro.slots.has('reset');
 ---
@@ -21,6 +31,7 @@ const hasActions = Astro.slots.has('submit') || Astro.slots.has('reset');
     action={action}
     method={method}
     enctype={enctype}
+    novalidate={novalidate}
     class:list={['form', className]}
     data-initial-values={initialValues ? JSON.stringify(initialValues) : undefined}
   >
