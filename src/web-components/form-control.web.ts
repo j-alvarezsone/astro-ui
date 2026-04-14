@@ -60,7 +60,9 @@ export function populateForm(form: HTMLFormElement, values: Record<string, unkno
 class FormControl extends HTMLElement {
   connectedCallback(): void {
     const form = this.querySelector('form');
-    if (!form?.dataset.initialValues) return;
+    if (!form) return;
+
+    if (!form.dataset.initialValues) return;
 
     let parsed: unknown;
     try {
