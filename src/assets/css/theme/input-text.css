@@ -1,0 +1,12 @@
+/* ── InputText Component Default Hooks ────────────────────────
+ * These variables wire InputText to the global design tokens.
+ * Override them once (globally or per-theme) to restyle all
+ * InputText instances without touching component-level config.
+ */
+:root {
+  --input-text-input-color: inherit;
+  --input-text-input-padding-block: var(--spacing-2-5);
+  --input-text-input-placeholder-color: var(--color-fg-muted);
+  --input-text-input-placeholder-error-color: var(--color-danger-fg);
+  --input-text-input-disabled-color: var(--color-fg-disabled);
+}

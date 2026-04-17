@@ -1,15 +1,18 @@
 ---
+import type { ClassValue, StyleValue } from '@/types/theme/form/shared';
+
 interface Props {
   for: string;
   label: string;
   position?: 'default' | 'over' | 'in' | 'on';
-  class?: string | string[];
+  class?: ClassValue;
+  style?: StyleValue;
 }
 
-const { for: htmlFor, label, position = 'default', class: className } = Astro.props;
+const { for: htmlFor, label, position = 'default', class: className, ...rest } = Astro.props;
 ---
 
-<label for={htmlFor} class:list={['input-label', `input-label--${position}`, className]}>
+<label for={htmlFor} class:list={['input-label', `input-label--${position}`, className]} {...rest}>
   {label}
 </label>
 
@@ -19,7 +22,7 @@ const { for: htmlFor, label, position = 'default', class: className } = Astro.pr
     display: block;
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
-    color: var(--color-fg-muted);
+    color: var(--input-field-label-color, var(--color-fg-muted));
     line-height: 1.2;
   }
 
@@ -30,19 +33,19 @@ const { for: htmlFor, label, position = 'default', class: className } = Astro.pr
   :global(.input-field:has(input:required)) .input-label::after {
     content: '*';
     margin-inline-start: var(--spacing-1);
-    color: var(--color-danger-fg);
+    color: var(--input-field-label-required-color, var(--color-danger-fg));
   }
 
   :global(.input-field:has(input:optional)) .input-label::after {
     content: '(Optional)';
     margin-inline-start: var(--spacing-1);
-    color: var(--color-fg-muted);
+    color: var(--input-field-label-optional-color, var(--color-fg-muted));
     font-size: var(--font-size-xs);
   }
 
   /* ── Default: static block above the wrapper ─────────────── */
   .input-label--default {
-    color: var(--color-fg);
+    color: var(--input-field-label-default-color, var(--color-fg));
   }
 
   /* ── Floating variants: shared RESTING position ─────────────
@@ -84,7 +87,7 @@ const { for: htmlFor, label, position = 'default', class: className } = Astro.pr
     inset-inline-start: var(--spacing-3);
     transform: translateY(-100%);
     font-size: var(--font-size-xs);
-    color: var(--color-fg);
+    color: var(--input-field-label-active-color, var(--color-fg));
     padding-block-end: var(--spacing-2-5);
   }
 
@@ -98,7 +101,7 @@ const { for: htmlFor, label, position = 'default', class: className } = Astro.pr
     inset-inline-start: var(--label-start, var(--spacing-3-5));
     transform: none;
     font-size: var(--font-size-xs);
-    color: var(--color-fg);
+    color: var(--input-field-label-active-color, var(--color-fg));
   }
 
   /* ── On: sits centered ON the top border line ───────────────
@@ -111,8 +114,8 @@ const { for: htmlFor, label, position = 'default', class: className } = Astro.pr
     inset-inline-start: var(--spacing-3);
     transform: translateY(-50%);
     font-size: var(--font-size-xs);
-    background-color: var(--color-surface);
+    background-color: var(--input-field-label-background, var(--color-surface));
     padding-inline: var(--spacing-1);
-    color: var(--color-fg);
+    color: var(--input-field-label-active-color, var(--color-fg));
   }
 </style>

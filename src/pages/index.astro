@@ -10,7 +10,7 @@ import Layout from '@layouts/Layout.astro';
 import { Icon } from 'astro-icon/components';
 ---
 
-<Layout>
+<Layout uiTheme="warm">
   <div class="container">
     <Heading weight="bold">Hello world</Heading>
     <Button class="test" as="button" icon={{ name: 'mdi:account-alert' }} />
@@ -63,6 +63,14 @@ import { Icon } from 'astro-icon/components';
       <Button slot="reset" as="button" type="reset" label="Reset" />
       <Button slot="submit" as="button" type="submit" label="Submit" />
     </Form>
+
+    <InputText
+      name="firstName"
+      label="First name"
+      placeholder="Type..."
+      pt={{ wrapper: { class: 'input-text-wrapper-custom' } }}
+    />
+    <InputText name="lastName" label="Last name" placeholder="Type..." />
   </div>
 </Layout>
 
@@ -78,5 +86,9 @@ import { Icon } from 'astro-icon/components';
     display: flex;
     flex-direction: column;
     gap: var(--spacing-3);
+  }
+  :global(.input-text-wrapper-custom) {
+    --input-field-wrapper-background: #dcfce7;
+    --input-field-wrapper-border-color: #22c55e;
   }
 </style>

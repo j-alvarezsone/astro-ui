@@ -1,5 +1,10 @@
 ---
+import type { InputTextPassThrough } from '@/types/theme/form/inputText';
+import type { ClassValue } from '@/types/theme/form/shared';
 import { Icon, type IconProps } from 'astro-icon/components';
+
+import { mergePassThroughAttributes, splitPassThroughAttributes } from '@utils/theme/form/inputTextConfig';
+
 import InputLabel from './InputLabel.astro';
 
 interface Props {
@@ -11,7 +16,8 @@ interface Props {
   iconPos?: 'left' | 'right';
   errorText?: string;
   helpText?: string;
-  class?: string | string[];
+  class?: ClassValue;
+  pt?: InputTextPassThrough;
 }
 
 const {
@@ -24,6 +30,7 @@ const {
   errorText,
   helpText,
   class: className,
+  pt,
   ...rest
 } = Astro.props;
 
@@ -34,23 +41,49 @@ const helpTextId = helpText ? `${name}-help` : undefined;
 // Offset floating label past a left icon (icon ≈ 1.25rem + gap).
 const labelStart =
   isFloating && icon && iconPos !== 'right' ? 'calc(var(--spacing-3-5) + 1.25rem + var(--spacing-2))' : undefined;
+
+const rootAttributes = mergePassThroughAttributes(rest, pt?.root);
+const wrapperAttributes = mergePassThroughAttributes(
+  labelStart ? { style: `--label-start: ${labelStart}` } : undefined,
+  pt?.wrapper,
+);
+const inputLabelAttributes = pt?.label;
+const iconAttributes = pt?.icon;
+const helpTextAttributes = pt?.helpText;
+const errorTextAttributes = pt?.errorText;
+
+const { className: rootPassThroughClass, attributes: rootPassThroughAttributes } =
+  splitPassThroughAttributes(rootAttributes);
+const { className: wrapperPassThroughClass, attributes: wrapperPassThroughAttributes } =
+  splitPassThroughAttributes(wrapperAttributes);
+const { className: iconPassThroughClass, attributes: iconPassThroughAttributes } =
+  splitPassThroughAttributes(iconAttributes);
+const { className: helpTextPassThroughClass, attributes: helpTextPassThroughAttributes } =
+  splitPassThroughAttributes(helpTextAttributes);
+const { className: errorTextPassThroughClass, attributes: errorTextPassThroughAttributes } =
+  splitPassThroughAttributes(errorTextAttributes);
 ---
 
-<div class:list={['input-field', className]} {...rest}>
-  {!isFloating && <InputLabel for={name} label={label} position="default" />}
+<div class:list={['input-field', className, rootPassThroughClass]} {...rootPassThroughAttributes}>
+  {!isFloating && <InputLabel for={name} label={label} position="default" {...inputLabelAttributes} />}
   <div
     class:list={[
       'input-field__wrapper',
       errorText && 'input-field__wrapper--error',
       isFloating && `input-field__wrapper--${labelPosition}`,
       `input-field__wrapper--${sizes}`,
+      wrapperPassThroughClass,
     ]}
-    style={labelStart ? `--label-start: ${labelStart}` : undefined}
+    {...wrapperPassThroughAttributes}
   >
-    {isFloating && <InputLabel for={name} label={label} position={labelPosition} />}
+    {isFloating && <InputLabel for={name} label={label} position={labelPosition} {...inputLabelAttributes} />}
     {
       icon && (
-        <div class:list={['input-field__icon', `input-field__icon--${iconPos}`]} aria-hidden="true">
+        <div
+          class:list={['input-field__icon', `input-field__icon--${iconPos}`, iconPassThroughClass]}
+          aria-hidden="true"
+          {...iconPassThroughAttributes}
+        >
           <Icon {...icon} />
         </div>
       )
@@ -59,14 +92,23 @@ const labelStart =
   </div>
   {
     errorText && (
-      <p id={errorTextId} class="input-field__error" aria-live="polite">
+      <p
+        id={errorTextId}
+        class:list={['input-field__error', errorTextPassThroughClass]}
+        aria-live="polite"
+        {...errorTextPassThroughAttributes}
+      >
         {errorText}
       </p>
     )
   }
   {
     helpText && (
-      <p id={helpTextId} class="input-field__help">
+      <p
+        id={helpTextId}
+        class:list={['input-field__help', helpTextPassThroughClass]}
+        {...helpTextPassThroughAttributes}
+      >
         {helpText}
       </p>
     )
@@ -78,28 +120,28 @@ const labelStart =
   .input-field {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-1-5);
+    gap: var(--input-field-root-gap, var(--spacing-1-5));
   }
 
   .input-field__wrapper {
     position: relative;
     display: flex;
     align-items: center;
-    gap: var(--spacing-2);
+    gap: var(--input-field-wrapper-gap, var(--spacing-2));
     width: 100%;
-    border: 1px solid var(--color-border);
-    border-radius: var(--rounded-lg);
-    background-color: var(--color-surface);
-    padding-inline: var(--spacing-3-5);
+    border: 1px solid var(--input-field-wrapper-border-color, var(--color-border));
+    border-radius: var(--input-field-wrapper-border-radius, var(--rounded-lg));
+    background-color: var(--input-field-wrapper-background, var(--color-surface));
+    padding-inline: var(--input-field-wrapper-padding-inline, var(--spacing-3-5));
   }
 
   .input-field__wrapper:hover:not(:focus-within):not(:has(:disabled)) {
-    border-color: var(--color-hover-border);
+    border-color: var(--input-field-wrapper-hover-border-color, var(--color-hover-border));
   }
 
   .input-field__wrapper:focus-within {
-    border-color: var(--color-focus-border);
-    outline: 2px solid var(--color-focus-ring);
+    border-color: var(--input-field-wrapper-focus-border-color, var(--color-focus-border));
+    outline: 2px solid var(--input-field-wrapper-focus-ring-color, var(--color-focus-ring));
     outline-offset: 2px;
   }
 
@@ -107,7 +149,7 @@ const labelStart =
   .input-field__wrapper--error,
   .input-field__wrapper--error:hover,
   .input-field__wrapper--error:focus-within {
-    border-color: var(--color-danger-border);
+    border-color: var(--input-field-wrapper-error-border-color, var(--color-danger-border));
   }
 
   /* Validation states
@@ -117,7 +159,7 @@ const labelStart =
    *   and only once the field has a value.
   */
   :global(form:not([novalidate]) .input-field__wrapper:has(input:user-invalid:not(:placeholder-shown))) {
-    border-color: var(--color-danger-border);
+    border-color: var(--input-field-wrapper-error-border-color, var(--color-danger-border));
   }
 
   :global(form:not([novalidate]) .input-field__wrapper:has(input:user-valid:focus:not(:placeholder-shown))) {
@@ -125,12 +167,12 @@ const labelStart =
   }
 
   .input-field__wrapper:has(:disabled) {
-    background-color: var(--color-disabled-fill);
+    background-color: var(--input-field-wrapper-disabled-background, var(--color-disabled-fill));
     cursor: not-allowed;
   }
 
   .input-field__wrapper:has(:disabled) .input-field__icon {
-    opacity: 0.4;
+    opacity: var(--input-field-icon-disabled-opacity, 0.4);
   }
 
   /* ── Icon ────────────────────────────────────────────────── */
@@ -138,6 +180,7 @@ const labelStart =
     display: inline-grid;
     place-items: center;
     flex-shrink: 0;
+    color: var(--input-field-icon-color, currentColor);
   }
 
   .input-field__icon--right {
@@ -147,13 +190,13 @@ const labelStart =
   /* ── Help text ───────────────────────────────────────────── */
   .input-field__help {
     font-size: var(--font-size-sm);
-    color: var(--color-fg-muted);
+    color: var(--input-field-help-color, var(--color-fg-muted));
     margin: 0;
   }
 
   .input-field__error {
     font-size: var(--font-size-xs);
-    color: var(--color-danger-fg);
+    color: var(--input-field-error-color, var(--color-danger-fg));
   }
 
   /* ── Slotted input base ──────────────────────────────────────
@@ -163,11 +206,12 @@ const labelStart =
   :global(.input-field__wrapper input) {
     flex: 1;
     min-width: 0;
-    padding-block: var(--spacing-2-5);
+    padding-block: var(--input-text-input-padding-block, var(--spacing-2-5));
     border: none;
     outline: none;
     background-color: transparent;
     font-size: inherit;
+    color: var(--input-text-input-color, inherit);
   }
 
   /* Sizes - applied via wrapper modifier, targets slotted input */
@@ -187,8 +231,8 @@ const labelStart =
 
   /* Disabled text */
   :global(.input-field__wrapper input:disabled) {
-    color: var(--color-fg-disabled);
-    -webkit-text-fill-color: var(--color-fg-disabled);
+    color: var(--input-text-input-disabled-color, var(--color-fg-disabled));
+    -webkit-text-fill-color: var(--input-text-input-disabled-color, var(--color-fg-disabled));
   }
 
   /* ── Placeholder ─────────────────────────────────────────────
@@ -197,15 +241,16 @@ const labelStart =
   ─────────────────────────────────────────────────────────── */
   :global(.input-field__wrapper input::placeholder) {
     opacity: 1;
+    color: var(--input-text-input-placeholder-color, var(--color-fg-muted));
   }
 
   :global(.input-field__wrapper--error input::placeholder) {
-    color: var(--color-danger-fg);
+    color: var(--input-text-input-placeholder-error-color, var(--color-danger-fg));
   }
 
   /* Show invalid placeholder color only for forms using native validation UX. */
   :global(form:not([novalidate]) .input-field__wrapper input:user-invalid::placeholder) {
-    color: var(--color-danger-fg);
+    color: var(--input-text-input-placeholder-error-color, var(--color-danger-fg));
   }
 
   :global(.input-field__wrapper--over input::placeholder),
