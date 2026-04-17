@@ -162,6 +162,7 @@ Follow this sequence.
 7. Use the generated CSS variables in the component CSS.
 8. Add or update tests.
 9. Run `pnpm run type:check`.
+10. Ensure relevant tests pass and changed theme-related logic has 100% coverage in focused tests for the modified behavior.
 
 ## Composition Rules
 
@@ -199,4 +200,8 @@ After editing the theme system, run at minimum:
 
 - `pnpm run type:check`
 
-When changing theme utilities or token generation, also run the relevant tests.
+When changing theme utilities or token generation:
+
+- run the relevant tests
+- ensure those tests pass
+- ensure changed theme-related logic is covered 100% in focused tests for the modified behavior
