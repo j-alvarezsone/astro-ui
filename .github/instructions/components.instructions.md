@@ -34,6 +34,26 @@ Key rules:
 - Keep styles scoped (`<style>` block without `:global`).
 - Default slot for content; named slots for distinct regions.
 
+## Theming Decision
+
+When creating a new reusable UI component, especially a form-related or stateful visual primitive, ask whether it should participate in the theme system before implementing its styling API.
+
+Default requirement:
+- any new reusable component should be designed to support theming
+- if user confirms, implement full theme support in the same task
+- if user postpones, keep CSS and API theme-ready so future enablement is straightforward
+
+Ask this especially for:
+- text-like form controls
+- reusable field shells
+- components with borders, labels, icons, backgrounds, or interactive state colors
+
+If the component should be themeable:
+- follow `.github/instructions/theme-system.instructions.md`
+- keep shared shell styling separate from component-specific styling
+- add or update tests for the theme behavior
+- run `pnpm run type:check`
+
 ## Vue SFCs
 
 Use `<script setup>` with the Composition API. Define all props and emits explicitly:
