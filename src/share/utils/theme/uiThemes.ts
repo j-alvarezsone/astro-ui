@@ -1,11 +1,8 @@
-import type { Keyof, ValueOf } from '@/types/index';
+import type { Keyof } from '@/types/index';
 import type { UIThemeConfig } from '@/types/theme/uiThemes';
+import { hasOwnKey } from '@utils/object/hasOwnKey';
 
-function defineUIThemes<T extends Record<string, UIThemeConfig>>(themes: T): T {
-  return themes;
-}
-
-const UI_THEMES = defineUIThemes({
+const UI_THEMES = {
   warm: {
     components: {
       inputText: {
@@ -25,15 +22,28 @@ const UI_THEMES = defineUIThemes({
       },
     },
   },
-});
+} as const satisfies Record<string, UIThemeConfig>;
 
+export type UIThemeComponents = UIThemeConfig['components'];
 export type UIThemeName = Keyof<typeof UI_THEMES>;
-export type UIThemeComponents = ValueOf<typeof UI_THEMES>['components'];
 export type UIThemeComponentName = Keyof<UIThemeComponents>;
 export type UIThemeComponentEntry<TName extends UIThemeComponentName = UIThemeComponentName> = {
   name: TName;
   config: UIThemeComponents[TName];
 };
+
+/**
+ * Returns all available UI theme names.
+ *
+ * @returns List of valid `UIThemeName` values currently registered in `UI_THEMES`.
+ *
+ * @example
+ * const names = getUIThemeNames();
+ * // ['warm']
+ */
+export function getUIThemeNames(): UIThemeName[] {
+  return Object.keys(UI_THEMES).filter((themeName): themeName is UIThemeName => isUIThemeName(themeName));
+}
 
 /**
  * Checks whether a string matches one of the available UI theme names.
@@ -46,7 +56,7 @@ export type UIThemeComponentEntry<TName extends UIThemeComponentName = UIThemeCo
  * // true
  */
 export function isUIThemeName(themeName: string): themeName is UIThemeName {
-  return themeName in UI_THEMES;
+  return hasOwnKey(UI_THEMES, themeName);
 }
 
 /**
@@ -64,7 +74,7 @@ function isUIThemeComponentName(
   componentName: string,
   components: UIThemeComponents,
 ): componentName is UIThemeComponentName {
-  return componentName in components;
+  return hasOwnKey(components, componentName);
 }
 
 /**
@@ -112,9 +122,11 @@ export function getThemeComponents(themeName: UIThemeName): UIThemeComponentEntr
 
     const config = components[componentName];
 
-    if (config !== undefined) {
-      componentEntries.push({ name: componentName, config });
+    if (config === undefined) {
+      continue;
     }
+
+    componentEntries.push({ name: componentName, config });
   }
 
   return componentEntries;
@@ -125,7 +137,7 @@ export function getThemeComponents(themeName: UIThemeName): UIThemeComponentEntr
  *
  * @param themeName - Resolved theme name to read from.
  * @param componentName - Component key within the theme's components map.
- * @returns The component-specific theme configuration.
+ * @returns The component-specific theme configuration, or undefined when the selected theme does not override that component.
  *
  * @example
  * const inputTextTheme = getThemeComponent('warm', 'inputText');
@@ -134,6 +146,6 @@ export function getThemeComponents(themeName: UIThemeName): UIThemeComponentEntr
 export function getThemeComponent<TName extends UIThemeComponentName>(
   themeName: UIThemeName,
   componentName: TName,
-): UIThemeComponents[TName] {
+): UIThemeComponents[TName] | undefined {
   return UI_THEMES[themeName].components[componentName];
 }

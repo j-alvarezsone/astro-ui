@@ -17,6 +17,15 @@ The system must stay:
 - easy to extend without turning one file into a dumping ground
 - capable of supporting theming for any new reusable component
 
+## Optional Custom Themes
+
+Custom themes are optional in this project.
+
+- Do not assume at least one named custom theme exists in `UI_THEMES`.
+- Runtime behavior must remain valid when `UI_THEMES` is empty.
+- Tests must not hardcode a required custom theme name (for example `warm`) unless the test is explicitly about that concrete sample theme.
+- Prefer dynamic assertions based on discovered theme names where applicable.
+
 ## Source Of Truth
 
 When editing the theme system, align with these files:
@@ -91,6 +100,15 @@ Use the typed `defineUIThemes(...)` pattern in `src/share/utils/theme/uiThemes.t
 Do not replace it with an untyped object or broad `Record<string, unknown>` shape.
 
 The authoring experience should provide autocomplete for nested theme config keys while editing theme objects.
+
+### 5.1 Prefer shared key/value helper aliases in theme type aliases
+
+When deriving exported key or value aliases inside theme-system TypeScript files, prefer shared helpers from `src/share/types/index.ts`:
+
+- use `Keyof<T>` instead of raw `keyof T`
+- use `ValueOf<T>` instead of manual indexed unions like `T[keyof T]`
+
+This keeps type alias style consistent across theme utilities and avoids mixed patterns in public theme typings.
 
 ### 6. New reusable components must be theme-capable by design
 

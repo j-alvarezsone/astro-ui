@@ -10,15 +10,15 @@ type PassThroughSource = Record<string, unknown> & {
  * Returns all attributes except `class` and `style` from a pass-through object.
  *
  * @param source - Pass-through source object.
- * @returns Attributes excluding `class` and `style`, or `undefined` when source is missing.
+ * @returns Attributes excluding `class` and `style`.
  *
  * @example
  * const attrs = stripClassAndStyle({ class: 'x', style: 'color:red', id: 'field' });
  * // { id: 'field' }
  */
-function stripClassAndStyle(source: PassThroughSource | undefined): Record<string, unknown> | undefined {
+function stripClassAndStyle(source: PassThroughSource | undefined): Record<string, unknown> {
   if (!source) {
-    return undefined;
+    return {};
   }
 
   const { class: _class, style: _style, ...rest } = source;

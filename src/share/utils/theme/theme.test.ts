@@ -1,9 +1,11 @@
 import { getComponentsThemeCss, getResolvedThemeName } from '@utils/theme/theme';
+import { getUIThemeNames } from '@utils/theme/uiThemes';
 
 describe('getResolvedThemeName', () => {
-  it('returns the theme name when valid', () => {
-    const resolved = getResolvedThemeName('warm');
-    expect(['warm', undefined]).toContain(resolved);
+  it('returns each discovered theme name when valid', () => {
+    for (const themeName of getUIThemeNames()) {
+      expect(getResolvedThemeName(themeName)).toBe(themeName);
+    }
   });
 
   it('returns undefined for an unknown theme name', () => {
@@ -32,30 +34,38 @@ describe('getComponentsThemeCss (contract tests)', () => {
     expect(getComponentsThemeCss('')).toBeUndefined();
   });
 
-  it('returns either a CSS string or undefined', () => {
-    const result = getComponentsThemeCss('warm');
-    expect(result === undefined || typeof result === 'string').toBe(true);
+  it('returns either a CSS string or undefined for each discovered theme', () => {
+    for (const themeName of getUIThemeNames()) {
+      const result = getComponentsThemeCss(themeName);
+      expect(result === undefined || typeof result === 'string').toBe(true);
+    }
   });
 
-  it('returned CSS (if present) contains valid CSS syntax', () => {
-    const css = getComponentsThemeCss('warm');
-    if (css) {
-      // Should contain CSS selector and braces
-      expect(css).toMatch(/\{[^}]*\}/u);
+  it('returned CSS (if present) contains valid CSS syntax for each discovered theme', () => {
+    for (const themeName of getUIThemeNames()) {
+      const css = getComponentsThemeCss(themeName);
+      if (css) {
+        // Should contain CSS selector and braces
+        expect(css).toMatch(/\{[^}]*\}/u);
+      }
     }
   });
 
   it('returned CSS does not contain null or undefined string literals', () => {
-    const css = getComponentsThemeCss('warm');
-    if (css) {
-      expect(css).not.toContain('null');
-      expect(css).not.toContain('undefined');
+    for (const themeName of getUIThemeNames()) {
+      const css = getComponentsThemeCss(themeName);
+      if (css) {
+        expect(css).not.toContain('null');
+        expect(css).not.toContain('undefined');
+      }
     }
   });
 
-  it('multiple calls with same theme return consistent structure', () => {
-    const css1 = getComponentsThemeCss('warm');
-    const css2 = getComponentsThemeCss('warm');
-    expect(typeof css1).toBe(typeof css2);
+  it('multiple calls with same discovered theme return consistent structure', () => {
+    for (const themeName of getUIThemeNames()) {
+      const css1 = getComponentsThemeCss(themeName);
+      const css2 = getComponentsThemeCss(themeName);
+      expect(typeof css1).toBe(typeof css2);
+    }
   });
 });

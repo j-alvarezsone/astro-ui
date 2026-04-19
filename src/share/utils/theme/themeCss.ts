@@ -1,4 +1,4 @@
-import type { Maybe } from "@/types/index";
+import type { Maybe } from '@/types/index';
 
 /**
  * Normalizes and merges CSS declaration strings into a single declaration block.
