@@ -27,7 +27,16 @@
       ],
       "@utils/*": [
         "./src/share/utils/*"
-      ]
+      ],
+      "@assets/*": [
+        "./src/assets/*"
+      ],
+      "@content/*": [
+        "./src/content/*"
+      ],
+      "@constants/*": [
+        "./src/share/constants/*"
+      ],
     }
   }
 }

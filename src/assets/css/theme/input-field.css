@@ -1,0 +1,28 @@
+/* ── InputField Component Default Hooks ───────────────────────
+ * These variables style the shared field shell used by text-like
+ * controls such as InputText, InputEmail, InputPassword, Select,
+ * and Textarea.
+ */
+:root {
+  --input-field-root-gap: var(--spacing-1-5);
+  --input-field-wrapper-gap: var(--spacing-2);
+  --input-field-wrapper-background: var(--color-surface);
+  --input-field-wrapper-border-color: var(--color-border);
+  --input-field-wrapper-hover-border-color: var(--color-hover-border);
+  --input-field-wrapper-focus-border-color: var(--color-focus-border);
+  --input-field-wrapper-focus-ring-color: var(--color-focus-ring);
+  --input-field-wrapper-error-border-color: var(--color-danger-border);
+  --input-field-wrapper-disabled-background: var(--color-disabled-fill);
+  --input-field-wrapper-border-radius: var(--rounded-lg);
+  --input-field-wrapper-padding-inline: var(--spacing-3-5);
+  --input-field-label-color: var(--color-fg-muted);
+  --input-field-label-default-color: var(--color-fg);
+  --input-field-label-active-color: var(--color-fg);
+  --input-field-label-background: var(--color-surface);
+  --input-field-label-required-color: var(--color-danger-fg);
+  --input-field-label-optional-color: var(--color-fg-muted);
+  --input-field-icon-color: currentColor;
+  --input-field-icon-disabled-opacity: 0.4;
+  --input-field-help-color: var(--color-fg-muted);
+  --input-field-error-color: var(--color-danger-fg);
+}

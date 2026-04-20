@@ -1,14 +1,19 @@
 ---
 import { Font } from 'astro:assets';
+import { getComponentsThemeCss } from '@utils/theme/theme';
+import type { UIThemeName } from '@utils/theme/uiThemes';
 
-import '../assets/css/tokens.css';
-import '../assets/css/main.css';
+import '@assets/css/tokens.css';
+import '@assets/css/theme/theme.css';
+import '@assets/css/main.css';
 
 interface Props {
   title?: string;
+  uiTheme?: UIThemeName;
 }
 
-const { title = 'Home page' } = Astro.props;
+const { title = 'Home page', uiTheme } = Astro.props;
+const componentsThemeCss = getComponentsThemeCss(uiTheme);
 ---
 
 <Font cssVariable="--font-roboto" preload />
@@ -23,6 +28,7 @@ const { title = 'Home page' } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
+    {componentsThemeCss && <style is:global set:html={componentsThemeCss} />}
     <slot />
   </body>
 </html>

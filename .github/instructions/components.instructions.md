@@ -34,6 +34,26 @@ Key rules:
 - Keep styles scoped (`<style>` block without `:global`).
 - Default slot for content; named slots for distinct regions.
 
+## Theming Decision
+
+When creating a new reusable UI component, especially a form-related or stateful visual primitive, ask whether it should participate in the theme system before implementing its styling API.
+
+Default requirement:
+- any new reusable component should be designed to support theming
+- if user confirms, implement full theme support in the same task
+- if user postpones, keep CSS and API theme-ready so future enablement is straightforward
+
+Ask this especially for:
+- text-like form controls
+- reusable field shells
+- components with borders, labels, icons, backgrounds, or interactive state colors
+
+If the component should be themeable:
+- follow `.github/instructions/theme-system.instructions.md`
+- keep shared shell styling separate from component-specific styling
+- add or update tests for the theme behavior
+- run `pnpm run type:check`
+
 ## Vue SFCs
 
 Use `<script setup>` with the Composition API. Define all props and emits explicitly:
@@ -108,11 +128,31 @@ Key rules:
 
 ## CSS / Design Token Conventions
 
+> **Token enforcement rule:** Follow the canonical rule in `AGENTS.md` (`Conventions` → `CSS token enforcement`). Never invent token names. If a token is missing from `src/assets/css/tokens.css`, ask the user first and only proceed after explicit confirmation and after adding the token to `tokens.css`.
+
 - Use design tokens (CSS custom properties from `src/assets/css/tokens.css`) for all colors, spacing, and typography values.
 - Follow BEM naming for component class names (`.block__element--modifier`).
 - Use CSS logical properties (`margin-inline`, `padding-block`) for writing-mode compatibility.
 - Prefer CSS custom properties for theming over hard-coded values.
 - Keep component styles scoped; reach for `:global` only for utility or reset styles.
+
+### Pass-Through Styling And Selector Specificity
+
+When components expose pass-through sections (`pt`) for `class`, `style`, and arbitrary attributes:
+
+- Treat `root.class` as a **scope hook** for descendant selectors. It does not change child visuals by itself.
+- For direct visual overrides (`background-color`, `border-color`, etc.), target the actual internal element (`.input-field__wrapper`, `.button`, etc.).
+- A single custom class often has equal specificity to internal component classes; if both set the same property, final result depends on cascade order.
+- To make direct property overrides reliable, increase specificity (for example `.input-field__wrapper.my-class`) or use an `id` selector.
+- Prefer component CSS variable overrides (`--component-*`) for production theming. They are more stable across refactors and state variants.
+
+Recommended class-array pattern:
+
+- Use class arrays as layered roles, not mixed responsibilities:
+  - base class (`component-shell`)
+  - modifier class (`component-shell--compact`)
+  - state/variant class (`is-warning`)
+- Keep selectors separate per role; only add a combined high-specificity selector when needed for a native direct property override.
 
 ### Token Selection Guide
 

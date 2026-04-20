@@ -39,9 +39,13 @@
   - `@layouts/*`
   - `@web-components/*`
   - `@/types/*`
+- In TypeScript type aliases, prefer shared helper types from `src/share/types/index.ts`:
+  - `Keyof<T>` over raw `keyof T`
+  - `ValueOf<T>` over manual indexed unions like `T[keyof T]`
 - Keep edits scoped and avoid unrelated file changes.
 - Before finalizing changes, run at least `pnpm run type:check`; run `pnpm run lint` for lint-impacting changes.
 - If blocked or ambiguous, state assumptions and choose the lowest-risk implementation.
+- **CSS token enforcement:** Never use a `var(--...)` that does not exist in `src/assets/css/tokens.css`. If a token is missing, stop and ask the user: _"The token `--your-token` does not exist in `tokens.css`. Would you like me to create it?"_ Only proceed after explicit confirmation and after adding the token to `tokens.css`. Do not invent or guess token names.
 
 ## Hooks And Commits
 

@@ -1,0 +1,12 @@
+/* ── Base Input Control Default Hooks ────────────────────────
+ * These variables wire text-like input controls to global design
+ * tokens. Override them once (globally or per-theme) to restyle
+ * compatible input controls without per-component CSS edits.
+ */
+:root {
+  --input-control-input-color: inherit;
+  --input-control-input-padding-block: var(--spacing-2-5);
+  --input-control-input-placeholder-color: var(--color-fg-muted);
+  --input-control-input-placeholder-error-color: var(--color-danger-fg);
+  --input-control-input-disabled-color: var(--color-fg-disabled);
+}

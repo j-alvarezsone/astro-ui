@@ -1,8 +1,13 @@
 ---
 import type { IconProps } from 'astro-icon/components';
+
+import type { InputTextPassThrough } from '@/types/theme/form/inputText';
+import type { ClassValue } from '@/types/theme/form/shared';
+import { mergePassThroughAttributes, splitPassThroughAttributes } from '@utils/theme/form/inputTextConfig';
+
 import InputField from './InputField.astro';
 
-interface Props {
+interface Props extends Omit<astroHTML.JSX.InputHTMLAttributes, 'class'> {
   name: string;
   placeholder: string;
   label: string;
@@ -20,6 +25,8 @@ interface Props {
   min?: number;
   max?: number;
   pattern?: string;
+  class?: ClassValue;
+  pt?: InputTextPassThrough;
 }
 
 const {
@@ -40,12 +47,17 @@ const {
   min,
   max,
   pattern,
-  ...rest
+  class: className,
+  pt,
+  ...inputAttributes
 } = Astro.props;
 
 const errorTextId = errorText ? `${name}-error` : undefined;
 const helpTextId = helpText ? `${name}-help` : undefined;
 const describedBy = [errorTextId, helpTextId].filter(Boolean).join(' ') || undefined;
+
+const inputPassThrough = mergePassThroughAttributes(inputAttributes, pt?.input);
+const { className: inputPassThroughClass, attributes: inputPassThroughAttributes } = splitPassThroughAttributes(inputPassThrough);
 ---
 
 <InputField
@@ -57,7 +69,8 @@ const describedBy = [errorTextId, helpTextId].filter(Boolean).join(' ') || undef
   iconPos={iconPos}
   errorText={errorText}
   helpText={helpText}
-  {...rest}
+  class={className}
+  pt={pt}
 >
   <input
     id={name}
@@ -73,5 +86,7 @@ const describedBy = [errorTextId, helpTextId].filter(Boolean).join(' ') || undef
     pattern={pattern}
     aria-describedby={describedBy}
     aria-invalid={errorText ? 'true' : undefined}
+    class:list={inputPassThroughClass}
+    {...inputPassThroughAttributes}
   />
 </InputField>
