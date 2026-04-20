@@ -33,7 +33,10 @@
       ],
       "@content/*": [
         "./src/content/*"
-      ]
+      ],
+      "@constants/*": [
+        "./src/share/constants/*"
+      ],
     }
   }
 }
