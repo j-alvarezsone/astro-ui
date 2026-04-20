@@ -39,7 +39,7 @@ When editing the theme system, align with these files:
 - `src/share/types/theme/form/inputField.ts` — shared field-shell config type
 - `src/share/types/theme/form/inputText.ts` — InputText config and pass-through types
 - `src/assets/css/theme/input-field.css` — default shared field-shell token values
-- `src/assets/css/theme/input-text.css` — default InputText-only token values
+- `src/assets/css/theme/base-input.css` — default text-control token values shared by text-like controls
 
 ## Architecture Rules
 
@@ -53,7 +53,7 @@ Use `input-field` tokens for styling that belongs to the reusable field shell:
 - icon color and disabled opacity
 - help and error text colors
 
-Use `input-text` tokens only for text-control-specific styling:
+Use `input-control` tokens only for text-control-specific styling:
 
 - input text color
 - input padding block
@@ -95,11 +95,19 @@ If a component is not registered there, theme authoring for that component is in
 
 ### 5. Keep theme authoring typed
 
-Use the typed `defineUIThemes(...)` pattern in `src/share/utils/theme/uiThemes.ts`.
+Use the typed `as const satisfies Record<string, UIThemeConfig>` pattern in `src/share/utils/theme/uiThemes.ts`.
 
 Do not replace it with an untyped object or broad `Record<string, unknown>` shape.
 
 The authoring experience should provide autocomplete for nested theme config keys while editing theme objects.
+
+Also keep token contracts aligned across these three places:
+
+- generated declarations in `src/share/utils/theme/form/inputTextConfig.ts`
+- consumed variables in `src/components/form/InputField.astro`
+- default values in `src/assets/css/theme/base-input.css`
+
+Do not rename one side of this contract without updating the others.
 
 ### 5.1 Prefer shared key/value helper aliases in theme type aliases
 
@@ -141,9 +149,9 @@ Use:
 
 ### InputText-only tokens
 
-Use:
+Use text-control tokens:
 
-- `--input-text-input-*`
+- `--input-control-input-*`
 
 ### Future component-specific tokens
 

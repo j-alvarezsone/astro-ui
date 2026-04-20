@@ -1,6 +1,6 @@
 ---
 description: "Use when adding or updating theme documentation collection entries or the standalone theme guide page."
-applyTo: "src/content.config.ts,src/content/theme-guides/**,src/pages/theme-system.astro"
+applyTo: "src/content.config.ts,src/content/theme-guides/**,src/pages/theme-system/index.astro"
 ---
 
 # Theme Guides Collection
@@ -20,7 +20,7 @@ This documentation must remain:
 
 - Collection definition lives in `src/content.config.ts`
 - Theme guide entries live in `src/content/theme-guides/**`
-- Standalone rendering page lives in `src/pages/theme-system.astro`
+- Standalone rendering page lives in `src/pages/theme-system/index.astro`
 
 ## Authoring Rules
 
@@ -31,6 +31,10 @@ This documentation must remain:
 5. For `pt` overrides, document class and style as separate use-cases to reduce confusion.
 6. When documenting class-based overrides in Astro, explicitly note that styles are scoped and `:global(...)` is required to target runtime classes.
 7. When showing code snippets in docs, clarify whether the snippet is an example or runtime source-of-truth, and include "where to find it" pointers.
+8. Add a concise "mental model" section for complex guides (especially form controls) so readers can distinguish theme config, token defaults, and one-off `pt` overrides.
+9. Include a short troubleshooting checklist for common override failures (wrong target element, selector specificity, missing `:global`, token mismatch).
+10. Keep token naming aligned with runtime source-of-truth (`base-input.css`, `input-field.css`, and the corresponding style-var generators).
+11. When adding `pt` documentation for any component, follow the **exact** 11-section structure defined in the `theme-guides` skill (`SKILL.md`). Do not skip, reorder, or merge sections. Use `src/content/theme-guides/input-text-reference.md` as the canonical example of the complete correct structure.
 
 ## Implementation Rules
 

@@ -119,7 +119,7 @@ When making theme changes, align with these files:
 - `src/share/types/theme/form/inputField.ts`
 - `src/share/types/theme/form/inputText.ts`
 - `src/assets/css/theme/input-field.css`
-- `src/assets/css/theme/input-text.css`
+- `src/assets/css/theme/base-input.css`
 - `.github/instructions/theme-system.instructions.md`
 
 ## Naming Rules
@@ -137,7 +137,7 @@ Use `--input-field-*` for:
 
 ### InputText-only tokens
 
-Use `--input-text-*` for:
+Use `--input-control-*` for shared text-control internals:
 
 - input text color
 - placeholder styling
