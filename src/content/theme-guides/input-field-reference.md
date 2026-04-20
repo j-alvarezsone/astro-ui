@@ -1,6 +1,6 @@
 ---
 title: InputField Reference
-summary: "Complete InputField shared-shell reference: config keys, CSS tokens, and class hooks."
+summary: 'Complete InputField shared-shell reference: config keys, CSS tokens, and class hooks.'
 order: 3
 updatedAt: 2026-04-19
 ---
@@ -129,15 +129,15 @@ Example class-based override:
 </style>
 ```
 
-## Relationship To InputText Tokens
+## Relationship To Base Input Control Tokens
 
 InputField controls shell styling.
-InputText adds control-specific tokens such as:
+Text-like controls use shared input-control tokens such as:
 
-- `--input-text-input-color`
-- `--input-text-input-padding-block`
-- `--input-text-input-placeholder-color`
-- `--input-text-input-placeholder-error-color`
-- `--input-text-input-disabled-color`
+- `--input-control-input-color`
+- `--input-control-input-padding-block`
+- `--input-control-input-placeholder-color`
+- `--input-control-input-placeholder-error-color`
+- `--input-control-input-disabled-color`
 
 For those keys and full `pt` section mapping, see `/theme-system/input-text`.

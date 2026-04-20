@@ -1,6 +1,6 @@
 ---
 title: InputText Reference
-summary: "Complete InputText theming map: pt sections, style config keys, CSS tokens, and runtime classes."
+summary: 'Complete InputText theming map with practical usage: pt sections, style keys, tokens, classes, and troubleshooting.'
 order: 2
 updatedAt: 2026-04-19
 ---
@@ -14,6 +14,23 @@ Use this page when you need full InputText theming details in one place:
 - all relevant CSS custom properties
 - all runtime CSS classes you can target
 
+## Quick Mental Model
+
+Think of InputText theming as 3 layers:
+
+1. Theme config layer (`uiThemes.ts`)
+- Set style keys under `components.inputText`.
+- Shared shell keys (`wrapper`, `label`, etc.) map to InputField shell tokens.
+- Input-specific keys (`input.*`) map to input-control tokens.
+
+2. Token defaults layer (`input-field.css` + `base-input.css`)
+- Defaults live in CSS variables.
+- Theme config overrides only what should differ.
+
+3. Instance override layer (`pt`)
+- Use `pt.class`, `pt.style`, and attributes for one-off usage overrides.
+- Prefer token overrides for production theming and direct native CSS properties for local exceptions.
+
 ## Source Of Truth
 
 - `src/components/form/InputText.astro`
@@ -23,8 +40,14 @@ Use this page when you need full InputText theming details in one place:
 - `src/share/types/theme/form/inputField.ts`
 - `src/share/utils/theme/form/inputTextConfig.ts`
 - `src/share/utils/theme/form/inputFieldConfig.ts`
-- `src/assets/css/theme/input-text.css`
+- `src/assets/css/theme/base-input.css`
 - `src/assets/css/theme/input-field.css`
+
+Practical alignment notes:
+
+- Runtime token consumption happens in `src/components/form/InputField.astro`.
+- Default token values come from `src/assets/css/theme/base-input.css` and `src/assets/css/theme/input-field.css`.
+- Keep generator output names and consumed token names aligned when refactoring.
 
 ## InputText `pt` Sections
 
@@ -44,26 +67,141 @@ Each section accepts pass-through attributes:
 - `style` (string or object)
 - arbitrary HTML attributes (`data-*`, `aria-*`, `id`, etc.)
 
-Example:
+### Example A: `pt.class` + `<style>` tag override
+
+This snippet is an example pattern (not runtime source-of-truth):
 
 ```astro
 <InputText
-  name="price"
-  label="Price"
-  placeholder="0.00"
+  name="email"
+  label="Email"
+  placeholder="name@example.com"
   pt={{
-    root: { class: 'field-root-custom', 'data-testid': 'price-field' },
-    wrapper: { class: ['field-shell-custom', 'field-shell--compact'] },
-    input: { class: 'price-input', style: { letterSpacing: '0.02em' } },
-    helpText: { class: 'price-help' },
-    errorText: { class: 'price-error' },
+    root: { class: 'email-field-root' },
+    wrapper: { class: ['email-shell', 'email-shell--compact', 'email-shell--info'] },
+    input: { class: 'email-input' },
+    helpText: { class: 'email-help' },
+    errorText: { class: 'email-error' },
+  }}
+/>
+
+<style>
+  /* Root-level scope class:
+     useful to scope all nested field styling in one area. */
+  :global(.email-field-root .input-field__wrapper) {
+    --input-field-wrapper-focus-ring-color: var(--color-link-border);
+  }
+
+  /* Wrapper base class (1 responsibility) */
+  :global(.email-shell) {
+    --input-field-wrapper-background: var(--color-primary-subtle);
+    --input-field-wrapper-border-color: var(--color-primary-border);
+  }
+
+  /* Wrapper modifier class (2nd responsibility) */
+  :global(.email-shell--compact) {
+    --input-field-wrapper-padding-inline: var(--spacing-2);
+  }
+
+  /* Wrapper state/variant class (3rd responsibility) */
+  :global(.email-shell--info) {
+    --input-field-wrapper-border-color: var(--color-link-border);
+  }
+
+  /* Native CSS property override via class:
+     use higher specificity than .input-field__wrapper to win cascade. */
+  :global(.input-field__wrapper.email-shell.email-shell--info) {
+    background-color: blue;
+    border-color: blue;
+  }
+
+  /* Input class has its own separate responsibility */
+  :global(.email-input) {
+    --input-control-input-color: var(--color-fg);
+  }
+</style>
+```
+
+InputText note:
+
+- `root.class` is mainly a scope hook for descendant selectors.
+- Wrapper visual overrides should target the wrapper element itself (`.input-field__wrapper...`) or override wrapper tokens.
+
+For general pass-through specificity and class-array layering guidance, see `theme-system-overview.md` -> `Pass-Through Class Strategy`.
+
+### Example B: `pt.style` (inline style string/object)
+
+```astro
+<InputText
+  name="email"
+  label="Email"
+  placeholder="name@example.com"
+  pt={{
+    wrapper: { style: { backgroundColor: 'orange' } },
+    input: {
+      style: '--input-control-input-color: var(--color-warning-fg); letter-spacing: 0.02em;',
+    },
   }}
 />
 ```
 
+### Example C: arbitrary attributes (`data-*`, `aria-*`, `id`)
+
+```astro
+<InputText
+  name="email"
+  label="Email"
+  placeholder="name@example.com"
+  pt={{
+    wrapper: { id: 'email-wrapper', 'data-ui': 'email-wrapper', 'aria-live': 'polite' },
+    input: { id: 'email-input', 'data-ui': 'email-input', 'aria-label': 'Email address' },
+    label: { id: 'email-label', 'data-ui': 'email-label' },
+    helpText: { id: 'email-help', 'data-ui': 'email-help' },
+    errorText: { id: 'email-error', 'data-ui': 'email-error' },
+  }}
+/>
+
+<style>
+  /* Native CSS property override via id:
+     id specificity is high, so this usually wins directly. */
+  :global(#email-wrapper) {
+    background-color: blue;
+    border-color: blue;
+  }
+
+  /* Token-based override (recommended for theming) */
+  :global(#email-wrapper) {
+    --input-field-wrapper-background: var(--color-secondary-subtle);
+    --input-field-wrapper-border-color: var(--color-secondary-border);
+  }
+
+  :global([data-ui='email-label']) {
+    --input-field-label-active-color: var(--color-secondary-fg);
+  }
+
+  :global(#email-help) {
+    color: var(--color-fg-muted);
+  }
+</style>
+```
+
+### What Is Possible
+
+Both approaches are supported:
+
+- Native CSS properties (for example `background-color`, `border-color`)
+- Component token variables (for example `--input-field-wrapper-background`)
+
+In InputText docs, prefer token overrides for production theming and use direct native properties for local one-off overrides.
+
 ## InputText Style Config Keys
 
 `inputText` style config combines shared `InputField` shell keys with InputText-only keys.
+
+Current object shape in named themes:
+
+- Shared shell keys stay at the top level of `inputText` (`root`, `wrapper`, `label`, `icon`, `helpText`, `errorText`).
+- Input control keys stay under `inputText.input`.
 
 ### Shared shell keys (`InputFieldStyleConfig`)
 
@@ -143,17 +281,22 @@ warm: {
 }
 ```
 
+Why this split matters:
+
+- `wrapper`/`label`/... are consumed by shared shell styling.
+- `input.*` is consumed by the native `<input>` styling path.
+
 ## CSS Custom Properties
 
-### InputText-only tokens
+### Base input control tokens
 
 ```css
 :root {
-  --input-text-input-color: inherit;
-  --input-text-input-padding-block: var(--spacing-2-5);
-  --input-text-input-placeholder-color: var(--color-fg-muted);
-  --input-text-input-placeholder-error-color: var(--color-danger-fg);
-  --input-text-input-disabled-color: var(--color-fg-disabled);
+  --input-control-input-color: var(--color-fg);
+  --input-control-input-padding-block: var(--spacing-2-5);
+  --input-control-input-placeholder-color: var(--color-fg-muted);
+  --input-control-input-placeholder-error-color: var(--color-danger-fg);
+  --input-control-input-disabled-color: var(--color-fg-disabled);
 }
 ```
 
@@ -184,6 +327,25 @@ warm: {
   --input-field-error-color: var(--color-danger-fg);
 }
 ```
+
+## Troubleshooting
+
+If your override does not apply as expected:
+
+1. Check target element choice.
+- Wrapper visuals should target wrapper selectors or wrapper tokens.
+- Text/placeholder visuals should target input-control tokens.
+
+2. Check selector specificity.
+- A single custom class can tie with component-class specificity.
+- Use a combined selector (or an `id`) for direct native property overrides.
+
+3. Check Astro style scoping.
+- Use `:global(...)` when targeting runtime classes emitted by the component.
+
+4. Check token wiring.
+- Defaults: `src/assets/css/theme/base-input.css`, `src/assets/css/theme/input-field.css`.
+- Runtime consumption: `src/components/form/InputField.astro`.
 
 ## Runtime CSS Classes
 
@@ -220,7 +382,7 @@ To target runtime classes from `pt`, use `:global(...)`.
   }
 
   :global(.price-input) {
-    --input-text-input-color: #0f172a;
+    --input-control-input-color: #0f172a;
   }
 </style>
 ```
