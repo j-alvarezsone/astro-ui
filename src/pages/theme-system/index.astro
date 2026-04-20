@@ -1,0 +1,217 @@
+---
+import Heading from '@components/typography/Heading.astro';
+import ComponentRefs from '@components/theme/ComponentRefs.astro';
+import ThemeLayout from '@layouts/ThemeLayout.astro';
+import { THEME_COMPONENT_REFS } from '@constants/theme-component-refs';
+import { getCollection, render } from 'astro:content';
+
+const guides = (await getCollection('themeGuides'))
+  .filter((entry) => entry.id === 'theme-system-overview')
+  .toSorted((left, right) => left.data.order - right.data.order);
+
+const dateFormatter = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: '2-digit',
+  year: 'numeric',
+});
+
+const guideSections = await Promise.all(
+  guides.map(async (entry) => {
+    const rendered = await render(entry);
+    const { Content } = rendered;
+    const headings =
+      'headings' in rendered && Array.isArray(rendered.headings)
+        ? rendered.headings.filter((heading) => heading.depth >= 2 && heading.depth <= 3)
+        : [];
+
+    return {
+      entry,
+      Content,
+      headings,
+      updatedLabel: entry.data.updatedAt ? dateFormatter.format(entry.data.updatedAt) : null,
+    };
+  }),
+);
+---
+
+<ThemeLayout
+  title="Theme System Guide"
+  heroTitle="Build UI themes with a cleaner system, not scattered overrides."
+  heroSummary="This standalone playbook explains how typed theme objects become runtime CSS variables, and how to extend the system without introducing token chaos."
+  contentLabel="Theme guide content"
+  indexLabel="Guide index"
+  backLabel="Back to Home"
+  backHref="/"
+>
+  <Fragment slot="meta">
+    <span>{guideSections.length} guide{guideSections.length === 1 ? '' : 's'}</span>
+    <span>Astro content collection</span>
+    <span>Theme-first architecture</span>
+  </Fragment>
+
+  <ol slot="index">
+    {
+      guideSections.map(({ entry, headings }) => (
+        <li class="theme-guide-index__guide">
+          <a href={`#${entry.id}`}>{entry.data.title}</a>
+          {headings.length > 0 && (
+            <ol class="theme-guide-index__sections">
+              {headings.map((heading) => (
+                <li class:list={['theme-guide-index__section', `theme-guide-index__section--depth-${heading.depth}`]}>
+                  <a href={`#${heading.slug}`}>{heading.text}</a>
+                </li>
+              ))}
+            </ol>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+
+  <ComponentRefs refs={THEME_COMPONENT_REFS} />
+
+  {
+    guideSections.map(({ entry, Content, updatedLabel }, index) => (
+      <article class="theme-doc-card" id={entry.id}>
+        <header class="theme-doc-card__header">
+          <p class="theme-doc-card__eyebrow">Guide {index + 1}</p>
+          <Heading as="h2" size="3xl" weight="bold">
+            {entry.data.title}
+          </Heading>
+          <p>{entry.data.summary}</p>
+          {updatedLabel && <span class="theme-doc-card__date">Updated {updatedLabel}</span>}
+        </header>
+        <div class="theme-doc-content">
+          <Content />
+        </div>
+      </article>
+    ))
+  }
+</ThemeLayout>
+
+<style>
+  .theme-guide-index__guide {
+    display: grid;
+    gap: var(--spacing-1-5);
+  }
+
+  .theme-guide-index__sections {
+    margin: 0;
+    padding-left: var(--spacing-4);
+    display: grid;
+    gap: var(--spacing-1);
+  }
+
+  .theme-guide-index__section {
+    font-size: var(--font-size-sm);
+  }
+
+  .theme-guide-index__section--depth-3 {
+    opacity: 0.85;
+  }
+
+  .theme-doc-meta :global(span) {
+    padding: var(--spacing-1) var(--spacing-3);
+    border: 1px solid color-mix(in oklab, var(--color-border) 85%, #9ca3af 15%);
+    border-radius: var(--rounded-full);
+    background-color: color-mix(in oklab, var(--color-surface) 72%, #f3f4f6 28%);
+    font-size: var(--font-size-sm);
+    color: color-mix(in oklab, var(--color-fg-muted) 70%, var(--color-fg) 30%);
+  }
+
+  .theme-doc-card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-2xl);
+    background-color: color-mix(in oklab, var(--color-surface) 85%, #ffffff 15%);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+    overflow: clip;
+  }
+
+  .theme-doc-card__header {
+    padding: var(--spacing-5);
+    border-bottom: 1px solid color-mix(in oklab, var(--color-border) 85%, #dbe3ed 15%);
+    background: linear-gradient(180deg, color-mix(in oklab, #f1f5f9 66%, #fff 34%), transparent);
+  }
+
+  .theme-doc-card__eyebrow {
+    margin: 0;
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: var(--font-weight-semibold);
+    color: color-mix(in oklab, var(--color-fg-muted) 80%, #0f172a 20%);
+  }
+
+  .theme-doc-card__header :global(h2.heading) {
+    margin: var(--spacing-2) 0 var(--spacing-3);
+    font-size: clamp(var(--font-size-xl), 1rem + 0.8vw, var(--font-size-2xl));
+    color: var(--color-fg);
+  }
+
+  .theme-doc-card__header p {
+    margin: 0;
+    color: color-mix(in oklab, var(--color-fg-muted) 86%, #111827 14%);
+  }
+
+  .theme-doc-card__date {
+    display: inline-flex;
+    margin-top: var(--spacing-3);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: color-mix(in oklab, var(--color-fg-muted) 70%, #334155 30%);
+  }
+
+  .theme-doc-content {
+    padding: var(--spacing-5);
+    color: color-mix(in oklab, var(--color-fg) 88%, #111827 12%);
+    max-width: 72ch;
+  }
+
+  .theme-doc-content :global(h2),
+  .theme-doc-content :global(h3),
+  .theme-doc-content :global(h4) {
+    margin-top: var(--spacing-6);
+    margin-bottom: var(--spacing-2);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  .theme-doc-content :global(p),
+  .theme-doc-content :global(ol),
+  .theme-doc-content :global(ul) {
+    margin-top: 0;
+    margin-bottom: var(--spacing-3);
+    line-height: 1.6;
+  }
+
+  .theme-doc-content :global(ol),
+  .theme-doc-content :global(ul) {
+    padding-left: var(--spacing-5);
+  }
+
+  .theme-doc-content :global(li + li) {
+    margin-top: var(--spacing-1);
+  }
+
+  .theme-doc-content :global(code) {
+    font-size: 0.9em;
+    padding: 0.12rem 0.4rem;
+    border-radius: var(--rounded-md);
+    background-color: color-mix(in oklab, #dbeafe 46%, #ffffff 54%);
+  }
+
+  .theme-doc-content :global(pre) {
+    margin-top: 0;
+    margin-bottom: var(--spacing-4);
+    border: 1px solid color-mix(in oklab, var(--color-border) 85%, #d4d4d8 15%);
+    border-radius: var(--rounded-lg);
+    background-color: color-mix(in oklab, #0f172a 92%, black 8%);
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
+  }
+
+  .theme-doc-content :global(pre code) {
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+</style>

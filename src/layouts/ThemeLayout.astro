@@ -1,0 +1,332 @@
+---
+import Heading from '@components/typography/Heading.astro';
+import Layout from '@layouts/Layout.astro';
+
+interface Props {
+  title: string;
+  heroTitle: string;
+  heroSummary: string;
+  heroKicker?: string;
+  backHref?: string;
+  backLabel?: string;
+  secondaryHref?: string;
+  secondaryLabel?: string;
+  contentLabel?: string;
+  indexLabel?: string;
+}
+
+const {
+  title,
+  heroTitle,
+  heroSummary,
+  heroKicker = 'Theme Documentation',
+  backHref = '/theme-system',
+  backLabel = 'Back to Theme System',
+  secondaryHref,
+  secondaryLabel,
+  contentLabel = 'Theme documentation content',
+  indexLabel = 'On This Page',
+} = Astro.props;
+---
+
+<Layout title={title}>
+  <main class="theme-doc-shell">
+    <div class="theme-doc-backdrop" aria-hidden="true"></div>
+
+    <section class="theme-doc-hero" aria-labelledby="theme-doc-title">
+      <p class="theme-doc-kicker">{heroKicker}</p>
+      <Heading as="h1" size="5xl" weight="bold" id="theme-doc-title">{heroTitle}</Heading>
+      <p class="theme-doc-summary">{heroSummary}</p>
+      <div class="theme-doc-meta">
+        <slot name="meta" />
+      </div>
+      <p class="theme-doc-nav">
+        <a href={backHref}>{backLabel}</a>
+        {
+          secondaryHref && secondaryLabel && (
+            <>
+              <span aria-hidden="true">•</span>
+              <a href={secondaryHref}>{secondaryLabel}</a>
+            </>
+          )
+        }
+      </p>
+    </section>
+
+    <section class="theme-doc-layout" aria-label={contentLabel}>
+      <aside class="theme-doc-index" aria-label={indexLabel}>
+        <Heading as="h2" size="lg" weight="bold">{indexLabel}</Heading>
+        <slot name="index" />
+      </aside>
+
+      <div class="theme-doc-main">
+        <slot />
+      </div>
+    </section>
+  </main>
+</Layout>
+
+<style>
+  .theme-doc-shell {
+    --theme-doc-surface: var(--color-surface);
+    --theme-doc-border: var(--color-border);
+    --theme-doc-ink: var(--color-fg);
+
+    position: relative;
+    isolation: isolate;
+    width: min(1120px, 100% - (var(--spacing-4) * 2));
+    margin-inline: auto;
+    padding-block: clamp(var(--spacing-7), 6vw, var(--spacing-12));
+    padding-inline: var(--spacing-4);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(var(--spacing-5), 2vw, var(--spacing-8));
+    overflow-x: clip;
+  }
+
+  .theme-doc-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: var(--rounded-4xl);
+    background:
+      radial-gradient(42rem 23rem at 0% 0%, color-mix(in oklab, var(--color-primary-fg) 21%, transparent), transparent),
+      radial-gradient(
+        30rem 18rem at 100% 2%,
+        color-mix(in oklab, var(--color-success-fill-hover) 20%, transparent),
+        transparent
+      ),
+      linear-gradient(
+        160deg,
+        var(--color-contrast-subtle) 0%,
+        var(--color-secondary-subtle) 44%,
+        var(--color-success-subtle) 100%
+      );
+    box-shadow: 0 30px 70px color-mix(in oklab, var(--color-contrast-fill) 8%, transparent);
+  }
+
+  .theme-doc-hero {
+    padding: clamp(var(--spacing-4), 2.5vw, var(--spacing-8));
+    border: 1px solid var(--theme-doc-border);
+    border-radius: var(--rounded-3xl);
+    background: color-mix(in oklab, var(--theme-doc-surface) 70%, var(--color-secondary-subtle) 30%);
+    backdrop-filter: blur(4px);
+  }
+
+  .theme-doc-kicker {
+    margin: 0;
+    color: color-mix(in oklab, var(--color-primary-fg) 75%, var(--color-secondary-fg) 25%);
+    font-weight: var(--font-weight-medium);
+    font-size: clamp(0.75rem, 0.7rem + 0.26vw, 0.88rem);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .theme-doc-hero :global(h1.heading) {
+    margin-block: var(--spacing-3) var(--spacing-4);
+    color: var(--theme-doc-ink);
+  }
+
+  .theme-doc-summary {
+    margin: 0;
+    max-width: 68ch;
+    color: color-mix(in oklab, var(--color-fg-muted) 90%, var(--color-fg) 10%);
+    font-size: clamp(var(--font-size-base), 0.95rem + 0.35vw, var(--font-size-lg));
+    line-height: 1.45;
+  }
+
+  .theme-doc-meta {
+    margin-top: var(--spacing-5);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+  }
+
+  .theme-doc-nav {
+    margin: var(--spacing-3) 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+    align-items: center;
+  }
+
+  .theme-doc-nav a {
+    color: color-mix(in oklab, var(--color-primary-fg) 82%, var(--color-link-fg) 18%);
+  }
+
+  .theme-doc-layout {
+    display: grid;
+    grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr);
+    gap: clamp(var(--spacing-4), 2vw, var(--spacing-7));
+    align-items: start;
+  }
+
+  .theme-doc-index {
+    position: sticky;
+    top: var(--spacing-6);
+    padding: var(--spacing-4);
+    border: 1px solid var(--theme-doc-border);
+    border-radius: var(--rounded-xl);
+    background: color-mix(in oklab, var(--color-surface) 70%, var(--color-contrast-subtle) 30%);
+  }
+
+  .theme-doc-index :global(h2.heading) {
+    margin: 0 0 var(--spacing-3);
+    font-size: clamp(var(--font-size-base), 0.92rem + 0.2vw, var(--font-size-lg));
+  }
+
+  .theme-doc-index :global(ol) {
+    margin: 0;
+    padding: 0;
+    list-style-position: inside;
+    display: grid;
+    gap: var(--spacing-2);
+  }
+
+  .theme-doc-index :global(a) {
+    color: color-mix(in oklab, var(--color-primary-fg) 70%, var(--color-link-fg) 30%);
+    text-decoration: none;
+  }
+
+  .theme-doc-index :global(a:hover) {
+    text-decoration: underline;
+  }
+
+  .theme-doc-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(var(--spacing-4), 2vw, var(--spacing-6));
+  }
+
+  .theme-doc-card,
+  .theme-doc-article {
+    border: 1px solid var(--theme-doc-border);
+    border-radius: var(--rounded-2xl);
+    background-color: color-mix(in oklab, var(--theme-doc-surface) 85%, var(--color-contrast-subtle) 15%);
+    box-shadow: 0 14px 34px color-mix(in oklab, var(--color-contrast-fill) 8%, transparent);
+    overflow: clip;
+  }
+
+  .theme-doc-card__header {
+    padding: var(--spacing-5);
+    border-bottom: 1px solid color-mix(in oklab, var(--theme-doc-border) 85%, var(--color-border-strong) 15%);
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-contrast-subtle) 66%, var(--color-surface) 34%),
+      transparent
+    );
+  }
+
+  .theme-doc-card__eyebrow {
+    margin: 0;
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: var(--font-weight-semibold);
+    color: color-mix(in oklab, var(--color-fg-muted) 80%, var(--color-fg) 20%);
+  }
+
+  .theme-doc-card__header :global(h2.heading) {
+    margin: var(--spacing-2) 0 var(--spacing-3);
+    font-size: clamp(var(--font-size-xl), 1rem + 0.8vw, var(--font-size-2xl));
+    color: var(--theme-doc-ink);
+  }
+
+  .theme-doc-card__header p {
+    margin: 0;
+    color: color-mix(in oklab, var(--color-fg-muted) 86%, var(--color-fg) 14%);
+  }
+
+  .theme-doc-card__date {
+    display: inline-flex;
+    margin-top: var(--spacing-3);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: color-mix(in oklab, var(--color-fg-muted) 70%, var(--color-fg) 30%);
+  }
+
+  .theme-doc-content {
+    padding: var(--spacing-5);
+    color: color-mix(in oklab, var(--color-fg) 88%, var(--color-fg-muted) 12%);
+    max-width: 72ch;
+  }
+
+  .theme-doc-content :global(h2),
+  .theme-doc-content :global(h3),
+  .theme-doc-content :global(h4) {
+    margin-top: var(--spacing-6);
+    margin-bottom: var(--spacing-2);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  .theme-doc-content :global(p),
+  .theme-doc-content :global(ol),
+  .theme-doc-content :global(ul) {
+    margin-top: 0;
+    margin-bottom: var(--spacing-3);
+    line-height: 1.6;
+  }
+
+  .theme-doc-content :global(ol),
+  .theme-doc-content :global(ul) {
+    padding-left: var(--spacing-5);
+  }
+
+  .theme-doc-content :global(li + li) {
+    margin-top: var(--spacing-1);
+  }
+
+  .theme-doc-content :global(code) {
+    font-size: 0.9em;
+    padding: 0.12rem 0.4rem;
+    border-radius: var(--rounded-md);
+    background-color: color-mix(in oklab, var(--color-primary-subtle) 46%, var(--color-surface) 54%);
+  }
+
+  .theme-doc-content :global(pre) {
+    margin-top: 0;
+    margin-bottom: var(--spacing-4);
+    border: 1px solid color-mix(in oklab, var(--theme-doc-border) 85%, var(--color-border-strong) 15%);
+    border-radius: var(--rounded-lg);
+    background-color: color-mix(in oklab, var(--color-contrast-fill) 92%, var(--color-fg) 8%);
+    box-shadow: 0 16px 34px color-mix(in oklab, var(--color-contrast-fill) 18%, transparent);
+  }
+
+  .theme-doc-content :global(pre code) {
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  @media (max-width: 64rem) {
+    .theme-doc-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .theme-doc-index {
+      position: static;
+    }
+  }
+
+  @media (max-width: 48rem) {
+    .theme-doc-shell {
+      width: 100%;
+      padding-block: var(--spacing-6);
+      padding-inline: var(--spacing-3);
+    }
+
+    .theme-doc-backdrop {
+      border-radius: var(--rounded-2xl);
+    }
+
+    .theme-doc-card__header,
+    .theme-doc-content {
+      padding: var(--spacing-4);
+    }
+
+    .theme-doc-hero {
+      border-radius: var(--rounded-2xl);
+    }
+  }
+</style>

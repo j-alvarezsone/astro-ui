@@ -68,9 +68,33 @@ import { Icon } from 'astro-icon/components';
       name="firstName"
       label="First name"
       placeholder="Type..."
-      pt={{ wrapper: { class: 'input-text-wrapper-custom' } }}
+      pt={{ wrapper: { class: 'input-text-wrapper-custom', id: 'wrapper' } }}
     />
     <InputText name="lastName" label="Last name" placeholder="Type..." />
+    <InputText
+      name="email"
+      label="Email"
+      placeholder="name@example.com"
+      pt={{
+        root: { class: 'email-field-root' },
+        wrapper: { style: '--input-field-wrapper-background: pink; letter-spacing: 0.02em;' },
+        input: { class: 'email-input' },
+        helpText: { class: 'email-help' },
+        errorText: { class: 'email-error' },
+      }}
+    />
+    <InputText
+      name="email"
+      label="Email"
+      placeholder="name@example.com"
+      pt={{
+        root: { class: 'email-field-root' },
+        wrapper: { class: ['email-shell', 'email-shell--compact', 'email-shell--info'] },
+        input: { class: 'email-input' },
+        helpText: { class: 'email-help' },
+        errorText: { class: 'email-error' },
+      }}
+    />
   </div>
 </Layout>
 
@@ -87,8 +111,37 @@ import { Icon } from 'astro-icon/components';
     flex-direction: column;
     gap: var(--spacing-3);
   }
-  :global(.input-text-wrapper-custom) {
-    --input-field-wrapper-background: #dcfce7;
-    --input-field-wrapper-border-color: #22c55e;
+  /* Root-level scope class:
+     useful to scope all nested field styling in one area. */
+  :global(.email-field-root .input-field__wrapper) {
+    --input-field-wrapper-focus-ring-color: var(--color-link-border);
+  }
+
+  /* Wrapper base class (1 responsibility) */
+  :global(.email-shell) {
+    --input-field-wrapper-background: var(--color-primary-subtle);
+    --input-field-wrapper-border-color: var(--color-primary-border);
+  }
+
+  /* Wrapper modifier class (2nd responsibility) */
+  :global(.email-shell--compact) {
+    --input-field-wrapper-padding-inline: var(--spacing-2);
+  }
+
+  /* Wrapper state/variant class (3rd responsibility) */
+  :global(.email-shell--info) {
+    --input-field-wrapper-border-color: var(--color-link-border);
+  }
+
+  /* Native CSS property override via class:
+     use higher specificity than .input-field__wrapper to win cascade. */
+  :global(.input-field__wrapper.email-shell.email-shell--info) {
+    background-color: blue;
+    border-color: blue;
+  }
+
+  /* Input class has its own separate responsibility */
+  :global(.email-input) {
+    --input-control-input-color: var(--color-fg);
   }
 </style>

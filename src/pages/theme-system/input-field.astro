@@ -1,0 +1,42 @@
+---
+import ThemeDocArticle from '@components/theme/ThemeDocArticle.astro';
+import ThemeLayout from '@layouts/ThemeLayout.astro';
+import { getCollection, render } from 'astro:content';
+
+const guides = await getCollection('themeGuides');
+const guide = guides.find((entry) => /(^|\/)input-field-reference(\.mdx?)?$/u.test(entry.id));
+
+if (!guide) {
+  throw new Error('Theme guide entry "input-field-reference" was not found.');
+}
+
+const rendered = await render(guide);
+const { Content } = rendered;
+const headings =
+  'headings' in rendered && Array.isArray(rendered.headings)
+    ? rendered.headings.filter((heading) => heading.depth >= 2 && heading.depth <= 3)
+    : [];
+---
+
+<ThemeLayout
+  title="InputField Documentation"
+  heroTitle={guide.data.title}
+  heroSummary={guide.data.summary}
+  secondaryHref="/theme-system/input-text"
+  secondaryLabel="InputText Documentation"
+  contentLabel="InputField documentation content"
+>
+  <ol slot="index">
+    {
+      headings.map((heading) => (
+        <li>
+          <a href={`#${heading.slug}`}>{heading.text}</a>
+        </li>
+      ))
+    }
+  </ol>
+
+  <ThemeDocArticle>
+    <Content />
+  </ThemeDocArticle>
+</ThemeLayout>
