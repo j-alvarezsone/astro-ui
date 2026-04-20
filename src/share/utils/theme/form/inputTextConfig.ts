@@ -294,7 +294,7 @@ export function mergeInputTextPassThrough(
  * const vars = createInputTextStyleVars({
  *   input: { color: 'navy', placeholderColor: 'gray' },
  * });
- * // '--input-text-input-color: navy; --input-text-input-placeholder-color: gray'
+ * // '--input-control-input-color: navy; --input-control-input-placeholder-color: gray'
  */
 export function createInputTextStyleVars(config: InputTextStyleConfig | undefined): string | undefined {
   if (!config) {
@@ -302,11 +302,11 @@ export function createInputTextStyleVars(config: InputTextStyleConfig | undefine
   }
 
   const entries = [
-    ['--input-text-input-color', config.input?.color],
-    ['--input-text-input-padding-block', config.input?.paddingBlock],
-    ['--input-text-input-placeholder-color', config.input?.placeholderColor],
-    ['--input-text-input-placeholder-error-color', config.input?.placeholderErrorColor],
-    ['--input-text-input-disabled-color', config.input?.disabledColor],
+    ['--input-control-input-color', config.input?.color],
+    ['--input-control-input-padding-block', config.input?.paddingBlock],
+    ['--input-control-input-placeholder-color', config.input?.placeholderColor],
+    ['--input-control-input-placeholder-error-color', config.input?.placeholderErrorColor],
+    ['--input-control-input-disabled-color', config.input?.disabledColor],
   ] as const;
 
   const declarations = entries

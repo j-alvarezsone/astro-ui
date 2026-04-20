@@ -206,12 +206,12 @@ const { className: errorTextPassThroughClass, attributes: errorTextPassThroughAt
   :global(.input-field__wrapper input) {
     flex: 1;
     min-width: 0;
-    padding-block: var(--input-text-input-padding-block, var(--spacing-2-5));
+    padding-block: var(--input-control-input-padding-block, var(--spacing-2-5));
     border: none;
     outline: none;
     background-color: transparent;
     font-size: inherit;
-    color: var(--input-text-input-color, inherit);
+    color: var(--input-control-input-color, inherit);
   }
 
   /* Sizes - applied via wrapper modifier, targets slotted input */
@@ -231,8 +231,8 @@ const { className: errorTextPassThroughClass, attributes: errorTextPassThroughAt
 
   /* Disabled text */
   :global(.input-field__wrapper input:disabled) {
-    color: var(--input-text-input-disabled-color, var(--color-fg-disabled));
-    -webkit-text-fill-color: var(--input-text-input-disabled-color, var(--color-fg-disabled));
+    color: var(--input-control-input-disabled-color, var(--color-fg-disabled));
+    -webkit-text-fill-color: var(--input-control-input-disabled-color, var(--color-fg-disabled));
   }
 
   /* ── Placeholder ─────────────────────────────────────────────
@@ -241,16 +241,16 @@ const { className: errorTextPassThroughClass, attributes: errorTextPassThroughAt
   ─────────────────────────────────────────────────────────── */
   :global(.input-field__wrapper input::placeholder) {
     opacity: 1;
-    color: var(--input-text-input-placeholder-color, var(--color-fg-muted));
+    color: var(--input-control-input-placeholder-color, var(--color-fg-muted));
   }
 
   :global(.input-field__wrapper--error input::placeholder) {
-    color: var(--input-text-input-placeholder-error-color, var(--color-danger-fg));
+    color: var(--input-control-input-placeholder-error-color, var(--color-danger-fg));
   }
 
   /* Show invalid placeholder color only for forms using native validation UX. */
   :global(form:not([novalidate]) .input-field__wrapper input:user-invalid::placeholder) {
-    color: var(--input-text-input-placeholder-error-color, var(--color-danger-fg));
+    color: var(--input-control-input-placeholder-error-color, var(--color-danger-fg));
   }
 
   :global(.input-field__wrapper--over input::placeholder),

@@ -30,7 +30,7 @@ export function getResolvedThemeName(themeName: string | undefined): UIThemeName
  *
  * @example
  * const css = getComponentsThemeCss('warm');
- * // 'html:root { --input-field-wrapper-background: #fff7ed; --input-text-input-placeholder-color: #9a3412; ... }'
+ * // 'html:root { --input-field-wrapper-background: #fff7ed; --input-control-input-placeholder-color: #9a3412; ... }'
  *
  * @example
  * const none = getComponentsThemeCss(undefined);

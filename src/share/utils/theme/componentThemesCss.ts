@@ -23,7 +23,7 @@ interface CreateComponentThemeResolverParams<TThemeConfig, TThemeName extends st
  *   selector: 'html:root',
  * });
  * const css = resolver('warm');
- * // 'html:root { --input-field-wrapper-background: #fff7ed; --input-text-input-placeholder-color: #9a3412; ... }'
+ * // 'html:root { --input-field-wrapper-background: #fff7ed; --input-control-input-placeholder-color: #9a3412; ... }'
  */
 export function createComponentThemeResolver<TThemeConfig, TThemeName extends string = string>({
   getThemeByName,
@@ -44,7 +44,7 @@ export function createComponentThemeResolver<TThemeConfig, TThemeName extends st
  *
  * @example
  * const css = createComponentsThemeCss('warm', [inputTextResolver, buttonResolver]);
- * // 'html:root { --input-field-wrapper-background: #fff7ed; --input-text-input-placeholder-color: #9a3412; ... }\nhtml:root { --button-color: ...; }'
+ * // 'html:root { --input-field-wrapper-background: #fff7ed; --input-control-input-placeholder-color: #9a3412; ... }\nhtml:root { --button-color: ...; }'
  */
 export function createComponentsThemeCss<TThemeName extends string>(
   resolvedThemeName: TThemeName,

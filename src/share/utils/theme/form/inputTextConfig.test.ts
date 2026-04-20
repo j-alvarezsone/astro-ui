@@ -109,7 +109,7 @@ describe('createInputTextStyleVars', () => {
           placeholderColor: 'gray',
         },
       }),
-    ).toBe('--input-text-input-color: navy; --input-text-input-placeholder-color: gray');
+    ).toBe('--input-control-input-color: navy; --input-control-input-placeholder-color: gray');
   });
 
   it('returns undefined when no declarations are produced', () => {
