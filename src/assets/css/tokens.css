@@ -74,10 +74,6 @@
   --rounded-4xl: 2rem;
   --rounded-full: 9999rem;
 
-  /* Backward-compatible aliases */
-  --border-radius-lg: var(--rounded-lg);
-  --border-radius-full: var(--rounded-full);
-
   /****
   Colors
   ****/
