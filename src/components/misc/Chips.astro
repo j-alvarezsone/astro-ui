@@ -1,0 +1,102 @@
+---
+import { Icon, type IconProps } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+
+interface Props {
+  size?: 'sm' | 'md' | 'lg';
+  label?: string;
+  icon?: IconProps;
+  iconPos?: 'left' | 'right';
+  image?: {
+    src: string;
+    alt: string;
+  };
+}
+
+const { size = 'md', label, icon, iconPos = 'left', image, ...rest } = Astro.props;
+
+const imageSizes: Record<NonNullable<Props['size']>, number> = {
+  sm: 26,
+  md: 30,
+  lg: 34,
+} as const;
+
+const imageDimension = imageSizes[size];
+---
+
+<button type="button" class:list={['chips', `chips--${size}`, { 'chips--with-image': Boolean(image) }]} {...rest}>
+  {
+    image && (
+      <Image src={image.src} alt={image.alt} width={imageDimension} height={imageDimension} class="chips__image" />
+    )
+  }
+  {
+    icon && (!image || iconPos === 'right') && (
+      <Icon {...icon} class:list={['chips__icon', `chips__icon--${iconPos}`]} />
+    )
+  }
+  <slot>{label}</slot>
+</button>
+
+<style>
+  .chips {
+    background: none;
+    color: inherit;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+    outline: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-full);
+    padding-block: var(--spacing-1);
+    padding-inline: var(--spacing-2);
+    background-color: var(--color-contrast-subtle);
+    color: var(--color-contrast-fg);
+  }
+
+  .chips--sm {
+    padding-block: var(--spacing-0-5);
+    padding-inline: var(--spacing-1);
+    font-size: var(--font-size-sm);
+  }
+
+  .chips--lg {
+    padding-block: var(--spacing-1-5);
+    padding-inline: var(--spacing-3);
+    font-size: var(--font-size-lg);
+  }
+
+  .chips--with-image.chips--sm {
+    padding-inline: var(--spacing-0-5);
+  }
+
+  .chips--with-image.chips--md {
+    padding-inline: var(--spacing-1);
+  }
+
+  .chips--with-image.chips--lg {
+    padding-inline: var(--spacing-2);
+  }
+
+  .chips__icon--right {
+    order: 1;
+  }
+
+  .chips__image {
+    border-radius: var(--rounded-full);
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .chips:focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 6px var(--color-focus-ring-overlay);
+    border-color: var(--color-focus-ring);
+  }
+</style>

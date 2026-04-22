@@ -5,6 +5,7 @@ import FormGroup from '@components/form/FormGroup.astro';
 import InputAddon from '@components/form/InputAddon.astro';
 import InputGroup from '@components/form/InputGroup.astro';
 import InputText from '@components/form/InputText.astro';
+import Chips from '@components/misc/Chips.astro';
 import Heading from '@components/typography/Heading.astro';
 import Layout from '@layouts/Layout.astro';
 import { Icon } from 'astro-icon/components';
@@ -94,6 +95,13 @@ import { Icon } from 'astro-icon/components';
         helpText: { class: 'email-help' },
         errorText: { class: 'email-error' },
       }}
+    />
+    <Chips
+      label="test"
+      image={{ src: 'https://i.pravatar.cc/96?img=21', alt: 'Amy Elsner avatar' }}
+      icon={{ name: 'mdi:abacus' }}
+      iconPos="right"
+      size="md"
     />
   </div>
 </Layout>
