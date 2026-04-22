@@ -114,6 +114,7 @@
   --color-secondary-border:       #93c5fd;
 
   /* ── Contrast (Neutral dark — surfaces & borders) ────────── */
+  --color-contrast-fg:           #1e293b;
   --color-contrast-fill:         #18181b;
   --color-contrast-fill-hover:   #09090b;
   --color-contrast-on-fill:      #fafafa;
