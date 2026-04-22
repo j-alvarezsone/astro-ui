@@ -165,6 +165,16 @@
   --color-danger-on-subtle:    #991b1b;
   --color-danger-border:       #fca5a5;
 
+  /* ── Info ─────────────────────────────────────────────── */
+  --color-info-fg:           #0c4a6e;
+  --color-info-fill:         #0369a1;
+  --color-info-fill-hover:   #075985;
+  --color-info-on-fill:      #ffffff;
+  --color-info-subtle:       #e0f2fe;
+  --color-info-subtle-hover: #bae6fd;
+  --color-info-on-subtle:    #0c4a6e;
+  --color-info-border:       #7dd3fc;
+
   /* ── Global borders ─────────────────────────────────────── */
   --color-border:       #e5e7eb;
   --color-border-strong: #d1d5db;
