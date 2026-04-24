@@ -1,8 +1,21 @@
 ---
+import ComponentSlotsDemo from '@components/theme/ComponentSlotsDemo.astro';
 import ThemeDocArticle from '@components/theme/ThemeDocArticle.astro';
 import ThemeLayout from '@layouts/ThemeLayout.astro';
+import { createComponentSlots } from '@utils/content/createComponentSlots';
 import { getFilteredHeadings } from '@utils/content/getFilteredHeadings';
+import InputTextComponent from '@components/form/InputText.astro';
+import { INPUT_TEXT_PT_SLOT_NAMES } from '@/types/theme/form/inputText';
+import { INPUT_FIELD_SELECTOR_OVERRIDES } from '@/types/theme/form/inputField';
 import { getEntry, render } from 'astro:content';
+
+// InputText renders the same DOM root as InputField (.input-field) because it
+// delegates to InputField internally — it adds no own CSS block class.
+// The only additional slot is `input` (the bare <input> inside the wrapper).
+const INPUT_TEXT_SLOTS = createComponentSlots('input-field', INPUT_TEXT_PT_SLOT_NAMES, {
+  ...INPUT_FIELD_SELECTOR_OVERRIDES,
+  input: '.input-field__wrapper input',
+});
 
 const guide = await getEntry('themeGuides', 'input-text-reference');
 
@@ -24,6 +37,17 @@ const headings = getFilteredHeadings(rendered);
   contentLabel="InputText documentation content"
   headings={headings}
 >
+  <ComponentSlotsDemo slots={INPUT_TEXT_SLOTS} label="InputText pt slots">
+    <InputTextComponent
+      name="demo-input-text"
+      label="First Name"
+      placeholder="Enter your first name"
+      icon={{ name: 'mdi:account' }}
+      helpText="Enter your first name."
+      errorText="First name is required."
+    />
+  </ComponentSlotsDemo>
+
   <ThemeDocArticle>
     <Content />
   </ThemeDocArticle>

@@ -67,4 +67,39 @@
     border-radius: 0;
     background: transparent;
   }
+
+  .theme-doc-content :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: var(--spacing-4);
+    font-size: var(--font-size-sm);
+  }
+
+  .theme-doc-content :global(thead) {
+    background-color: color-mix(in oklab, var(--color-contrast-subtle) 60%, var(--color-surface) 40%);
+    border-bottom: 2px solid var(--color-border);
+  }
+
+  .theme-doc-content :global(th) {
+    padding: var(--spacing-2) var(--spacing-4);
+    text-align: left;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-fg);
+    white-space: nowrap;
+  }
+
+  .theme-doc-content :global(td) {
+    padding: var(--spacing-2) var(--spacing-4);
+    border-bottom: 1px solid color-mix(in oklab, var(--color-border) 60%, transparent 40%);
+    color: color-mix(in oklab, var(--color-fg) 85%, var(--color-fg-muted) 15%);
+    vertical-align: top;
+  }
+
+  .theme-doc-content :global(tr:last-child td) {
+    border-bottom: none;
+  }
+
+  .theme-doc-content :global(tbody tr:hover td) {
+    background-color: color-mix(in oklab, var(--color-primary-subtle) 30%, transparent 70%);
+  }
 </style>

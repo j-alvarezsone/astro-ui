@@ -104,9 +104,20 @@ import { MY_COMPONENT_PT_SLOT_NAMES } from '@/types/theme/misc/my-component';
 const MY_COMPONENT_SLOTS = createComponentSlots('my-component', MY_COMPONENT_PT_SLOT_NAMES);
 ```
 
-`createComponentSlots(blockClass, slotNames)` maps:
+`createComponentSlots(blockClass, slotNames, selectorOverrides?)` maps:
 - `'root'` → `.blockClass`
 - any other name → `.blockClass__kebab-slot-name`
+- entries in `selectorOverrides` replace the auto-derived selector for that slot
+
+When a component's actual DOM classes deviate from standard BEM (e.g. `.input-label` instead of `.input-field__label`, or `.input-field__help` instead of `.input-field__help-text`), pass the deviating selectors as `selectorOverrides` — **never fall back to a hand-written `ComponentSlot[]` array**:
+
+```ts
+const INPUT_FIELD_SLOTS = createComponentSlots('input-field', INPUT_FIELD_PT_SLOT_NAMES, {
+  label: '.input-label',
+  helpText: '.input-field__help',
+  errorText: '.input-field__error',
+});
+```
 
 **2. Render the demo in the page**
 
@@ -121,7 +132,8 @@ The `label` prop (optional, default `'Component pt slots'`) sets the `aria-label
 ### Rules
 
 - Never skip `ComponentSlotsDemo` on a theme-guide page that documents `pt` slots.
-- Always derive slots from the component's `*_PT_SLOT_NAMES` constant — never write selectors by hand.
+- Always derive slots from the component's `*_PT_SLOT_NAMES` constant using `createComponentSlots` — never write a hand-crafted `ComponentSlot[]` array.
+- When a slot's actual CSS selector deviates from BEM convention, pass it via `selectorOverrides` (third argument) — do not skip `createComponentSlots`.
 - Do **not** add `margin-block` to the component; the parent grid gap handles vertical spacing.
 - Use `:global([data-slots-highlight])` (already in `ComponentSlotsDemo.astro`) to style highlighted elements — do not add extra outline styles elsewhere.
 

@@ -23,4 +23,31 @@ describe('createComponentSlots', () => {
   it('returns an empty array when no slots are provided', () => {
     expect(createComponentSlots('chips', [])).toEqual([]);
   });
+
+  it('uses selectorOverrides for slots whose actual selector deviates from BEM', () => {
+    expect(
+      createComponentSlots('input-field', ['root', 'label', 'helpText', 'errorText'], {
+        label: '.input-label',
+        helpText: '.input-field__help',
+        errorText: '.input-field__error',
+      }),
+    ).toEqual([
+      { name: 'root', selector: '.input-field' },
+      { name: 'label', selector: '.input-label' },
+      { name: 'helpText', selector: '.input-field__help' },
+      { name: 'errorText', selector: '.input-field__error' },
+    ]);
+  });
+
+  it('only overrides the specified slots, leaving others as BEM-derived', () => {
+    expect(
+      createComponentSlots('input-field', ['root', 'wrapper', 'label'], {
+        label: '.input-label',
+      }),
+    ).toEqual([
+      { name: 'root', selector: '.input-field' },
+      { name: 'wrapper', selector: '.input-field__wrapper' },
+      { name: 'label', selector: '.input-label' },
+    ]);
+  });
 });
