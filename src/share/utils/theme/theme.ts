@@ -1,6 +1,6 @@
 import { createComponentThemeResolver, createComponentsThemeCss } from '@utils/theme/componentThemesCss';
-import { createComponentThemeCss } from '@utils/theme/createComponentThemeCss';
-import { getThemeComponent, getThemeComponents, type UIThemeName, resolveThemeName } from '@utils/theme/uiThemes';
+import { componentThemeCssMap } from '@utils/theme/createComponentThemeCss';
+import { getThemeComponent, getThemeComponents, type UIThemeComponentName, type UIThemeComponents, type UIThemeName, resolveThemeName } from '@utils/theme/uiThemes';
 
 /**
  * Resolves a raw theme name string into a valid `UIThemeName`.
@@ -44,12 +44,31 @@ export function getComponentsThemeCss(themeName: string | undefined): string | u
   }
 
   const componentThemeResolvers = getThemeComponents(resolvedThemeName).map(({ name }) =>
-    createComponentThemeResolver({
-      getThemeByName: (currentThemeName: UIThemeName) => getThemeComponent(currentThemeName, name),
-      createThemeCss: createComponentThemeCss,
-      selector: 'html:root',
-    }),
+    createTypedComponentResolver(name),
   );
 
   return createComponentsThemeCss(resolvedThemeName, componentThemeResolvers);
+}
+
+/**
+ * Creates a type-safe component theme resolver for a single component.
+ *
+ * Captures `K` as a precise subtype of `UIThemeComponentName` so TypeScript can prove
+ * that `getThemeComponent` and `componentThemeCssMap[name]` both operate on the same
+ * `UIThemeComponents[K]` config type — no cast required.
+ *
+ * @param name - The component key as registered in `UIThemeComponentsConfig`.
+ * @returns A resolver function that accepts a theme name and returns scoped CSS or `undefined`.
+ *
+ * @example
+ * const resolver = createTypedComponentResolver('inputText');
+ * const css = resolver('warm');
+ * // 'html:root { --input-field-wrapper-background: #fff7ed; ... }'
+ */
+function createTypedComponentResolver<K extends UIThemeComponentName>(name: K) {
+  return createComponentThemeResolver<UIThemeComponents[K], UIThemeName>({
+    getThemeByName: (themeName: UIThemeName) => getThemeComponent(themeName, name),
+    createThemeCss: componentThemeCssMap[name],
+    selector: 'html:root',
+  });
 }

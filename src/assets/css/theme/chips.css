@@ -1,0 +1,13 @@
+/* ── Chips Default Hooks ─────────────────────────────────────
+ * These variables control the default visual appearance of the
+ * Chips component. Override them once (globally or per-theme)
+ * to restyle chips without per-component CSS edits.
+ */
+:root {
+  --chips-background-color: var(--color-contrast-subtle);
+  --chips-border-color: var(--color-border);
+  --chips-color: var(--color-contrast-fg);
+  --chips-active-background-color: var(--color-primary-subtle);
+  --chips-active-border-color: var(--color-primary-fg);
+  --chips-active-color: var(--color-primary-fg);
+}

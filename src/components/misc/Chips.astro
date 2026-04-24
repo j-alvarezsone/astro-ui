@@ -2,6 +2,9 @@
 import { Icon, type IconProps } from 'astro-icon/components';
 import { Image } from 'astro:assets';
 
+import type { ChipsPassThrough } from '@/types/theme/misc/chips';
+import { splitPassThroughAttributes } from '@utils/theme/form/inputTextConfig';
+
 interface Props {
   size?: 'sm' | 'md' | 'lg';
   label?: string;
@@ -11,9 +14,10 @@ interface Props {
     src: string;
     alt: string;
   };
+  pt?: ChipsPassThrough;
 }
 
-const { size = 'md', label, icon, iconPos = 'left', image, ...rest } = Astro.props;
+const { size = 'md', label, icon, iconPos = 'left', image, pt, ...rest } = Astro.props;
 
 const imageSizes: Record<NonNullable<Props['size']>, number> = {
   sm: 26,
@@ -22,9 +26,16 @@ const imageSizes: Record<NonNullable<Props['size']>, number> = {
 } as const;
 
 const imageDimension = imageSizes[size];
+
+const { className: rootClass, attributes: rootAttributes } = splitPassThroughAttributes(pt?.root);
 ---
 
-<button type="button" class:list={['chips', `chips--${size}`, { 'chips--with-image': Boolean(image) }]} {...rest}>
+<button
+  type="button"
+  class:list={['chips', `chips--${size}`, { 'chips--with-image': Boolean(image) }, rootClass]}
+  {...rootAttributes}
+  {...rest}
+>
   {
     image && (
       <Image src={image.src} alt={image.alt} width={imageDimension} height={imageDimension} class="chips__image" />
@@ -43,12 +54,19 @@ const imageDimension = imageSizes[size];
     display: inline-flex;
     align-items: center;
     gap: var(--spacing-2);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--chips-border-color);
     border-radius: var(--rounded-full);
     padding-block: var(--spacing-1);
     padding-inline: var(--spacing-2);
-    background-color: var(--color-contrast-subtle);
-    color: var(--color-contrast-fg);
+    background-color: var(--chips-background-color);
+    color: var(--chips-color);
+    cursor: pointer;
+  }
+
+  .chips[data-active] {
+    background-color: var(--chips-active-background-color);
+    border-color: var(--chips-active-border-color);
+    color: var(--chips-active-color);
   }
 
   .chips--sm {

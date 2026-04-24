@@ -34,6 +34,56 @@ Key rules:
 - Keep styles scoped (`<style>` block without `:global`).
 - Default slot for content; named slots for distinct regions.
 
+## Pass-Through (`pt`) Pattern
+
+Components that accept a `pt` prop for per-slot attribute injection **must** follow this exact pattern. Never deviate.
+
+### 1. Type the pass-through interface in `src/share/types/theme/`
+
+Each slot has a `PassThroughAttributes` entry:
+
+```ts
+import type { PassThroughAttributes } from '@/types/theme/form/shared';
+
+export interface MyComponentPassThrough {
+  root?: PassThroughAttributes;
+  // add one key per distinct DOM slot
+}
+```
+
+### 2. In the component frontmatter, split with `splitPassThroughAttributes`
+
+Always import and use the shared utility — never write an IIFE, a custom spread, or `as string | undefined` casts:
+
+```astro
+import { splitPassThroughAttributes } from '@utils/theme/form/inputTextConfig';
+import type { MyComponentPassThrough } from '@/types/theme/my-component';
+
+const { pt, ...rest } = Astro.props;
+const { className: rootClass, attributes: rootAttributes } = splitPassThroughAttributes(pt?.root);
+```
+
+### 3. In the template, bind class and attributes separately
+
+```astro
+<div
+  class:list={['my-component', rootClass]}
+  {...rootAttributes}
+  {...rest}
+/>
+```
+
+`splitPassThroughAttributes` returns `{ className, attributes }` where `attributes` already excludes `class` and is `undefined` when empty — so spreading it is always safe.
+
+### Rules
+
+- **Never** manually destructure `{ class: _, style: __, ...attrs }` inline.
+- **Never** use an IIFE `(() => { ... })()` inside the template to strip keys.
+- **Never** cast `pt?.root?.style as string | undefined`.
+- **Always** use `splitPassThroughAttributes` from `@utils/theme/form/inputTextConfig`.
+- Keep `class:list` for classes and `{...rootAttributes}` for everything else, in that order.
+- Place `{...rest}` after `{...rootAttributes}` so component-level props do not override pass-through.
+
 ## Theming Decision
 
 When creating a new reusable UI component, especially a form-related or stateful visual primitive, ask whether it should participate in the theme system before implementing its styling API.

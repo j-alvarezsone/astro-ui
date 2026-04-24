@@ -77,7 +77,19 @@ Current pattern:
 - `src/share/types/theme/form/shared.ts`
 - `src/share/types/theme/form/inputField.ts`
 - `src/share/types/theme/form/inputText.ts`
+- `src/share/types/theme/misc/chips.ts`
 - `src/share/types/theme/uiThemes.ts`
+
+**Mirror the component folder structure.**
+
+Theme type files and config/utils files must live under the same category subfolder as the component:
+
+| Component | Type file | Config file |
+|---|---|---|
+| `src/components/form/InputText.astro` | `src/share/types/theme/form/inputText.ts` | `src/share/utils/theme/form/inputTextConfig.ts` |
+| `src/components/misc/Chips.astro` | `src/share/types/theme/misc/chips.ts` | `src/share/utils/theme/misc/chipsConfig.ts` |
+
+**Rule:** any new themed component under `src/components/<category>/` gets its type file under `src/share/types/theme/<category>/` and its config under `src/share/utils/theme/<category>/` — never flat in the theme root.
 
 Future components should follow the same pattern with dedicated files.
 
@@ -189,14 +201,15 @@ cool: {
 
 1. Ask whether the new component should participate in the theme system.
 2. Decide whether it reuses `InputField` or needs its own structure.
-3. Create a dedicated type file under `src/share/types/theme/...`.
-4. Register the component in `src/share/types/theme/uiThemes.ts`.
-5. Create a style-var generator under `src/share/utils/theme/...`.
-6. Add default CSS variable values under `src/assets/css/theme/...` if new tokens are introduced.
-7. Wire the generator into `src/share/utils/theme/createComponentThemeCss.ts` if it contributes runtime theme CSS.
-8. Use the variables in the component CSS.
-9. Add or update tests.
-10. Run `pnpm run type:check`.
+3. Determine the component's category folder by looking at `src/components/<category>/`.
+4. Create a dedicated type file at `src/share/types/theme/<category>/<componentName>.ts`.
+5. Register the component in `src/share/types/theme/uiThemes.ts`.
+6. Create a style-var generator at `src/share/utils/theme/<category>/<componentName>Config.ts`.
+7. Add default CSS variable values under `src/assets/css/theme/...` if new tokens are introduced.
+8. Wire the generator into `src/share/utils/theme/createComponentThemeCss.ts` if it contributes runtime theme CSS.
+9. Use the variables in the component CSS.
+10. Add or update tests.
+11. Run `pnpm run type:check`.
 
 ## Workflow: Make Any New Reusable Component Theme-Capable
 
@@ -269,6 +282,10 @@ When the task changes generated CSS, assert the exact expected string where prac
 - Do not leave old token names partially in use after a refactor.
 - Do not add a second theming path when the layout-based global theme pipeline already handles the use case.
 - Do not finish theme work without tests and typecheck.
+- **Do not implement `pt` pass-through manually** with IIFEs, inline destructuring, or `as string | undefined` casts. Always use `splitPassThroughAttributes` from `@utils/theme/form/inputTextConfig`. See the `pt` pattern rules in `.github/instructions/components.instructions.md`.
+- **Do not use a single flat `createThemeCssFromStyleVars([...])` array across different components.** Each component has its own config type. Add one entry per component to `componentThemeCssMap` in `createComponentThemeCss.ts`.
+- **Do not export dead code from `createComponentThemeCss.ts`.** No aliases, wrappers, or backward-compatibility re-exports unless they are actively imported somewhere. Verify usages before adding any new export.
+- **Do not use `any` or `eslint-disable` / `@ts-ignore` comments.** When generics need to be paired (e.g. `getThemeComponent` with `componentThemeCssMap[name]`), capture the type with a small typed helper function using `K extends UIThemeComponentName` so TypeScript can prove the types align without a cast.
 
 ## Completion Checklist
 
