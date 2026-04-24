@@ -2,54 +2,7 @@ import type { InputTextPassThrough } from '@/types/theme/form/inputText';
 
 import { createThemeCss } from '@utils/theme/themeCss';
 import { createInputFieldStyleVars } from '@utils/theme/form/inputFieldConfig';
-import {
-  createInputTextStyleVars,
-  mergeInputTextPassThrough,
-  mergePassThroughAttributes,
-} from '@utils/theme/form/inputTextConfig';
-
-describe('mergePassThroughAttributes', () => {
-  it('merges classes and styles while allowing override attributes to win', () => {
-    const merged = mergePassThroughAttributes(
-      {
-        class: 'base-class',
-        style: 'color: red;',
-        'data-size': 'md',
-      },
-      {
-        class: ['override-class'],
-        style: 'background: blue;',
-        'data-size': 'lg',
-        'data-slot': 'input',
-      },
-    );
-
-    expect(merged).toEqual({
-      class: ['base-class', 'override-class'],
-      style: 'color: red; background: blue',
-      'data-size': 'lg',
-      'data-slot': 'input',
-    });
-  });
-
-  it('merges style objects and style strings into one CSS text', () => {
-    const merged = mergePassThroughAttributes(
-      {
-        style: {
-          '--label-start': '10px',
-          backgroundColor: 'white',
-        },
-      },
-      {
-        style: 'border-color: red;',
-      },
-    );
-
-    expect(merged).toEqual({
-      style: '--label-start: 10px; background-color: white; border-color: red',
-    });
-  });
-});
+import { createInputTextStyleVars, mergeInputTextPassThrough } from '@utils/theme/form/inputTextConfig';
 
 describe('mergeInputTextPassThrough', () => {
   it('merges each part independently', () => {

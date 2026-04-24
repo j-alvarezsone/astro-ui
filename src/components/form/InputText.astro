@@ -1,9 +1,8 @@
 ---
 import type { IconProps } from 'astro-icon/components';
-
 import type { InputTextPassThrough } from '@/types/theme/form/inputText';
 import type { ClassValue } from '@/types/theme/form/shared';
-import { mergePassThroughAttributes, splitPassThroughAttributes } from '@utils/theme/form/inputTextConfig';
+import { mergePassThroughAttributes, splitPassThroughAttributes } from '@utils/theme/passThrough';
 
 import InputField from './InputField.astro';
 
@@ -57,7 +56,8 @@ const helpTextId = helpText ? `${name}-help` : undefined;
 const describedBy = [errorTextId, helpTextId].filter(Boolean).join(' ') || undefined;
 
 const inputPassThrough = mergePassThroughAttributes(inputAttributes, pt?.input);
-const { className: inputPassThroughClass, attributes: inputPassThroughAttributes } = splitPassThroughAttributes(inputPassThrough);
+const { className: inputPassThroughClass, attributes: inputPassThroughAttributes } =
+  splitPassThroughAttributes(inputPassThrough);
 ---
 
 <InputField
