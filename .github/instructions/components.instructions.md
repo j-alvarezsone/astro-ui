@@ -78,6 +78,87 @@ const { className: rootClass, attributes: rootAttributes } = splitPassThroughAtt
 ### Rules
 
 - **Never** manually destructure `{ class: _, style: __, ...attrs }` inline.
+
+## Interactive Slot Preview (`ComponentSlotsDemo`)
+
+Use `ComponentSlotsDemo` in every theme-guide page that has a `pt` (pass-through) API to show which DOM element each slot targets.
+
+### How it works
+
+1. The Astro component `src/components/theme/ComponentSlotsDemo.astro` renders a two-column grid:
+   - Left: a live preview area (`data-slots-preview`) containing the component instance via `<slot />`.
+   - Right: an ordered list of slot rows, each storing the CSS selector in `data-slots-item`.
+2. The custom element `src/web-components/slots-demo.web.ts` (`SlotsDemoElement`) powers the hover/focus highlight:
+   - `connectedCallback` reads each `[data-slots-item]` selector, resolves matching elements inside `[data-slots-preview]`, and attaches `mouseenter/mouseleave/focus/blur` listeners via a single `AbortController`.
+   - `disconnectedCallback` calls `controller.abort()` — no manual `removeEventListener` needed.
+   - `#activate` sets `data-slots-active` on the row and `data-slots-highlight` on targets; `#deactivate` removes them.
+
+### Steps to add a slot demo to a page
+
+**1. Derive slot descriptors with `createComponentSlots`**
+
+```ts
+import { createComponentSlots } from '@utils/content/createComponentSlots';
+import { MY_COMPONENT_PT_SLOT_NAMES } from '@/types/theme/misc/my-component';
+
+const MY_COMPONENT_SLOTS = createComponentSlots('my-component', MY_COMPONENT_PT_SLOT_NAMES);
+```
+
+`createComponentSlots(blockClass, slotNames)` maps:
+- `'root'` → `.blockClass`
+- any other name → `.blockClass__kebab-slot-name`
+
+**2. Render the demo in the page**
+
+```astro
+<ComponentSlotsDemo slots={MY_COMPONENT_SLOTS}>
+  <MyComponent label="Example" />
+</ComponentSlotsDemo>
+```
+
+The `label` prop (optional, default `'Component pt slots'`) sets the `aria-label` on the list.
+
+### Rules
+
+- Never skip `ComponentSlotsDemo` on a theme-guide page that documents `pt` slots.
+- Always derive slots from the component's `*_PT_SLOT_NAMES` constant — never write selectors by hand.
+- Do **not** add `margin-block` to the component; the parent grid gap handles vertical spacing.
+- Use `:global([data-slots-highlight])` (already in `ComponentSlotsDemo.astro`) to style highlighted elements — do not add extra outline styles elsewhere.
+
+## Web Component Pattern (`*.web.ts`)
+
+All interactive behavior that needs to be unit-tested must be a custom element in `src/web-components/`.
+
+### Template
+
+```ts
+class MyFeatureElement extends HTMLElement {
+  #controller: AbortController | null = null;
+
+  connectedCallback(): void {
+    this.#controller = new AbortController();
+    const { signal } = this.#controller;
+    // attach all event listeners with { signal }
+  }
+
+  disconnectedCallback(): void {
+    this.#controller?.abort();
+    this.#controller = null;
+  }
+}
+
+customElements.define('my-feature', MyFeatureElement);
+```
+
+### Rules
+
+- File naming: `kebab-name.web.ts` in `src/web-components/`.
+- Always use `AbortController` for cleanup — never call `removeEventListener` manually.
+- Private methods: use `#privateMethod()` syntax (not `_`).
+- Companion test file: `kebab-name.web.test.ts` next to the source file.
+- In Astro, load the web component with `<script>import '@web-components/my-feature.web';</script>` — never inline the class in a `<script>` tag.
+- The custom element name must match its filename prefix (`slots-demo.web.ts` → `customElements.define('slots-demo', ...)`).
+- When using the element as the root wrapper in Astro, scope CSS with `element-name.class-name { }` (e.g. `slots-demo.slots-demo { }`).
 - **Never** use an IIFE `(() => { ... })()` inside the template to strip keys.
 - **Never** cast `pt?.root?.style as string | undefined`.
 - **Always** use `splitPassThroughAttributes` from `@utils/theme/form/inputTextConfig`.

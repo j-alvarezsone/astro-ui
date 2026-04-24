@@ -51,9 +51,13 @@ Practical alignment notes:
 
 ## Chips `pt` Sections
 
-`Chips` currently supports one `pt` section:
+`Chips` currently supports these `pt` sections:
 
 - `root`
+- `image`
+- `icon`
+- `label`
+- `removeIcon`
 
 The `root` section accepts pass-through attributes:
 
@@ -100,7 +104,8 @@ This snippet is an example pattern (not runtime source-of-truth):
 
 Chips note:
 
-- `pt.root.class` is both the scope hook and the main visual hook because Chips renders a single root button.
+- `pt.root.class` remains the broad scope hook for the root button.
+- Use slot-level sections (`image`, `icon`, `label`, `removeIcon`) for precise per-part overrides.
 - For general class-array layering strategy, see `theme-system-overview.md` -> `Pass-Through Class Strategy`.
 
 ### Example B: `pt.style` (inline style string/object)
@@ -109,6 +114,11 @@ Chips note:
 <Chips
   label="Inline Styled"
   pt={{
+    label: {
+      style: {
+        fontWeight: 600,
+      },
+    },
     root: {
       style: {
         backgroundColor: 'orange',
@@ -119,7 +129,11 @@ Chips note:
 
 <Chips
   label="Token Inline"
+  removeIcon={{ name: 'mdi:close-circle-outline' }}
   pt={{
+    removeIcon: {
+      style: 'opacity: 0.72;',
+    },
     root: {
       style: '--chips-active-background-color: var(--color-warning-fg); letter-spacing: 0.02em;',
     },
@@ -132,6 +146,8 @@ Chips note:
 ```astro
 <Chips
   label="Filter"
+  icon={{ name: 'mdi:microsoft-windows' }}
+  removeIcon={{ name: 'mdi:close-circle-outline' }}
   pt={{
     root: {
       id: 'chips-filter-button',
@@ -139,6 +155,13 @@ Chips note:
       'data-group': 'status',
       'aria-label': 'Filter by status',
       'aria-pressed': 'false',
+    },
+    icon: {
+      'data-ui': 'chips-filter-icon',
+    },
+    removeIcon: {
+      'data-ui': 'chips-remove-icon',
+      'aria-hidden': 'true',
     },
   }}
 />
@@ -158,6 +181,14 @@ Chips note:
   /* Token override via data attribute selector */
   :global([data-ui='chips-filter-button']) {
     --chips-active-border-color: var(--color-secondary-border);
+  }
+
+  :global([data-ui='chips-filter-icon']) {
+    color: var(--color-secondary-fg);
+  }
+
+  :global([data-ui='chips-remove-icon']) {
+    opacity: 0.85;
   }
 </style>
 ```
@@ -262,6 +293,8 @@ Chips runtime classes:
 - `.chips__icon--left`
 - `.chips__icon--right`
 - `.chips__image`
+- `.chips__label`
+- `.chips__remove-icon`
 
 Use `:global(...)` when targeting these from docs or page-level `<style>` blocks, because Astro styles are scoped by default.
 

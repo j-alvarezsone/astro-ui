@@ -9,6 +9,7 @@ interface Props {
   label?: string;
   icon?: IconProps;
   iconPos?: 'left' | 'right';
+  removeIcon?: IconProps;
   image?: {
     src: string;
     alt: string;
@@ -16,7 +17,7 @@ interface Props {
   pt?: ChipsPassThrough;
 }
 
-const { size = 'md', label, icon, iconPos = 'left', image, pt, ...rest } = Astro.props;
+const { size = 'md', label, icon, iconPos = 'left', removeIcon, image, pt, ...rest } = Astro.props;
 
 const imageSizes: Record<NonNullable<Props['size']>, number> = {
   sm: 26,
@@ -27,6 +28,10 @@ const imageSizes: Record<NonNullable<Props['size']>, number> = {
 const imageDimension = imageSizes[size];
 
 const { className: rootClass, attributes: rootAttributes } = splitPassThroughAttributes(pt?.root);
+const { className: imageClass, attributes: imageAttributes } = splitPassThroughAttributes(pt?.image);
+const { className: iconClass, attributes: iconAttributes } = splitPassThroughAttributes(pt?.icon);
+const { className: labelClass, attributes: labelAttributes } = splitPassThroughAttributes(pt?.label);
+const { className: removeIconClass, attributes: removeIconAttributes } = splitPassThroughAttributes(pt?.removeIcon);
 ---
 
 <button
@@ -37,15 +42,29 @@ const { className: rootClass, attributes: rootAttributes } = splitPassThroughAtt
 >
   {
     image && (
-      <Image src={image.src} alt={image.alt} width={imageDimension} height={imageDimension} class="chips__image" />
+      <Image
+        src={image.src}
+        alt={image.alt}
+        width={imageDimension}
+        height={imageDimension}
+        class:list={['chips__image', imageClass]}
+        {...imageAttributes}
+      />
     )
   }
   {
     icon && (!image || iconPos === 'right') && (
-      <Icon {...icon} class:list={['chips__icon', `chips__icon--${iconPos}`]} />
+      <Icon {...icon} class:list={['chips__icon', `chips__icon--${iconPos}`, iconClass]} {...iconAttributes} />
     )
   }
-  <slot>{label}</slot>
+  <span class:list={['chips__label', labelClass]} {...labelAttributes}>
+    <slot>{label}</slot>
+  </span>
+  {
+    removeIcon && iconPos !== 'right' && (
+      <Icon {...removeIcon} class:list={['chips__remove-icon', removeIconClass]} {...removeIconAttributes} />
+    )
+  }
 </button>
 
 <style>
@@ -94,6 +113,15 @@ const { className: rootClass, attributes: rootAttributes } = splitPassThroughAtt
 
   .chips__icon--right {
     order: 1;
+  }
+
+  .chips__label {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .chips__remove-icon {
+    flex-shrink: 0;
   }
 
   .chips__image {

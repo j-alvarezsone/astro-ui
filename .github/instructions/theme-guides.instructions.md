@@ -43,6 +43,7 @@ This documentation must remain:
 - Render content using `render(entry)` from `astro:content`.
 - Extract page headings with `getFilteredHeadings(rendered)` from `@utils/content/getFilteredHeadings` — never inline the `'headings' in rendered` guard.
 - Pass headings to `ThemeLayout` via the `headings` prop — do not use `slot="index"` directly in pages.
+- For every theme-guide page that documents a `pt` API, include a `ComponentSlotsDemo` using `createComponentSlots('block-class', COMPONENT_PT_SLOT_NAMES)` — never write selectors by hand.
 - If the page has an "On This Page" index, include both guide-level links and section heading links (at least heading depth 2-3).
 - Do not add links to this page in site navigation unless explicitly requested.
 
