@@ -1,10 +1,10 @@
 ---
 import ThemeDocArticle from '@components/theme/ThemeDocArticle.astro';
 import ThemeLayout from '@layouts/ThemeLayout.astro';
-import { getCollection, render } from 'astro:content';
+import { getFilteredHeadings } from '@utils/content/getFilteredHeadings';
+import { getEntry, render } from 'astro:content';
 
-const guides = await getCollection('themeGuides');
-const guide = guides.find((entry) => /(^|\/)input-field-reference(\.mdx?)?$/u.test(entry.id));
+const guide = await getEntry('themeGuides', 'input-field-reference');
 
 if (!guide) {
   throw new Error('Theme guide entry "input-field-reference" was not found.');
@@ -12,10 +12,7 @@ if (!guide) {
 
 const rendered = await render(guide);
 const { Content } = rendered;
-const headings =
-  'headings' in rendered && Array.isArray(rendered.headings)
-    ? rendered.headings.filter((heading) => heading.depth >= 2 && heading.depth <= 3)
-    : [];
+const headings = getFilteredHeadings(rendered);
 ---
 
 <ThemeLayout
@@ -25,17 +22,8 @@ const headings =
   secondaryHref="/theme-system/input-text"
   secondaryLabel="InputText Documentation"
   contentLabel="InputField documentation content"
+  headings={headings}
 >
-  <ol slot="index">
-    {
-      headings.map((heading) => (
-        <li>
-          <a href={`#${heading.slug}`}>{heading.text}</a>
-        </li>
-      ))
-    }
-  </ol>
-
   <ThemeDocArticle>
     <Content />
   </ThemeDocArticle>

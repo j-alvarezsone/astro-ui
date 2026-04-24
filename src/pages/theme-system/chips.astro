@@ -4,10 +4,10 @@ import ThemeLayout from '@layouts/ThemeLayout.astro';
 import { getFilteredHeadings } from '@utils/content/getFilteredHeadings';
 import { getEntry, render } from 'astro:content';
 
-const guide = await getEntry('themeGuides', 'input-text-reference');
+const guide = await getEntry('themeGuides', 'chips-reference');
 
 if (!guide) {
-  throw new Error('Theme guide entry "input-text-reference" was not found.');
+  throw new Error('Theme guide entry "chips-reference" was not found.');
 }
 
 const rendered = await render(guide);
@@ -16,12 +16,12 @@ const headings = getFilteredHeadings(rendered);
 ---
 
 <ThemeLayout
-  title="InputText Documentation"
+  title="Chips Documentation"
   heroTitle={guide.data.title}
   heroSummary={guide.data.summary}
-  secondaryHref="/theme-system/input-field"
-  secondaryLabel="InputField Documentation"
-  contentLabel="InputText documentation content"
+  secondaryHref="/theme-system/input-text"
+  secondaryLabel="InputText Documentation"
+  contentLabel="Chips documentation content"
   headings={headings}
 >
   <ThemeDocArticle>

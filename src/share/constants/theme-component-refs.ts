@@ -18,4 +18,10 @@ export const THEME_COMPONENT_REFS: ComponentRef[] = [
     category: 'Form',
     href: '/theme-system/input-field',
   },
+  {
+    label: 'Chips',
+    description: 'Single-slot pt + token reference',
+    category: 'Misc',
+    href: '/theme-system/chips',
+  },
 ];

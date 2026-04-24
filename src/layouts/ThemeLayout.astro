@@ -1,6 +1,8 @@
 ---
+import GuideIndexList from '@components/theme/GuideIndexList.astro';
 import Heading from '@components/typography/Heading.astro';
 import Layout from '@layouts/Layout.astro';
+import type { MarkdownHeading } from 'astro';
 
 interface Props {
   title: string;
@@ -13,6 +15,7 @@ interface Props {
   secondaryLabel?: string;
   contentLabel?: string;
   indexLabel?: string;
+  headings?: MarkdownHeading[];
 }
 
 const {
@@ -26,6 +29,7 @@ const {
   secondaryLabel,
   contentLabel = 'Theme documentation content',
   indexLabel = 'On This Page',
+  headings,
 } = Astro.props;
 ---
 
@@ -56,6 +60,7 @@ const {
     <section class="theme-doc-layout" aria-label={contentLabel}>
       <aside class="theme-doc-index" aria-label={indexLabel}>
         <Heading as="h2" size="lg" weight="bold">{indexLabel}</Heading>
+        {headings && <GuideIndexList headings={headings} />}
         <slot name="index" />
       </aside>
 
