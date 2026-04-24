@@ -1,3 +1,5 @@
+import type { PassThroughAttributes } from '@/types/theme/form/shared';
+
 export const INPUT_FIELD_PT_SLOT_NAMES = [
   'root',
   'wrapper',
@@ -9,6 +11,7 @@ export const INPUT_FIELD_PT_SLOT_NAMES = [
 
 export type InputFieldPassThroughSlotName = (typeof INPUT_FIELD_PT_SLOT_NAMES)[number];
 
+export type InputFieldPassThrough = Partial<Record<InputFieldPassThroughSlotName, PassThroughAttributes>>;
 /**
  * CSS selector overrides for InputField pt slots whose actual class names
  * deviate from the standard BEM pattern.

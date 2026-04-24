@@ -70,7 +70,14 @@ const { className: inputPassThroughClass, attributes: inputPassThroughAttributes
   errorText={errorText}
   helpText={helpText}
   class={className}
-  pt={pt}
+  pt={{
+    root: pt?.root,
+    wrapper: pt?.wrapper,
+    label: pt?.label,
+    icon: pt?.icon,
+    helpText: pt?.helpText,
+    errorText: pt?.errorText,
+  }}
 >
   <input
     id={name}
