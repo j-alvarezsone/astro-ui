@@ -1,0 +1,45 @@
+---
+import ComponentSlotsDemo from '@components/theme/ComponentSlotsDemo.astro';
+import ThemeDocArticle from '@components/theme/ThemeDocArticle.astro';
+import ThemeLayout from '@layouts/ThemeLayout.astro';
+import { CHIPS_PT_SLOT_NAMES } from '@/types/theme/misc/chips';
+import { createComponentSlots } from '@utils/content/createComponentSlots';
+import { getFilteredHeadings } from '@utils/content/getFilteredHeadings';
+import { getEntry, render } from 'astro:content';
+import ChipsComponent from '@components/misc/Chips.astro';
+
+const CHIPS_SLOTS = createComponentSlots('chips', CHIPS_PT_SLOT_NAMES);
+
+const guide = await getEntry('themeGuides', 'chips-reference');
+
+if (!guide) {
+  throw new Error('Theme guide entry "chips-reference" was not found.');
+}
+
+const rendered = await render(guide);
+const { Content } = rendered;
+const headings = getFilteredHeadings(rendered);
+---
+
+<ThemeLayout
+  title="Chips Documentation"
+  heroTitle={guide.data.title}
+  heroSummary={guide.data.summary}
+  secondaryHref="/theme-system/input-text"
+  secondaryLabel="InputText Documentation"
+  contentLabel="Chips documentation content"
+  headings={headings}
+>
+  <ComponentSlotsDemo slots={CHIPS_SLOTS} label="Chips pt slots">
+    <ChipsComponent label="Microsoft" icon={{ name: 'mdi:microsoft-windows' }} removable />
+    <ChipsComponent
+      label="Xuxue Feng"
+      image={{ src: 'https://i.pravatar.cc/30?img=47', alt: 'Xuxue Feng avatar' }}
+      removable
+    />
+  </ComponentSlotsDemo>
+
+  <ThemeDocArticle>
+    <Content />
+  </ThemeDocArticle>
+</ThemeLayout>

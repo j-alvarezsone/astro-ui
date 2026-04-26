@@ -1,0 +1,167 @@
+---
+import { Icon, type IconProps } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import type { ClassValue } from '@/types/theme/form/shared';
+import type { ChipsPassThrough } from '@/types/theme/misc/chips';
+import { mergePassThroughAttributes, splitPassThroughAttributes } from '@utils/theme/passThrough';
+
+interface Props {
+  class?: ClassValue;
+  size?: 'sm' | 'md' | 'lg';
+  label?: string;
+  icon?: IconProps;
+  iconPos?: 'left' | 'right';
+  removable?: boolean;
+  removeIcon?: IconProps;
+  image?: {
+    src: string;
+    alt: string;
+  };
+  pt?: ChipsPassThrough;
+}
+
+const {
+  class: className,
+  size = 'md',
+  label,
+  icon,
+  iconPos = 'left',
+  removable = false,
+  removeIcon,
+  image,
+  pt,
+  ...rest
+} = Astro.props;
+
+const imageSizes: Record<NonNullable<Props['size']>, number> = {
+  sm: 26,
+  md: 30,
+  lg: 34,
+} as const;
+
+const imageDimension = imageSizes[size];
+
+const { name: removeIconName = 'mdi:close-circle-outline', ...removeIconProps } = removeIcon ?? {};
+
+const { className: rootClass, attributes: rootAttributes } = splitPassThroughAttributes(
+  mergePassThroughAttributes(rest, pt?.root),
+);
+const { className: imageClass, attributes: imageAttributes } = splitPassThroughAttributes(pt?.image);
+const { className: iconClass, attributes: iconAttributes } = splitPassThroughAttributes(pt?.icon);
+const { className: labelClass, attributes: labelAttributes } = splitPassThroughAttributes(pt?.label);
+const { className: removeIconClass, attributes: removeIconAttributes } = splitPassThroughAttributes(pt?.removeIcon);
+---
+
+<button
+  type="button"
+  class:list={['chips', `chips--${size}`, { 'chips--with-image': Boolean(image) }, rootClass, className]}
+  {...rootAttributes}
+>
+  {
+    image && (
+      <Image
+        src={image.src}
+        alt={image.alt}
+        width={imageDimension}
+        height={imageDimension}
+        class:list={['chips__image', imageClass]}
+        {...imageAttributes}
+      />
+    )
+  }
+  {icon && <Icon {...icon} class:list={['chips__icon', `chips__icon--${iconPos}`, iconClass]} {...iconAttributes} />}
+  <span class:list={['chips__label', labelClass]} {...labelAttributes}>
+    <slot>{label}</slot>
+  </span>
+  {
+    removable && (
+      <Icon
+        {...removeIconProps}
+        name={removeIconName}
+        class:list={['chips__remove-icon', removeIconClass]}
+        {...removeIconAttributes}
+      />
+    )
+  }
+</button>
+
+<style>
+  .chips {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    border: 1px solid var(--chips-border-color);
+    border-radius: var(--chips-border-radius);
+    padding-block: var(--spacing-1);
+    padding-inline: var(--spacing-2);
+    background-color: var(--chips-background-color);
+    color: var(--chips-color);
+    cursor: pointer;
+  }
+
+  .chips[data-active] {
+    background-color: var(--chips-active-background-color);
+    border-color: var(--chips-active-border-color);
+    color: var(--chips-active-color);
+  }
+
+  .chips--sm {
+    padding-block: var(--spacing-0-5);
+    padding-inline: var(--spacing-1);
+    font-size: var(--font-size-sm);
+  }
+
+  .chips--lg {
+    padding-block: var(--spacing-1-5);
+    padding-inline: var(--spacing-3);
+    font-size: var(--font-size-lg);
+  }
+
+  .chips--with-image.chips--sm {
+    padding-inline: var(--spacing-0-5);
+  }
+
+  .chips--with-image.chips--md {
+    padding-inline: var(--spacing-1);
+  }
+
+  .chips--with-image.chips--lg {
+    padding-inline: var(--spacing-2);
+  }
+
+  .chips__icon {
+    color: var(--chips-icon-color);
+  }
+
+  .chips__icon--right {
+    order: 1;
+  }
+
+  .chips__label {
+    display: inline-flex;
+    align-items: center;
+    color: var(--chips-label-color);
+    font-weight: var(--chips-label-font-weight);
+    font-size: var(--chips-label-font-size);
+  }
+
+  .chips__remove-icon {
+    flex-shrink: 0;
+    order: 2;
+    color: var(--chips-remove-icon-color);
+  }
+
+  .chips__image {
+    border-radius: var(--chips-image-border-radius);
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .chips:focus-visible {
+    outline: 2px solid var(--chips-focus-ring-color);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 6px var(--chips-focus-ring-overlay-color);
+    border-color: var(--chips-focus-ring-color);
+  }
+</style>

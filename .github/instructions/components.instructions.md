@@ -34,6 +34,179 @@ Key rules:
 - Keep styles scoped (`<style>` block without `:global`).
 - Default slot for content; named slots for distinct regions.
 
+## Pass-Through (`pt`) Pattern
+
+Components that accept a `pt` prop for per-slot attribute injection **must** follow this exact pattern. Never deviate.
+
+### 1. Type the pass-through interface in `src/share/types/theme/`
+
+Each slot has a `PassThroughAttributes` entry:
+
+```ts
+import type { PassThroughAttributes } from '@/types/theme/form/shared';
+
+export interface MyComponentPassThrough {
+  root?: PassThroughAttributes;
+  // add one key per distinct DOM slot
+}
+```
+
+The `pt` slot names **must also be the top-level keys of the component's `*StyleConfig` type**. Theme config and pass-through must share the same slot vocabulary. See `src/share/types/theme/misc/chips.ts` for the canonical example.
+
+### 2. In the component frontmatter, merge root attributes then split
+
+Always import and use both shared utilities — never write an IIFE, a custom spread, or `as string | undefined` casts:
+
+```astro
+import { mergePassThroughAttributes, splitPassThroughAttributes } from '@utils/theme/passThrough';
+import type { MyComponentPassThrough } from '@/types/theme/my-component';
+
+const { pt, ...rest } = Astro.props;
+const { className: rootClass, attributes: rootAttributes } = splitPassThroughAttributes(
+  mergePassThroughAttributes(rest, pt?.root),
+);
+const { className: fooClass, attributes: fooAttributes } = splitPassThroughAttributes(pt?.foo);
+```
+
+`mergePassThroughAttributes(base, override)` merges two attribute objects: class values are concatenated, style strings are merged, and non-class/style attributes from `override` win. Always pass the result to `splitPassThroughAttributes` to extract `className` for `class:list`.
+
+Use `mergePassThroughAttributes` in two situations:
+
+- **Root slot + `...rest`**: `rest` (component-level HTML attributes) is the base, `pt?.root` is the override. This is the most common case and replaces a separate `{...rest}` spread on the root element.
+
+  ```ts
+  const { pt, ...rest } = Astro.props;
+  const { className: rootClass, attributes: rootAttributes } = splitPassThroughAttributes(
+    mergePassThroughAttributes(rest, pt?.root),
+  );
+  ```
+
+- **Non-root slot + computed attributes**: when a slot has component-derived attributes that must be merged with the consumer's `pt` entry. Computed attributes are the base, `pt?.slotName` is the override.
+
+  ```ts
+  // e.g. InputText: inputAttributes (name, aria-*, etc.) merged with pt?.input
+  const inputPassThrough = mergePassThroughAttributes(inputAttributes, pt?.input);
+  const { className: inputClass, attributes: inputAttributes_ } = splitPassThroughAttributes(inputPassThrough);
+  ```
+
+Slots that have **no computed attributes** pass their `pt` entry directly to `splitPassThroughAttributes` without merging.
+
+### 3. In the template, bind class and attributes separately
+
+```astro
+<div
+  class:list={['my-component', rootClass]}
+  {...rootAttributes}
+/>
+```
+
+`splitPassThroughAttributes` returns `{ className, attributes }` where `attributes` already excludes `class` and is `undefined` when empty — so spreading it is always safe. Because `rest` was folded into `rootAttributes` via `mergePassThroughAttributes`, **do not spread `{...rest}` separately on the root element**.
+
+### Rules
+
+- **Always** use `mergePassThroughAttributes(rest, pt?.root)` for the root slot — never spread `{...rest}` and `{...rootAttributes}` separately.
+- **Always** use `mergePassThroughAttributes(computedAttrs, pt?.slotName)` when a non-root slot has component-derived attributes that must be passed to the element.
+- **Never** pass `pt?.root` directly to `splitPassThroughAttributes` on the root element; it must go through `mergePassThroughAttributes(rest, pt?.root)` first.
+- **Never** manually destructure `{ class: _, style: __, ...attrs }` inline.
+
+## Interactive Slot Preview (`ComponentSlotsDemo`)
+
+Use `ComponentSlotsDemo` in every theme-guide page that has a `pt` (pass-through) API to show which DOM element each slot targets.
+
+### How it works
+
+1. The Astro component `src/components/theme/ComponentSlotsDemo.astro` renders a two-column grid:
+   - Left: a live preview area (`data-slots-preview`) containing the component instance via `<slot />`.
+   - Right: an ordered list of slot rows, each storing the CSS selector in `data-slots-item`.
+2. The custom element `src/web-components/slots-demo.web.ts` (`SlotsDemoElement`) powers the hover/focus highlight:
+   - `connectedCallback` reads each `[data-slots-item]` selector, resolves matching elements inside `[data-slots-preview]`, and attaches `mouseenter/mouseleave/focus/blur` listeners via a single `AbortController`.
+   - `disconnectedCallback` calls `controller.abort()` — no manual `removeEventListener` needed.
+   - `#activate` sets `data-slots-active` on the row and `data-slots-highlight` on targets; `#deactivate` removes them.
+
+### Steps to add a slot demo to a page
+
+**1. Derive slot descriptors with `createComponentSlots`**
+
+```ts
+import { createComponentSlots } from '@utils/content/createComponentSlots';
+import { MY_COMPONENT_PT_SLOT_NAMES } from '@/types/theme/misc/my-component';
+
+const MY_COMPONENT_SLOTS = createComponentSlots('my-component', MY_COMPONENT_PT_SLOT_NAMES);
+```
+
+`createComponentSlots(blockClass, slotNames, selectorOverrides?)` maps:
+- `'root'` → `.blockClass`
+- any other name → `.blockClass__kebab-slot-name`
+- entries in `selectorOverrides` replace the auto-derived selector for that slot
+
+When a component's actual DOM classes deviate from standard BEM (e.g. `.input-label` instead of `.input-field__label`, or `.input-field__help` instead of `.input-field__help-text`), pass the deviating selectors as `selectorOverrides` — **never fall back to a hand-written `ComponentSlot[]` array**:
+
+```ts
+const INPUT_FIELD_SLOTS = createComponentSlots('input-field', INPUT_FIELD_PT_SLOT_NAMES, {
+  label: '.input-label',
+  helpText: '.input-field__help',
+  errorText: '.input-field__error',
+});
+```
+
+**2. Render the demo in the page**
+
+```astro
+<ComponentSlotsDemo slots={MY_COMPONENT_SLOTS}>
+  <MyComponent label="Example" />
+</ComponentSlotsDemo>
+```
+
+The `label` prop (optional, default `'Component pt slots'`) sets the `aria-label` on the list.
+
+### Rules
+
+- Never skip `ComponentSlotsDemo` on a theme-guide page that documents `pt` slots.
+- Always derive slots from the component's `*_PT_SLOT_NAMES` constant using `createComponentSlots` — never write a hand-crafted `ComponentSlot[]` array.
+- When a slot's actual CSS selector deviates from BEM convention, pass it via `selectorOverrides` (third argument) — do not skip `createComponentSlots`.
+- Do **not** add `margin-block` to the component; the parent grid gap handles vertical spacing.
+- Use `:global([data-slots-highlight])` (already in `ComponentSlotsDemo.astro`) to style highlighted elements — do not add extra outline styles elsewhere.
+
+## Web Component Pattern (`*.web.ts`)
+
+All interactive behavior that needs to be unit-tested must be a custom element in `src/web-components/`.
+
+### Template
+
+```ts
+class MyFeatureElement extends HTMLElement {
+  #controller: AbortController | null = null;
+
+  connectedCallback(): void {
+    this.#controller = new AbortController();
+    const { signal } = this.#controller;
+    // attach all event listeners with { signal }
+  }
+
+  disconnectedCallback(): void {
+    this.#controller?.abort();
+    this.#controller = null;
+  }
+}
+
+customElements.define('my-feature', MyFeatureElement);
+```
+
+### Rules
+
+- File naming: `kebab-name.web.ts` in `src/web-components/`.
+- Always use `AbortController` for cleanup — never call `removeEventListener` manually.
+- Private methods: use `#privateMethod()` syntax (not `_`).
+- Companion test file: `kebab-name.web.test.ts` next to the source file.
+- In Astro, load the web component with `<script>import '@web-components/my-feature.web';</script>` — never inline the class in a `<script>` tag.
+- The custom element name must match its filename prefix (`slots-demo.web.ts` → `customElements.define('slots-demo', ...)`).
+- When using the element as the root wrapper in Astro, scope CSS with `element-name.class-name { }` (e.g. `slots-demo.slots-demo { }`).
+- **Never** use an IIFE `(() => { ... })()` inside the template to strip keys.
+- **Never** cast `pt?.root?.style as string | undefined`.
+- **Always** use `splitPassThroughAttributes` from `@utils/theme/passThrough`.
+- Keep `class:list` for classes and `{...rootAttributes}` for everything else, in that order.
+- Place `{...rest}` after `{...rootAttributes}` so component-level props do not override pass-through.
+
 ## Theming Decision
 
 When creating a new reusable UI component, especially a form-related or stateful visual primitive, ask whether it should participate in the theme system before implementing its styling API.

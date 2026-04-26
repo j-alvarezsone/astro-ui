@@ -6,6 +6,9 @@ import icon from "astro-icon";
 // https://astro.build/config
 export default defineConfig({
   integrations: [vue(), icon()],
+  image: {
+    domains: ["i.pravatar.cc"],
+  },
   fonts: [{
     provider: fontProviders.google(),
     name: "Roboto",

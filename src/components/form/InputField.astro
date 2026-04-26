@@ -1,10 +1,8 @@
 ---
-import type { InputTextPassThrough } from '@/types/theme/form/inputText';
+import type { InputFieldPassThrough } from '@/types/theme/form/inputField';
 import type { ClassValue } from '@/types/theme/form/shared';
 import { Icon, type IconProps } from 'astro-icon/components';
-
-import { mergePassThroughAttributes, splitPassThroughAttributes } from '@utils/theme/form/inputTextConfig';
-
+import { mergePassThroughAttributes, splitPassThroughAttributes } from '@utils/theme/passThrough';
 import InputLabel from './InputLabel.astro';
 
 interface Props {
@@ -17,7 +15,7 @@ interface Props {
   errorText?: string;
   helpText?: string;
   class?: ClassValue;
-  pt?: InputTextPassThrough;
+  pt?: InputFieldPassThrough;
 }
 
 const {

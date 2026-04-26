@@ -20,6 +20,16 @@ const UI_THEMES = {
           placeholderColor: '#9a3412',
         },
       },
+      chips: {
+        root: {
+          backgroundColor: '#fff7ed',
+          borderColor: '#fdba74',
+          color: '#9a3412',
+          activeBackgroundColor: '#fb923c',
+          activeBorderColor: '#ea580c',
+          activeColor: '#ffffff',
+        },
+      },
     },
   },
 } as const satisfies Record<string, UIThemeConfig>;

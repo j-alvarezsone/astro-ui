@@ -1,6 +1,6 @@
 ---
 description: "Use when adding or updating theme documentation collection entries or the standalone theme guide page."
-applyTo: "src/content.config.ts,src/content/theme-guides/**,src/pages/theme-system/index.astro"
+applyTo: "src/content.config.ts,src/content/theme-guides/**,src/pages/theme-system/**"
 ---
 
 # Theme Guides Collection
@@ -38,9 +38,12 @@ This documentation must remain:
 
 ## Implementation Rules
 
-- Retrieve collection entries via `getCollection('themeGuides')`.
-- Sort by `order` before rendering.
+- Retrieve a **single** collection entry via `getEntry('themeGuides', '<slug>')`, never via `getCollection().find()` with a regex.
+- Retrieve **all** entries for listing pages via `getCollection('themeGuides')`, sorted by `order`.
 - Render content using `render(entry)` from `astro:content`.
+- Extract page headings with `getFilteredHeadings(rendered)` from `@utils/content/getFilteredHeadings` — never inline the `'headings' in rendered` guard.
+- Pass headings to `ThemeLayout` via the `headings` prop — do not use `slot="index"` directly in pages.
+- For every theme-guide page that documents a `pt` API, include a `ComponentSlotsDemo` using `createComponentSlots('block-class', COMPONENT_PT_SLOT_NAMES)` — never write selectors by hand.
 - If the page has an "On This Page" index, include both guide-level links and section heading links (at least heading depth 2-3).
 - Do not add links to this page in site navigation unless explicitly requested.
 

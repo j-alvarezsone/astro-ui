@@ -1,19 +1,57 @@
 ---
 title: InputField Reference
-summary: 'Complete InputField shared-shell reference: config keys, CSS tokens, and class hooks.'
+summary: 'InputField is the shared field shell — label, border wrapper, icon, help and error text — that all text-like controls build on top of.'
 order: 3
 updatedAt: 2026-04-19
 ---
 
 ## Purpose
 
-Use this page to understand the shared field shell used by text-like controls:
+**InputField is a shell component, not an input control.**
 
-- InputText
-- InputEmail
-- InputPassword
-- Textarea
-- Select
+It provides the visual structure that surrounds a form control:
+
+- the field label (`InputLabel`)
+- the bordered wrapper that holds the control and optional icon
+- help text below the wrapper
+- error text below the wrapper
+
+The actual control — `<input>`, `<select>`, `<textarea>`, or a custom element — is passed in via `<slot />`. InputField never renders an input element itself.
+
+### Who uses InputField
+
+Every text-like component in this library wraps InputField internally:
+
+- **InputText** — adds a standard `<input type="text|number">` into the slot
+- InputEmail, InputPassword, Textarea, Select _(planned)_
+
+You typically do **not** use InputField directly unless you are building a new input-type component that needs the same shell (label + wrapper + help/error).
+
+### InputField vs InputText at a glance
+
+|                            | InputField                  | InputText                    |
+| -------------------------- | --------------------------- | ---------------------------- |
+| Renders the label          | ✓                           | ✓ via InputField             |
+| Renders the border wrapper | ✓                           | ✓ via InputField             |
+| Renders the `<input>`      | ✗ — you slot it in          | ✓                            |
+| Has `pt.input` slot        | ✗                           | ✓                            |
+| Use when                   | Building a new control type | Using a text input in a form |
+
+## Quick Mental Model
+
+InputField theming works in 3 layers:
+
+1. **Theme config layer** (`uiThemes.ts`)
+   - Set shared shell keys under `components.inputText` (or your custom component key).
+   - These map to `--input-field-*` CSS variables via `inputFieldConfig.ts`.
+
+2. **Token defaults layer** (`input-field.css`)
+   - Every `--input-field-*` variable has a default referencing a design token.
+   - You only override what should differ from the token.
+
+3. **Instance override layer** (`pt`)
+   - Use `pt.root`, `pt.wrapper`, `pt.label`, `pt.icon`, `pt.helpText`, `pt.errorText` for one-off visual adjustments.
+   - `pt` accepts `class`, `style`, and any HTML attribute on the target element.
 
 ## Source Of Truth
 

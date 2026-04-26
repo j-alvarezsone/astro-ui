@@ -1,0 +1,101 @@
+---
+interface SlotDef {
+  name: string;
+  selector: string;
+}
+
+interface Props {
+  slots: SlotDef[];
+  label?: string;
+}
+
+const { slots, label = 'Component pt slots' } = Astro.props;
+---
+
+<slots-demo class="slots-demo">
+  <div class="slots-demo__preview" data-slots-preview>
+    <slot />
+  </div>
+  <ol class="slots-demo__list" aria-label={label}>
+    {
+      slots.map((s) => (
+        <li class="slots-demo__item" data-slots-item={s.selector} tabindex="0">
+          <code class="slots-demo__name">{s.name}</code>
+          <span class="slots-demo__selector">{s.selector}</span>
+        </li>
+      ))
+    }
+  </ol>
+</slots-demo>
+
+<script>
+  import '@web-components/slots-demo.web';
+</script>
+
+<style>
+  slots-demo.slots-demo {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-xl);
+    background-color: var(--color-surface);
+    overflow: clip;
+  }
+
+  .slots-demo__preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-3);
+    padding: var(--spacing-8);
+    min-height: 140px;
+  }
+
+  .slots-demo__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-inline-start: 1px solid var(--color-border);
+    min-width: 180px;
+  }
+
+  .slots-demo__item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-0-5);
+    padding: var(--spacing-2-5) var(--spacing-4);
+    cursor: default;
+    border-bottom: 1px solid var(--color-border);
+    transition: background-color 0.15s ease;
+  }
+
+  .slots-demo__item:last-child {
+    border-bottom: none;
+  }
+
+  .slots-demo__item:hover,
+  .slots-demo__item:focus-visible,
+  .slots-demo__item[data-slots-active] {
+    background-color: var(--color-primary-subtle);
+    outline: none;
+  }
+
+  .slots-demo__name {
+    font-size: var(--font-size-sm);
+    font-family: monospace;
+    color: var(--color-fg);
+  }
+
+  .slots-demo__selector {
+    font-size: var(--font-size-xs);
+    color: var(--color-fg-muted);
+    font-family: monospace;
+  }
+
+  :global([data-slots-highlight]) {
+    outline: 2px solid var(--color-primary-fill) !important;
+    outline-offset: 3px;
+    border-radius: var(--rounded-sm);
+  }
+</style>

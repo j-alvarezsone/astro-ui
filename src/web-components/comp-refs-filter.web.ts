@@ -1,6 +1,6 @@
 class CompRefsFilter extends HTMLElement {
   #filter: HTMLInputElement | null = null;
-  #catBtns: NodeListOf<HTMLButtonElement> | null = null;
+  #chips: NodeListOf<HTMLButtonElement> | null = null;
   #rows: NodeListOf<HTMLLIElement> | null = null;
   #groups: NodeListOf<HTMLElement> | null = null;
   #empty: HTMLElement | null = null;
@@ -10,7 +10,7 @@ class CompRefsFilter extends HTMLElement {
 
   connectedCallback(): void {
     this.#filter = this.querySelector<HTMLInputElement>('[data-filter]');
-    this.#catBtns = this.querySelectorAll<HTMLButtonElement>('[data-cat-btn]');
+    this.#chips = this.querySelectorAll<HTMLButtonElement>('[data-category]');
     this.#rows = this.querySelectorAll<HTMLLIElement>('[data-row]');
     this.#groups = this.querySelectorAll<HTMLElement>('[data-group]');
     this.#empty = this.querySelector<HTMLElement>('[data-empty]');
@@ -21,12 +21,12 @@ class CompRefsFilter extends HTMLElement {
 
     this.#filter?.addEventListener('input', () => this.#applyFilter(), { signal });
 
-    this.#catBtns?.forEach((btn) => {
+    this.#chips?.forEach((btn) => {
       btn.addEventListener(
         'click',
         () => {
-          this.#activeCat = btn.dataset.catBtn ?? '';
-          this.#catBtns?.forEach((b) =>
+          this.#activeCat = btn.dataset.category ?? '';
+          this.#chips?.forEach((b) =>
             b.toggleAttribute('data-active', b === btn),
           );
           this.#applyFilter();

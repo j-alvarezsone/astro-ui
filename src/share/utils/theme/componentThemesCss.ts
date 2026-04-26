@@ -1,4 +1,4 @@
-type ThemeCssResolver<TThemeName extends string = string> = (resolvedThemeName: TThemeName) => string | undefined;
+export type ThemeCssResolver<TThemeName extends string = string> = (resolvedThemeName: TThemeName) => string | undefined;
 
 interface CreateComponentThemeResolverParams<TThemeConfig, TThemeName extends string = string> {
   getThemeByName: (themeName: TThemeName) => TThemeConfig | undefined;

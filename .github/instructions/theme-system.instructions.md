@@ -83,9 +83,50 @@ Use this split:
 - `form/shared.ts` for primitives like `ClassValue`, `StyleValue`, `PassThroughAttributes`
 - `form/inputField.ts` for shared field-shell config
 - `form/inputText.ts` for InputText-specific config and pass-through types
-- future components should get their own files such as `form/select.ts`, `form/textarea.ts`, `form/inputPassword.ts`
+- future form components should get their own files such as `form/select.ts`, `form/textarea.ts`, `form/inputPassword.ts`
 
-### 4. Keep theme registration centralized
+**Mirror the component folder structure for theme files.**
+
+The folder layout under `src/share/types/theme/` and `src/share/utils/theme/` must mirror `src/components/`:
+
+| Component location | Type file location | Config/utils location |
+|---|---|---|
+| `src/components/form/InputText.astro` | `src/share/types/theme/form/inputText.ts` | `src/share/utils/theme/form/inputTextConfig.ts` |
+| `src/components/misc/Chips.astro` | `src/share/types/theme/misc/chips.ts` | `src/share/utils/theme/misc/chipsConfig.ts` |
+
+Rule: **any new themed component under `src/components/<category>/` gets its type and config files under the matching `<category>/` subfolder** — never flat in the theme root.
+
+### 4. Theme config shape must mirror the `pt` slot structure
+
+When a component accepts a `pt` prop, its `*StyleConfig` type **must** be a nested object whose top-level keys are the `pt` slot names — never a flat object.
+
+```ts
+// ✅ Correct — one sub-config type per pt slot
+export interface MyComponentStyleConfig {
+  root?: MyComponentRootStyleConfig;       // pt.root → root element
+  icon?: MyComponentIconStyleConfig;       // pt.icon → icon element
+  label?: MyComponentLabelStyleConfig;     // pt.label → label element
+  action?: MyComponentActionStyleConfig;   // pt.action → action element
+}
+
+// ❌ Wrong — flat config has no mapping to slots
+export interface MyComponentStyleConfig {
+  backgroundColor?: string;
+  iconColor?: string;
+  labelFontWeight?: string;
+}
+```
+
+Rules:
+
+- Every pt slot that can be styled gets its own dedicated sub-config type.
+- Each sub-config type holds real visual properties (color, fontSize, fontWeight, borderRadius, etc.).
+- Do not use an empty `interface` for a slot sub-config. Use a `type` alias with at minimum one property. Slots with no styleable properties yet may temporarily be `type XxxStyleConfig = Record<string, never>`, but prefer adding real properties immediately.
+- The `create*StyleVars` generator must read `config.slotName?.property` paths matching this shape.
+- In `UI_THEMES`, theme overrides use the same nested shape, giving authors direct alignment with the `pt` API.
+- If an existing component has a flat `*StyleConfig`, restructure it to nested before adding new tokens.
+
+### 5. Keep theme registration centralized
 
 Every component that can appear inside `UI_THEMES` must be registered in `src/share/types/theme/uiThemes.ts`.
 
@@ -180,21 +221,63 @@ Prefer sparse overrides. Do not duplicate all default values into every theme.
 Follow this sequence.
 
 1. Decide whether the component reuses `InputField` or needs a unique structure.
-2. Create a dedicated type file under `src/share/types/theme/form/`.
-3. Register the component in `src/share/types/theme/uiThemes.ts`.
-4. Create a style-var generator under `src/share/utils/theme/...`.
-5. Add default CSS variable values under `src/assets/css/theme/` if the component introduces new tokens.
-6. Add the generator to `src/share/utils/theme/createComponentThemeCss.ts` if it participates in runtime theme output.
-7. Use the generated CSS variables in the component CSS.
-8. Add or update tests.
-9. Run `pnpm run type:check`.
-10. Ensure relevant tests pass and changed theme-related logic has 100% coverage in focused tests for the modified behavior.
+2. Determine the component's category folder (e.g. `form`, `misc`) by looking at its location under `src/components/<category>/`.
+3. Create a dedicated type file at `src/share/types/theme/<category>/<componentName>.ts`.
+4. Register the component in `src/share/types/theme/uiThemes.ts`.
+5. Create a style-var generator at `src/share/utils/theme/<category>/<componentName>Config.ts`.
+6. Add default CSS variable values under `src/assets/css/theme/` if the component introduces new tokens.
+7. Add the generator to `src/share/utils/theme/createComponentThemeCss.ts` if it participates in runtime theme output.
+8. Use the generated CSS variables in the component CSS.
+9. Add or update tests.
+10. Run `pnpm run type:check`.
+11. Ensure relevant tests pass and changed theme-related logic has 100% coverage in focused tests for the modified behavior.
 
 ## Composition Rules
 
 `src/share/utils/theme/createComponentThemeCss.ts` is the place where style-var generators are composed.
 
 Keep `src/share/utils/theme/theme.ts` orchestration-only.
+
+### ComponentThemeCssMap is the single composition point
+
+Every themed component must be registered as an entry in `componentThemeCssMap`. The map type is derived from `UIThemeComponentName` so TypeScript enforces that every registered component name has a creator — if you add a component to `UIThemeComponentsConfig` and forget to add it here, it is a compile error.
+
+Do not use a single flat `createThemeCssFromStyleVars([...])` call that combines generators from different components. Each component has its own config type; mixing them into one array breaks type safety. Use one map entry per component instead:
+
+```ts
+export const componentThemeCssMap: ComponentThemeCssMap = {
+  inputText: createThemeCssFromStyleVars([createInputFieldStyleVars, createInputTextStyleVars]),
+  chips: createThemeCssFromStyleVars(createChipsStyleVars),
+  // add new components here, one entry per component
+};
+```
+
+Note: `inputText` uses an array because `InputTextStyleConfig` extends `InputFieldStyleConfig` — both generators share that same config type. Any other component with its own distinct config type always gets a single generator (or its own dedicated array if it has multiple generators of the same config type).
+
+### No dead exports
+
+Do not export aliases, wrappers, or backward-compatibility re-exports from `createComponentThemeCss.ts` unless they are actively imported by another file. Verify with usages before creating any new export from this file.
+
+### No `any` and no `eslint-disable` comments
+
+Do not use `any` or suppress lint/type errors with `// eslint-disable` or `// @ts-ignore` comments anywhere in the theme system.
+
+When a generic cast seems necessary (for example, pairing `getThemeComponent` with `componentThemeCssMap`), capture the type parameter precisely instead. Use a small typed helper:
+
+```ts
+function createTypedComponentResolver<K extends UIThemeComponentName>(
+  name: K,
+  resolvedThemeName: UIThemeName,
+) {
+  return createComponentThemeResolver<UIThemeComponents[K], UIThemeName>({
+    getThemeByName: (themeName: UIThemeName) => getThemeComponent(themeName, name),
+    createThemeCss: componentThemeCssMap[name],
+    selector: 'html:root',
+  });
+}
+```
+
+Capturing `K extends UIThemeComponentName` lets TypeScript prove `getThemeComponent(themeName, name)` and `componentThemeCssMap[name]` share the same `UIThemeComponents[K]` type without any cast.
 
 If composition grows substantially, prefer extracting clearer named composition helpers instead of growing `theme.ts` with arrays and conditional logic.
 
@@ -219,6 +302,8 @@ The project intentionally removed `FormStyleProvider` to keep a single theming p
 - Do not generate unused theme values that are never consumed by CSS.
 - Do not add local wrapper-based theme systems when the global theme pipeline already solves the problem.
 - Do not clone the full InputText theme stack for `InputEmail` or `InputPassword` if they can reuse `InputField`.
+- Do not use a single flat `createThemeCssFromStyleVars([...])` array to combine generators from different components with different config types. Use `componentThemeCssMap` with one entry per component.
+- Do not export aliases or backward-compatibility re-exports from `createComponentThemeCss.ts` unless they are actively used. No dead exports.
 
 ## Validation
 
