@@ -221,12 +221,31 @@ None currently. Chips does not consume shared InputField shell keys.
 
 ```ts
 chips: {
-  backgroundColor: string,
-  borderColor: string,
-  color: string,
-  activeBackgroundColor: string,
-  activeBorderColor: string,
-  activeColor: string,
+  root: {
+    backgroundColor: string,
+    borderColor: string,
+    color: string,
+    borderRadius: string,
+    activeBackgroundColor: string,
+    activeBorderColor: string,
+    activeColor: string,
+    focusRingColor: string,
+    focusRingOverlayColor: string,
+  },
+  image: {
+    borderRadius: string,
+  },
+  icon: {
+    color: string,
+  },
+  label: {
+    color: string,
+    fontWeight: string,
+    fontSize: string,
+  },
+  removeIcon: {
+    color: string,
+  },
 }
 ```
 
@@ -236,12 +255,14 @@ Example:
 warm: {
   components: {
     chips: {
-      backgroundColor: '#fff7ed',
-      borderColor: '#fdba74',
-      color: '#9a3412',
-      activeBackgroundColor: '#fb923c',
-      activeBorderColor: '#ea580c',
-      activeColor: '#ffffff',
+      root: {
+        backgroundColor: '#fff7ed',
+        borderColor: '#fdba74',
+        color: '#9a3412',
+        activeBackgroundColor: '#fb923c',
+        activeBorderColor: '#ea580c',
+        activeColor: '#ffffff',
+      },
     },
   },
 }
@@ -261,9 +282,18 @@ Why this split matters:
   --chips-background-color: var(--color-contrast-subtle);
   --chips-border-color: var(--color-border);
   --chips-color: var(--color-contrast-fg);
+  --chips-border-radius: var(--rounded-full);
   --chips-active-background-color: var(--color-primary-subtle);
   --chips-active-border-color: var(--color-primary-fg);
   --chips-active-color: var(--color-primary-fg);
+  --chips-image-border-radius: var(--rounded-full);
+  --chips-focus-ring-color: var(--color-focus-ring);
+  --chips-focus-ring-overlay-color: var(--color-focus-ring-overlay);
+  --chips-icon-color: currentColor;
+  --chips-label-color: inherit;
+  --chips-label-font-weight: inherit;
+  --chips-label-font-size: inherit;
+  --chips-remove-icon-color: currentColor;
 }
 ```
 
