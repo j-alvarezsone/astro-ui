@@ -1,14 +1,17 @@
 ---
 import { Icon, type IconProps } from 'astro-icon/components';
 import { Image } from 'astro:assets';
+import type { ClassValue } from '@/types/theme/form/shared';
 import type { ChipsPassThrough } from '@/types/theme/misc/chips';
-import { splitPassThroughAttributes } from '@utils/theme/passThrough';
+import { mergePassThroughAttributes, splitPassThroughAttributes } from '@utils/theme/passThrough';
 
 interface Props {
+  class?: ClassValue;
   size?: 'sm' | 'md' | 'lg';
   label?: string;
   icon?: IconProps;
   iconPos?: 'left' | 'right';
+  removable?: boolean;
   removeIcon?: IconProps;
   image?: {
     src: string;
@@ -17,7 +20,18 @@ interface Props {
   pt?: ChipsPassThrough;
 }
 
-const { size = 'md', label, icon, iconPos = 'left', removeIcon, image, pt, ...rest } = Astro.props;
+const {
+  class: className,
+  size = 'md',
+  label,
+  icon,
+  iconPos = 'left',
+  removable = false,
+  removeIcon,
+  image,
+  pt,
+  ...rest
+} = Astro.props;
 
 const imageSizes: Record<NonNullable<Props['size']>, number> = {
   sm: 26,
@@ -27,7 +41,11 @@ const imageSizes: Record<NonNullable<Props['size']>, number> = {
 
 const imageDimension = imageSizes[size];
 
-const { className: rootClass, attributes: rootAttributes } = splitPassThroughAttributes(pt?.root);
+const { name: removeIconName = 'mdi:close-circle-outline', ...removeIconProps } = removeIcon ?? {};
+
+const { className: rootClass, attributes: rootAttributes } = splitPassThroughAttributes(
+  mergePassThroughAttributes(rest, pt?.root),
+);
 const { className: imageClass, attributes: imageAttributes } = splitPassThroughAttributes(pt?.image);
 const { className: iconClass, attributes: iconAttributes } = splitPassThroughAttributes(pt?.icon);
 const { className: labelClass, attributes: labelAttributes } = splitPassThroughAttributes(pt?.label);
@@ -36,9 +54,8 @@ const { className: removeIconClass, attributes: removeIconAttributes } = splitPa
 
 <button
   type="button"
-  class:list={['chips', `chips--${size}`, { 'chips--with-image': Boolean(image) }, rootClass]}
+  class:list={['chips', `chips--${size}`, { 'chips--with-image': Boolean(image) }, rootClass, className]}
   {...rootAttributes}
-  {...rest}
 >
   {
     image && (
@@ -52,17 +69,18 @@ const { className: removeIconClass, attributes: removeIconAttributes } = splitPa
       />
     )
   }
-  {
-    icon && (!image || iconPos === 'right') && (
-      <Icon {...icon} class:list={['chips__icon', `chips__icon--${iconPos}`, iconClass]} {...iconAttributes} />
-    )
-  }
+  {icon && <Icon {...icon} class:list={['chips__icon', `chips__icon--${iconPos}`, iconClass]} {...iconAttributes} />}
   <span class:list={['chips__label', labelClass]} {...labelAttributes}>
     <slot>{label}</slot>
   </span>
   {
-    removeIcon && iconPos !== 'right' && (
-      <Icon {...removeIcon} class:list={['chips__remove-icon', removeIconClass]} {...removeIconAttributes} />
+    removable && (
+      <Icon
+        {...removeIconProps}
+        name={removeIconName}
+        class:list={['chips__remove-icon', removeIconClass]}
+        {...removeIconAttributes}
+      />
     )
   }
 </button>
@@ -73,7 +91,7 @@ const { className: removeIconClass, attributes: removeIconAttributes } = splitPa
     align-items: center;
     gap: var(--spacing-2);
     border: 1px solid var(--chips-border-color);
-    border-radius: var(--rounded-full);
+    border-radius: var(--chips-border-radius);
     padding-block: var(--spacing-1);
     padding-inline: var(--spacing-2);
     background-color: var(--chips-background-color);
@@ -111,6 +129,10 @@ const { className: removeIconClass, attributes: removeIconAttributes } = splitPa
     padding-inline: var(--spacing-2);
   }
 
+  .chips__icon {
+    color: var(--chips-icon-color);
+  }
+
   .chips__icon--right {
     order: 1;
   }
@@ -118,23 +140,28 @@ const { className: removeIconClass, attributes: removeIconAttributes } = splitPa
   .chips__label {
     display: inline-flex;
     align-items: center;
+    color: var(--chips-label-color);
+    font-weight: var(--chips-label-font-weight);
+    font-size: var(--chips-label-font-size);
   }
 
   .chips__remove-icon {
     flex-shrink: 0;
+    order: 2;
+    color: var(--chips-remove-icon-color);
   }
 
   .chips__image {
-    border-radius: var(--rounded-full);
+    border-radius: var(--chips-image-border-radius);
     aspect-ratio: 1 / 1;
     object-fit: cover;
     flex-shrink: 0;
   }
 
   .chips:focus-visible {
-    outline: 2px solid var(--color-focus-ring);
+    outline: 2px solid var(--chips-focus-ring-color);
     outline-offset: 2px;
-    box-shadow: 0 0 0 6px var(--color-focus-ring-overlay);
-    border-color: var(--color-focus-ring);
+    box-shadow: 0 0 0 6px var(--chips-focus-ring-overlay-color);
+    border-color: var(--chips-focus-ring-color);
   }
 </style>

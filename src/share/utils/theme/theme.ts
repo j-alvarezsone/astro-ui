@@ -1,4 +1,4 @@
-import { createComponentThemeResolver, createComponentsThemeCss } from '@utils/theme/componentThemesCss';
+import { createComponentThemeResolver, createComponentsThemeCss, type ThemeCssResolver } from '@utils/theme/componentThemesCss';
 import { componentThemeCssMap } from '@utils/theme/createComponentThemeCss';
 import { getThemeComponent, getThemeComponents, type UIThemeComponentName, type UIThemeComponents, type UIThemeName, resolveThemeName } from '@utils/theme/uiThemes';
 
@@ -65,7 +65,7 @@ export function getComponentsThemeCss(themeName: string | undefined): string | u
  * const css = resolver('warm');
  * // 'html:root { --input-field-wrapper-background: #fff7ed; ... }'
  */
-function createTypedComponentResolver<K extends UIThemeComponentName>(name: K) {
+function createTypedComponentResolver<K extends UIThemeComponentName>(name: K): ThemeCssResolver<UIThemeName> {
   return createComponentThemeResolver<UIThemeComponents[K], UIThemeName>({
     getThemeByName: (themeName: UIThemeName) => getThemeComponent(themeName, name),
     createThemeCss: componentThemeCssMap[name],

@@ -31,15 +31,11 @@ const headings = getFilteredHeadings(rendered);
   headings={headings}
 >
   <ComponentSlotsDemo slots={CHIPS_SLOTS} label="Chips pt slots">
-    <ChipsComponent
-      label="Microsoft"
-      icon={{ name: 'mdi:microsoft-windows' }}
-      removeIcon={{ name: 'mdi:close-circle-outline' }}
-    />
+    <ChipsComponent label="Microsoft" icon={{ name: 'mdi:microsoft-windows' }} removable />
     <ChipsComponent
       label="Xuxue Feng"
       image={{ src: 'https://i.pravatar.cc/30?img=47', alt: 'Xuxue Feng avatar' }}
-      removeIcon={{ name: 'mdi:close-circle-outline' }}
+      removable
     />
   </ComponentSlotsDemo>
 

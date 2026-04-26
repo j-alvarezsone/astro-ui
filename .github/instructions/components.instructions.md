@@ -51,17 +51,45 @@ export interface MyComponentPassThrough {
 }
 ```
 
-### 2. In the component frontmatter, split with `splitPassThroughAttributes`
+The `pt` slot names **must also be the top-level keys of the component's `*StyleConfig` type**. Theme config and pass-through must share the same slot vocabulary. See `src/share/types/theme/misc/chips.ts` for the canonical example.
 
-Always import and use the shared utility — never write an IIFE, a custom spread, or `as string | undefined` casts:
+### 2. In the component frontmatter, merge root attributes then split
+
+Always import and use both shared utilities — never write an IIFE, a custom spread, or `as string | undefined` casts:
 
 ```astro
-import { splitPassThroughAttributes } from '@utils/theme/form/inputTextConfig';
+import { mergePassThroughAttributes, splitPassThroughAttributes } from '@utils/theme/passThrough';
 import type { MyComponentPassThrough } from '@/types/theme/my-component';
 
 const { pt, ...rest } = Astro.props;
-const { className: rootClass, attributes: rootAttributes } = splitPassThroughAttributes(pt?.root);
+const { className: rootClass, attributes: rootAttributes } = splitPassThroughAttributes(
+  mergePassThroughAttributes(rest, pt?.root),
+);
+const { className: fooClass, attributes: fooAttributes } = splitPassThroughAttributes(pt?.foo);
 ```
+
+`mergePassThroughAttributes(base, override)` merges two attribute objects: class values are concatenated, style strings are merged, and non-class/style attributes from `override` win. Always pass the result to `splitPassThroughAttributes` to extract `className` for `class:list`.
+
+Use `mergePassThroughAttributes` in two situations:
+
+- **Root slot + `...rest`**: `rest` (component-level HTML attributes) is the base, `pt?.root` is the override. This is the most common case and replaces a separate `{...rest}` spread on the root element.
+
+  ```ts
+  const { pt, ...rest } = Astro.props;
+  const { className: rootClass, attributes: rootAttributes } = splitPassThroughAttributes(
+    mergePassThroughAttributes(rest, pt?.root),
+  );
+  ```
+
+- **Non-root slot + computed attributes**: when a slot has component-derived attributes that must be merged with the consumer's `pt` entry. Computed attributes are the base, `pt?.slotName` is the override.
+
+  ```ts
+  // e.g. InputText: inputAttributes (name, aria-*, etc.) merged with pt?.input
+  const inputPassThrough = mergePassThroughAttributes(inputAttributes, pt?.input);
+  const { className: inputClass, attributes: inputAttributes_ } = splitPassThroughAttributes(inputPassThrough);
+  ```
+
+Slots that have **no computed attributes** pass their `pt` entry directly to `splitPassThroughAttributes` without merging.
 
 ### 3. In the template, bind class and attributes separately
 
@@ -69,14 +97,16 @@ const { className: rootClass, attributes: rootAttributes } = splitPassThroughAtt
 <div
   class:list={['my-component', rootClass]}
   {...rootAttributes}
-  {...rest}
 />
 ```
 
-`splitPassThroughAttributes` returns `{ className, attributes }` where `attributes` already excludes `class` and is `undefined` when empty — so spreading it is always safe.
+`splitPassThroughAttributes` returns `{ className, attributes }` where `attributes` already excludes `class` and is `undefined` when empty — so spreading it is always safe. Because `rest` was folded into `rootAttributes` via `mergePassThroughAttributes`, **do not spread `{...rest}` separately on the root element**.
 
 ### Rules
 
+- **Always** use `mergePassThroughAttributes(rest, pt?.root)` for the root slot — never spread `{...rest}` and `{...rootAttributes}` separately.
+- **Always** use `mergePassThroughAttributes(computedAttrs, pt?.slotName)` when a non-root slot has component-derived attributes that must be passed to the element.
+- **Never** pass `pt?.root` directly to `splitPassThroughAttributes` on the root element; it must go through `mergePassThroughAttributes(rest, pt?.root)` first.
 - **Never** manually destructure `{ class: _, style: __, ...attrs }` inline.
 
 ## Interactive Slot Preview (`ComponentSlotsDemo`)
@@ -173,7 +203,7 @@ customElements.define('my-feature', MyFeatureElement);
 - When using the element as the root wrapper in Astro, scope CSS with `element-name.class-name { }` (e.g. `slots-demo.slots-demo { }`).
 - **Never** use an IIFE `(() => { ... })()` inside the template to strip keys.
 - **Never** cast `pt?.root?.style as string | undefined`.
-- **Always** use `splitPassThroughAttributes` from `@utils/theme/form/inputTextConfig`.
+- **Always** use `splitPassThroughAttributes` from `@utils/theme/passThrough`.
 - Keep `class:list` for classes and `{...rootAttributes}` for everything else, in that order.
 - Place `{...rest}` after `{...rootAttributes}` so component-level props do not override pass-through.
 

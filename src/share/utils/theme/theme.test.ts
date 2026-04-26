@@ -69,3 +69,38 @@ describe('getComponentsThemeCss (contract tests)', () => {
     }
   });
 });
+
+describe('getComponentsThemeCss (component wiring integration)', () => {
+  it('warm theme includes expected --input-field-* overrides', () => {
+    const css = getComponentsThemeCss('warm');
+    expect(css).toBeDefined();
+    expect(css).toContain('--input-field-wrapper-background: #fff7ed');
+    expect(css).toContain('--input-field-wrapper-border-color: #fdba74');
+    expect(css).toContain('--input-field-label-active-color: #9a3412');
+  });
+
+  it('warm theme includes expected --input-control-* overrides', () => {
+    const css = getComponentsThemeCss('warm');
+    expect(css).toBeDefined();
+    expect(css).toContain('--input-control-input-placeholder-color: #9a3412');
+  });
+
+  it('warm theme includes expected --chips-* overrides', () => {
+    const css = getComponentsThemeCss('warm');
+    expect(css).toBeDefined();
+    expect(css).toContain('--chips-background-color: #fff7ed');
+    expect(css).toContain('--chips-border-color: #fdba74');
+    expect(css).toContain('--chips-color: #9a3412');
+    expect(css).toContain('--chips-active-background-color: #fb923c');
+    expect(css).toContain('--chips-active-border-color: #ea580c');
+    expect(css).toContain('--chips-active-color: #ffffff');
+  });
+
+  it('warm theme CSS contains both inputText and chips blocks', () => {
+    const css = getComponentsThemeCss('warm');
+    expect(css).toBeDefined();
+    // each component block is wrapped in html:root { ... }
+    const blockCount = (css?.match(/html:root\s*\{/gu) ?? []).length;
+    expect(blockCount).toBeGreaterThanOrEqual(2);
+  });
+});

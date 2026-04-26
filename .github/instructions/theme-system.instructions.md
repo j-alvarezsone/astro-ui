@@ -96,7 +96,37 @@ The folder layout under `src/share/types/theme/` and `src/share/utils/theme/` mu
 
 Rule: **any new themed component under `src/components/<category>/` gets its type and config files under the matching `<category>/` subfolder** — never flat in the theme root.
 
-### 4. Keep theme registration centralized
+### 4. Theme config shape must mirror the `pt` slot structure
+
+When a component accepts a `pt` prop, its `*StyleConfig` type **must** be a nested object whose top-level keys are the `pt` slot names — never a flat object.
+
+```ts
+// ✅ Correct — one sub-config type per pt slot
+export interface MyComponentStyleConfig {
+  root?: MyComponentRootStyleConfig;       // pt.root → root element
+  icon?: MyComponentIconStyleConfig;       // pt.icon → icon element
+  label?: MyComponentLabelStyleConfig;     // pt.label → label element
+  action?: MyComponentActionStyleConfig;   // pt.action → action element
+}
+
+// ❌ Wrong — flat config has no mapping to slots
+export interface MyComponentStyleConfig {
+  backgroundColor?: string;
+  iconColor?: string;
+  labelFontWeight?: string;
+}
+```
+
+Rules:
+
+- Every pt slot that can be styled gets its own dedicated sub-config type.
+- Each sub-config type holds real visual properties (color, fontSize, fontWeight, borderRadius, etc.).
+- Do not use an empty `interface` for a slot sub-config. Use a `type` alias with at minimum one property. Slots with no styleable properties yet may temporarily be `type XxxStyleConfig = Record<string, never>`, but prefer adding real properties immediately.
+- The `create*StyleVars` generator must read `config.slotName?.property` paths matching this shape.
+- In `UI_THEMES`, theme overrides use the same nested shape, giving authors direct alignment with the `pt` API.
+- If an existing component has a flat `*StyleConfig`, restructure it to nested before adding new tokens.
+
+### 5. Keep theme registration centralized
 
 Every component that can appear inside `UI_THEMES` must be registered in `src/share/types/theme/uiThemes.ts`.
 

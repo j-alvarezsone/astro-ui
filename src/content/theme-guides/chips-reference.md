@@ -30,7 +30,7 @@ Think of Chips theming as 3 layers:
 
 3. Instance override layer (`pt`)
 
-- Use `pt.root.class`, `pt.root.style`, and attributes for one-off per-instance overrides.
+- Use `pt.<section>.class`, `pt.<section>.style`, and arbitrary attributes for one-off per-instance overrides on any individual part (`root`, `image`, `icon`, `label`, `removeIcon`).
 - Prefer token overrides for production theming and native CSS properties for local exceptions.
 
 ## Source Of Truth
@@ -51,7 +51,7 @@ Practical alignment notes:
 
 ## Chips `pt` Sections
 
-`Chips` currently supports these `pt` sections:
+`Chips` supports these `pt` sections:
 
 - `root`
 - `image`
@@ -59,11 +59,18 @@ Practical alignment notes:
 - `label`
 - `removeIcon`
 
-The `root` section accepts pass-through attributes:
+**Every section** accepts the same set of pass-through attributes:
 
 - `class` (string or array of strings)
 - `style` (string or object)
 - arbitrary HTML attributes (`data-*`, `aria-*`, `id`, etc.)
+
+The examples below focus on `root` as the most common target, but the same patterns apply to any section — swap `root` for `image`, `icon`, `label`, or `removeIcon` to target that specific part instead.
+
+Icon behavior note:
+
+- `iconPos` controls the main `icon` placement (`left` or `right`).
+- `removeIcon` renders independently when provided, even when `iconPos="right"`.
 
 ### Example A: `pt.class` + `<style>` tag override
 

@@ -97,4 +97,23 @@ describe('SlotsDemoElement', () => {
     expect(item.hasAttribute('data-slots-active')).toBe(false);
     expect(target.hasAttribute('data-slots-highlight')).toBe(false);
   });
+
+  it('skips a slot item with an invalid CSS selector without throwing', () => {
+    // "::invalid-pseudo" is not a valid selector — querySelectorAll throws a DOMException
+    expect(() => {
+      buildDemo(
+        [{ selector: '::invalid-pseudo' }, { selector: '.chip' }],
+        '<span class="chip">Label</span>',
+      );
+    }).not.toThrow();
+
+    const el = document.querySelector('slots-demo')!;
+    const items = el.querySelectorAll<HTMLElement>('[data-slots-item]');
+    const validItem = items[1];
+    const target = el.querySelector<HTMLElement>('.chip')!;
+
+    // the valid item still works despite the bad one
+    validItem.dispatchEvent(new MouseEvent('mouseenter'));
+    expect(target.hasAttribute('data-slots-highlight')).toBe(true);
+  });
 });

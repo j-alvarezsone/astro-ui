@@ -12,7 +12,13 @@ class SlotsDemoElement extends HTMLElement {
       const selector = item.dataset.slotsItem;
       if (!selector) return;
 
-      const targets = Array.from(preview.querySelectorAll<HTMLElement>(selector));
+      let targets: HTMLElement[];
+      try {
+        targets = Array.from(preview.querySelectorAll<HTMLElement>(selector));
+      } catch {
+        console.error(`Invalid selector in data-slots-item: "${selector}"`);
+        return;
+      }
       if (targets.length === 0) return;
 
       item.addEventListener('mouseenter', () => this.#activate(item, targets), { signal });
