@@ -11,6 +11,7 @@
   --input-field-wrapper-hover-border-color: var(--color-hover-border);
   --input-field-wrapper-focus-border-color: var(--color-focus-border);
   --input-field-wrapper-focus-ring-color: var(--color-focus-ring);
+  --input-field-wrapper-focus-ring-width: var(--spacing-0-5);
   --input-field-wrapper-error-border-color: var(--color-danger-border);
   --input-field-wrapper-disabled-background: var(--color-disabled-fill);
   --input-field-wrapper-border-radius: var(--rounded-lg);

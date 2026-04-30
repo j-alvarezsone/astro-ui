@@ -139,8 +139,8 @@ const { className: errorTextPassThroughClass, attributes: errorTextPassThroughAt
 
   .input-field__wrapper:focus-within {
     border-color: var(--input-field-wrapper-focus-border-color, var(--color-focus-border));
-    outline: 2px solid var(--input-field-wrapper-focus-ring-color, var(--color-focus-ring));
-    outline-offset: 2px;
+    box-shadow: 0 0 0 var(--input-field-wrapper-focus-ring-width, var(--spacing-0-5))
+      var(--input-field-wrapper-focus-ring-color, var(--color-focus-ring));
   }
 
   /* Explicit error state from props: always keep danger border. */

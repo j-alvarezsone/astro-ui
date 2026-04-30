@@ -48,6 +48,19 @@ describe('createInputFieldStyleVars', () => {
     );
   });
 
+  it('creates focus ring declarations when provided', () => {
+    expect(
+      createInputFieldStyleVars({
+        wrapper: {
+          focusRingColor: '#98cbff',
+          focusRingWidth: '0.1875rem',
+        },
+      }),
+    ).toBe(
+      '--input-field-wrapper-focus-ring-color: #98cbff; --input-field-wrapper-focus-ring-width: 0.1875rem',
+    );
+  });
+
   it('returns undefined when no shared declarations are produced', () => {
     expect(createInputFieldStyleVars({})).toBeUndefined();
   });

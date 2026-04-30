@@ -34,6 +34,7 @@ export interface InputFieldStyleConfig {
     hoverBorderColor?: string;
     focusBorderColor?: string;
     focusRingColor?: string;
+    focusRingWidth?: string;
     errorBorderColor?: string;
     disabledBackgroundColor?: string;
     borderRadius?: string;

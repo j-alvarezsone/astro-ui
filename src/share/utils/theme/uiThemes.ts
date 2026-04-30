@@ -5,21 +5,21 @@ import { hasOwnKey } from '@utils/object/hasOwnKey';
 const UI_THEMES = {
   warm: {
     components: {
-      inputText: {
-        wrapper: {
-          backgroundColor: '#fff7ed',
-          borderColor: '#fdba74',
-          hoverBorderColor: '#fb923c',
-          focusBorderColor: '#ea580c',
-          focusRingColor: '#fb923c',
-        },
-        label: {
-          activeColor: '#9a3412',
-        },
-        input: {
-          placeholderColor: '#9a3412',
-        },
-      },
+      // inputText: {
+      //   wrapper: {
+      //     backgroundColor: '#fff7ed',
+      //     borderColor: '#fdba74',
+      //     hoverBorderColor: '#fb923c',
+      //     focusBorderColor: '#ea580c',
+      //     focusRingColor: '#fb923c',
+      //   },
+      //   label: {
+      //     activeColor: '#9a3412',
+      //   },
+      //   input: {
+      //     placeholderColor: '#9a3412',
+      //   },
+      // },
       chips: {
         root: {
           backgroundColor: '#fff7ed',

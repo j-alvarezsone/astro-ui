@@ -183,7 +183,7 @@
 
   /* ── Interaction borders ───────────────────────────────── */
   --color-hover-border: #94a3b8;
-  --color-focus-border: #020617;
-  --color-focus-ring:   #005fcc; /* outline / external ring around the focused element */
-  --color-focus-ring-overlay: rgba(0, 95, 204, 0.12); /* soft focus glow */
+  --color-focus-border: #0059c8;
+  --color-focus-ring:   #98cbff; /* box-shadow spread around the focused element */
+  --color-focus-ring-overlay: rgba(0, 89, 200, 0.12); /* soft focus glow */
 }

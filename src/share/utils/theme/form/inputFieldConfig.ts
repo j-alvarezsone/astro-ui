@@ -26,6 +26,7 @@ export function createInputFieldStyleVars(config: InputFieldStyleConfig | undefi
     ['--input-field-wrapper-hover-border-color', config.wrapper?.hoverBorderColor],
     ['--input-field-wrapper-focus-border-color', config.wrapper?.focusBorderColor],
     ['--input-field-wrapper-focus-ring-color', config.wrapper?.focusRingColor],
+    ['--input-field-wrapper-focus-ring-width', config.wrapper?.focusRingWidth],
     ['--input-field-wrapper-error-border-color', config.wrapper?.errorBorderColor],
     ['--input-field-wrapper-disabled-background', config.wrapper?.disabledBackgroundColor],
     ['--input-field-wrapper-border-radius', config.wrapper?.borderRadius],
