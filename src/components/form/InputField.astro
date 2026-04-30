@@ -139,8 +139,11 @@ const { className: errorTextPassThroughClass, attributes: errorTextPassThroughAt
 
   .input-field__wrapper:focus-within {
     border-color: var(--input-field-wrapper-focus-border-color, var(--color-focus-border));
-    box-shadow: 0 0 0 var(--input-field-wrapper-focus-ring-width, var(--spacing-0-5))
-      var(--input-field-wrapper-focus-ring-color, var(--color-focus-ring));
+    box-shadow:
+      0 0 0 var(--input-field-wrapper-focus-ring-width, var(--spacing-0-5))
+        var(--input-field-wrapper-focus-ring-color, var(--color-focus-ring)),
+      0 0 0 var(--spacing-1)
+        color-mix(in srgb, var(--input-field-wrapper-focus-ring-color, var(--color-focus-ring)) 28%, transparent);
   }
 
   /* Explicit error state from props: always keep danger border. */
@@ -153,19 +156,39 @@ const { className: errorTextPassThroughClass, attributes: errorTextPassThroughAt
   /* Validation states
    * - Invalid border only after user interaction,
    *   and only once the field has a value.
-   * - Valid border only after user interaction, while focused,
+   * - Valid border only after user interaction,
    *   and only once the field has a value.
   */
-  :global(form:not([novalidate]) .input-field__wrapper:has(input:user-invalid:not(:placeholder-shown))) {
+  :global(form:not([novalidate]) .input-field__wrapper:has(input:user-invalid:not(:placeholder-shown))):not(
+    :focus-within
+  ) {
     border-color: var(--input-field-wrapper-error-border-color, var(--color-danger-border));
-    box-shadow: 0 0 0 var(--input-field-wrapper-focus-ring-width, var(--spacing-0-5))
-      var(--input-field-wrapper-invalid-ring-color, var(--color-danger-subtle));
+    box-shadow: none;
+  }
+
+  :global(form:not([novalidate]) .input-field__wrapper:has(input:user-valid:not(:placeholder-shown))):not(
+    :focus-within
+  ) {
+    border-color: var(--input-field-wrapper-valid-border-color, var(--color-success-border));
+    box-shadow: none;
+  }
+
+  :global(form:not([novalidate]) .input-field__wrapper:has(input:user-invalid:focus:not(:placeholder-shown))) {
+    border-color: var(--input-field-wrapper-error-border-color, var(--color-danger-border));
+    box-shadow:
+      0 0 0 var(--input-field-wrapper-focus-ring-width, var(--spacing-0-5))
+        var(--input-field-wrapper-invalid-ring-color, var(--color-danger-subtle)),
+      0 0 0 var(--spacing-1)
+        color-mix(in srgb, var(--input-field-wrapper-invalid-ring-color, var(--color-danger-subtle)) 28%, transparent);
   }
 
   :global(form:not([novalidate]) .input-field__wrapper:has(input:user-valid:focus:not(:placeholder-shown))) {
     border-color: var(--input-field-wrapper-valid-border-color, var(--color-success-border));
-    box-shadow: 0 0 0 var(--input-field-wrapper-focus-ring-width, var(--spacing-0-5))
-      var(--input-field-wrapper-valid-ring-color, var(--color-success-subtle));
+    box-shadow:
+      0 0 0 var(--input-field-wrapper-focus-ring-width, var(--spacing-0-5))
+        var(--input-field-wrapper-valid-ring-color, var(--color-success-subtle)),
+      0 0 0 var(--spacing-1)
+        color-mix(in srgb, var(--input-field-wrapper-valid-ring-color, var(--color-success-subtle)) 28%, transparent);
   }
 
   .input-field__wrapper:has(:disabled) {
