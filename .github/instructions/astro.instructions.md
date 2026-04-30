@@ -4,9 +4,16 @@ applyTo: "**/*.astro"
 
 # Astro Patterns
 
+**Priority summary — apply these first:**
+
+1. Default to SSR-only (no `client:*` directive) and static rendering (`prerender: true`).
+2. Use `client:*` directives only for components requiring user input or dynamic updates.
+3. Use `try/catch` with typed errors for all data fetching in frontmatter.
+4. Validate content collection schemas with Zod.
+
 ## Partial Hydration (Component Islands)
 
-Use `client:*` directives only when the component needs interactivity:
+Use `client:*` directives only when the component requires user input or dynamic updates based on user actions (e.g., click handlers, form controls, state that changes in response to user events):
 
 | Directive | When to Use |
 |---|---|

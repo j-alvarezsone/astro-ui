@@ -43,6 +43,16 @@ When editing the theme system, align with these files:
 
 ## Architecture Rules
 
+**Quick reference — key constraints:**
+
+1. Separate shared field-shell tokens (`input-field-*`) from control-specific tokens (`input-control-*`).
+2. `InputField` is the reusable shell for text-like controls; do not force checkbox/radio into it.
+3. One type file per component; mirror the `src/components/<category>/` folder structure.
+4. `*StyleConfig` must be a nested object keyed by `pt` slot names — never a flat object.
+5. Every themed component must be registered in `UIThemeComponentsConfig`.
+6. Use `as const satisfies Record<string, UIThemeConfig>` for typed theme authoring.
+7. New reusable components must be theme-capable by design from the start.
+
 ### 1. Separate shared shell styling from control-specific styling
 
 Use `input-field` tokens for styling that belongs to the reusable field shell:
@@ -218,6 +228,22 @@ Prefer sparse overrides. Do not duplicate all default values into every theme.
 
 ## How To Add A New Themed Component
 
+**Summary — files to create or edit per step:**
+
+| Step | File to create or edit |
+|------|------------------------|
+| 1 | Decide on shell reuse (no file) |
+| 2 | Identify `src/components/<category>/` location (no file) |
+| 3 | Create `src/share/types/theme/<category>/<componentName>.ts` |
+| 4 | Edit `src/share/types/theme/uiThemes.ts` |
+| 5 | Create `src/share/utils/theme/<category>/<componentName>Config.ts` |
+| 6 | Add defaults to `src/assets/css/theme/<component>.css` |
+| 7 | Edit `src/share/utils/theme/createComponentThemeCss.ts` |
+| 8 | Edit component CSS to consume generated variables |
+| 9 | Add or update tests |
+| 10 | Run `pnpm run type:check` |
+| 11 | Verify 100% coverage for modified theme logic |
+
 Follow this sequence.
 
 1. Decide whether the component reuses `InputField` or needs a unique structure.
@@ -290,7 +316,7 @@ The runtime flow must stay:
 3. Each component config is converted into CSS declarations
 4. CSS is injected globally by the layout
 
-Do not introduce parallel theming paths unless there is a clear requirement.
+Do not introduce parallel theming paths unless there is a documented and approved project requirement.
 
 The project intentionally removed `FormStyleProvider` to keep a single theming path.
 

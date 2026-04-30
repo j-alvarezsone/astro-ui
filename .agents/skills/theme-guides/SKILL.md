@@ -1,6 +1,6 @@
 ---
 name: theme-guides
-description: Build and maintain the Astro theme documentation collection and standalone guide page. Use when asked to document theme usage, add examples, create collection entries, or update the dedicated theme docs route without adding navigation links.
+description: Build and maintain the Astro theme documentation collection and standalone guide page. Use when asked to document theme usage, add examples, create collection entries, or update the dedicated theme docs route without making any changes to navigation links.
 ---
 
 # Theme Guides
@@ -22,9 +22,12 @@ Use it when the task requires:
 3. Keep each entry focused on actionable steps and real code snippets.
 4. Render entries in `src/pages/theme-system.astro` using `getCollection` + `render(entry)`.
 5. For multi-entry render operations, use `Promise.all(...)` over mapped async tasks instead of `await` in loops.
-6. If the page contains an "On This Page" section, include both guide-level links and section heading links (heading depth 2-3).
-7. In the page template shell, prefer the shared `Heading` component over raw `h1`/`h2` tags.
-8. Keep the page standalone unless the user explicitly asks for navigation changes.
+6. Keep the page standalone unless the user explicitly asks for navigation changes.
+7. If multiple documentation updates conflict (e.g., overlapping frontmatter fields or contradictory examples), prioritize the most recent instruction or ask the user for clarification before proceeding.
+
+**If the page contains an "On This Page" section:** include both guide-level links and section heading links (heading depth 2-3).
+
+**In the page template shell:** prefer the shared `Heading` component over raw `h1`/`h2` tags.
 
 ## Content Standards
 
@@ -42,6 +45,22 @@ Each guide entry should include:
 ## Required `pt` Documentation Structure
 
 When documenting `pt` (pass-through) for a component, **always** follow this structure in order. Do not skip sections.
+
+**Structure at a glance:**
+
+| # | Section | What it covers |
+|---|---------|----------------|
+| 1 | Quick Mental Model | 3-layer model: theme config, token defaults, `pt` overrides |
+| 2 | Source Of Truth | All relevant source files + alignment notes |
+| 3 | `pt` Sections | Every supported slot and what it accepts |
+| 4 | Example A | `pt.class` + `<style>` tag override |
+| 5 | Example B | `pt.style` inline style string/object |
+| 6 | Example C | Arbitrary attributes (`data-*`, `aria-*`, `id`) |
+| 7 | What Is Possible | Brief capability summary |
+| 8 | Style Config Keys | Shared keys vs component-only keys |
+| 9 | CSS Custom Properties | All consumed tokens grouped by type |
+| 10 | Troubleshooting | Numbered checklist for common override failures |
+| 11 | Runtime CSS Classes | Full list of rendered classes with usage notes |
 
 ### 1. Quick Mental Model
 

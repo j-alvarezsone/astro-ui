@@ -51,7 +51,7 @@ export interface MyComponentPassThrough {
 }
 ```
 
-The `pt` slot names **must also be the top-level keys of the component's `*StyleConfig` type**. Theme config and pass-through must share the same slot vocabulary. See `src/share/types/theme/misc/chips.ts` for the canonical example.
+The `pt` slot names **must also be the top-level keys of the component's `StyleConfig` type (e.g., `ChipsStyleConfig`, `InputTextStyleConfig`)**. Theme config and pass-through must share the same slot vocabulary. See `src/share/types/theme/misc/chips.ts` for the canonical example.
 
 ### 2. In the component frontmatter, merge root attributes then split
 
@@ -70,26 +70,30 @@ const { className: fooClass, attributes: fooAttributes } = splitPassThroughAttri
 
 `mergePassThroughAttributes(base, override)` merges two attribute objects: class values are concatenated, style strings are merged, and non-class/style attributes from `override` win. Always pass the result to `splitPassThroughAttributes` to extract `className` for `class:list`.
 
-Use `mergePassThroughAttributes` in two situations:
+#### Scenario A — Root slot (most common)
 
-- **Root slot + `...rest`**: `rest` (component-level HTML attributes) is the base, `pt?.root` is the override. This is the most common case and replaces a separate `{...rest}` spread on the root element.
+Use `mergePassThroughAttributes(rest, pt?.root)` so that component-level HTML attributes (`rest`) and the consumer's root `pt` entry are merged together. This replaces a separate `{...rest}` spread on the root element.
 
-  ```ts
-  const { pt, ...rest } = Astro.props;
-  const { className: rootClass, attributes: rootAttributes } = splitPassThroughAttributes(
-    mergePassThroughAttributes(rest, pt?.root),
-  );
-  ```
+```ts
+const { pt, ...rest } = Astro.props;
+const { className: rootClass, attributes: rootAttributes } = splitPassThroughAttributes(
+  mergePassThroughAttributes(rest, pt?.root),
+);
+```
 
-- **Non-root slot + computed attributes**: when a slot has component-derived attributes that must be merged with the consumer's `pt` entry. Computed attributes are the base, `pt?.slotName` is the override.
+#### Scenario B — Non-root slot with computed attributes
 
-  ```ts
-  // e.g. InputText: inputAttributes (name, aria-*, etc.) merged with pt?.input
-  const inputPassThrough = mergePassThroughAttributes(inputAttributes, pt?.input);
-  const { className: inputClass, attributes: inputAttributes_ } = splitPassThroughAttributes(inputPassThrough);
-  ```
+Use `mergePassThroughAttributes(computedAttrs, pt?.slotName)` when a non-root slot has component-derived attributes that must be merged with the consumer's `pt` entry. Computed attributes are the base, `pt?.slotName` is the override.
 
-Slots that have **no computed attributes** pass their `pt` entry directly to `splitPassThroughAttributes` without merging.
+```ts
+// e.g. InputText: inputAttributes (name, aria-*, etc.) merged with pt?.input
+const inputPassThrough = mergePassThroughAttributes(inputAttributes, pt?.input);
+const { className: inputClass, attributes: inputAttributes_ } = splitPassThroughAttributes(inputPassThrough);
+```
+
+#### Scenario C — Non-root slot with no computed attributes
+
+Slots that have no computed attributes pass their `pt` entry directly to `splitPassThroughAttributes` without merging.
 
 ### 3. In the template, bind class and attributes separately
 
@@ -104,10 +108,10 @@ Slots that have **no computed attributes** pass their `pt` entry directly to `sp
 
 ### Rules
 
-- **Always** use `mergePassThroughAttributes(rest, pt?.root)` for the root slot — never spread `{...rest}` and `{...rootAttributes}` separately.
-- **Always** use `mergePassThroughAttributes(computedAttrs, pt?.slotName)` when a non-root slot has component-derived attributes that must be passed to the element.
-- **Never** pass `pt?.root` directly to `splitPassThroughAttributes` on the root element; it must go through `mergePassThroughAttributes(rest, pt?.root)` first.
-- **Never** manually destructure `{ class: _, style: __, ...attrs }` inline.
+1. **Root slot**: always use `mergePassThroughAttributes(rest, pt?.root)` — never spread `{...rest}` and `{...rootAttributes}` separately.
+2. **Non-root slot with computed attributes**: always use `mergePassThroughAttributes(computedAttrs, pt?.slotName)` when component-derived attributes must reach the element.
+3. **Root slot — no direct pass**: never pass `pt?.root` directly to `splitPassThroughAttributes` on the root element; it must go through `mergePassThroughAttributes(rest, pt?.root)` first.
+4. **No manual destructure**: never manually destructure `{ class: _, style: __, ...attrs }` inline.
 
 ## Interactive Slot Preview (`ComponentSlotsDemo`)
 

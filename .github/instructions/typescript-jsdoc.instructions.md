@@ -7,20 +7,23 @@ applyTo: "src/**/*.ts,scripts/**/*.mts"
 
 When creating a new function, always add full JSDoc.
 
+## JSDoc Tags
+
 Minimum required tags:
 
 - `@param` for each function parameter
 - `@returns` describing the return value
 - `@example` with at least one realistic usage snippet
 
-Additional rules:
+## JSDoc Content Rules
 
 - Keep examples short and copy-pasteable.
 - Keep descriptions practical and specific to behavior.
-- Apply this to exported and non-exported functions unless the function is trivial and immediately obvious.
-- For non-trivial logic, use an explicit function signature so TypeScript can clearly understand parameter types and return type.
+- Apply this to exported and non-exported functions unless the function has fewer than 3 lines of code and no branching logic.
 
-Signature requirements for non-trivial functions:
+## Signature Requirements
+
+For non-trivial functions:
 
 - Type every parameter explicitly.
 - Add an explicit return type annotation.

@@ -7,6 +7,14 @@ description: Build, extend, and refactor the typed component theme system in thi
 
 This skill governs the typed theme architecture used by the project.
 
+**Priority summary — apply these first:**
+
+1. Ask whether a new component should participate in the theme system before wiring it.
+2. Separate shared field-shell tokens (`--input-field-*`) from component-specific tokens.
+3. Keep one type file per component; mirror the `src/components/<category>/` folder structure.
+4. Keep all tests passing and add new tests for every theme behavior change.
+5. Always run `pnpm run type:check` after any theme edit.
+
 It is for:
 
 - adding new named themes
@@ -43,19 +51,22 @@ When creating a new UI component that is visually reusable or form-related, ask 
 
 - "Do you want this new component to participate in the theme system?"
 
-Default stance:
+**Decision table:**
 
-- if the component is reusable, design it to be theme-capable
-- if the user says "yes", wire full theme support immediately
-- if the user says "not now", keep architecture ready so enabling theme later is small and safe
+| Situation | Action |
+|-----------|--------|
+| Component is reusable and user says "yes" | Wire full theme support immediately |
+| Component is reusable and user says "not now" | Keep architecture ready; use CSS custom properties so enabling theme later is safe |
+| Component is reusable and no answer yet | Design theme-capable (CSS custom properties) and ask the question |
+| One-off, non-reusable component | Do not ask; skip theme wiring |
 
-Ask this especially for:
+Ask especially for:
 
 - text-like form controls
 - reusable UI primitives
 - components that have borders, labels, backgrounds, icons, or state colors
 
-Do not ask this for obviously non-themeable one-off code unless the user is clearly building a reusable component library feature.
+Do not ask for obviously non-themeable one-off code unless the user is clearly building a reusable component library feature.
 
 ### 2. Always separate shared shell styling from component-specific styling
 
