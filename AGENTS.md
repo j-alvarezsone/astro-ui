@@ -42,6 +42,7 @@
 - In TypeScript type aliases, prefer shared helper types from `src/share/types/index.ts`:
   - `Keyof<T>` over raw `keyof T`
   - `ValueOf<T>` over manual indexed unions like `T[keyof T]`
+- For Vitest test files, use configured global APIs (`describe`, `it`, `expect`, `beforeEach`, `afterEach`, `vi`) and do not import them from `vitest`.
 - Keep edits scoped and avoid unrelated file changes.
 - Before finalizing changes, run at least `pnpm run type:check`; run `pnpm run lint` for lint-impacting changes.
 - If blocked or ambiguous, state assumptions and choose the lowest-risk implementation.

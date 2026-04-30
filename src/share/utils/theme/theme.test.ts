@@ -70,37 +70,115 @@ describe('getComponentsThemeCss (contract tests)', () => {
   });
 });
 
-describe('getComponentsThemeCss (component wiring integration)', () => {
-  it('warm theme includes expected --input-field-* overrides', () => {
-    const css = getComponentsThemeCss('warm');
-    expect(css).toBeDefined();
-    expect(css).toContain('--input-field-wrapper-background: #fff7ed');
-    expect(css).toContain('--input-field-wrapper-border-color: #fdba74');
-    expect(css).toContain('--input-field-label-active-color: #9a3412');
+describe('getComponentsThemeCss (orchestration with mocks)', () => {
+  beforeEach(() => {
+    vi.resetModules();
   });
 
-  it('warm theme includes expected --input-control-* overrides', () => {
-    const css = getComponentsThemeCss('warm');
-    expect(css).toBeDefined();
-    expect(css).toContain('--input-control-input-placeholder-color: #9a3412');
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.resetModules();
   });
 
-  it('warm theme includes expected --chips-* overrides', () => {
-    const css = getComponentsThemeCss('warm');
-    expect(css).toBeDefined();
-    expect(css).toContain('--chips-background-color: #fff7ed');
-    expect(css).toContain('--chips-border-color: #fdba74');
-    expect(css).toContain('--chips-color: #9a3412');
-    expect(css).toContain('--chips-active-background-color: #fb923c');
-    expect(css).toContain('--chips-active-border-color: #ea580c');
-    expect(css).toContain('--chips-active-color: #ffffff');
+  it('returns undefined and skips composition when theme cannot be resolved', async () => {
+    const resolveThemeNameMock = vi.fn(() => undefined);
+    const getThemeComponentsMock = vi.fn(() => []);
+    const getThemeComponentMock = vi.fn(() => undefined);
+    const createComponentThemeResolverMock = vi.fn();
+    const createComponentsThemeCssMock = vi.fn(() => 'unused-css');
+
+    vi.doMock('@utils/theme/uiThemes', () => ({
+      resolveThemeName: resolveThemeNameMock,
+      getThemeComponents: getThemeComponentsMock,
+      getThemeComponent: getThemeComponentMock,
+    }));
+
+    vi.doMock('@utils/theme/componentThemesCss', () => ({
+      createComponentThemeResolver: createComponentThemeResolverMock,
+      createComponentsThemeCss: createComponentsThemeCssMock,
+    }));
+
+    vi.doMock('@utils/theme/createComponentThemeCss', () => ({
+      componentThemeCssMap: {
+        inputText: vi.fn(),
+        chips: vi.fn(),
+      },
+    }));
+
+    const { getComponentsThemeCss: getComponentsThemeCssWithMocks } = await import('@utils/theme/theme');
+
+    expect(getComponentsThemeCssWithMocks('unknown-theme')).toBeUndefined();
+    expect(resolveThemeNameMock).toHaveBeenCalledWith('unknown-theme');
+    expect(getThemeComponentsMock).not.toHaveBeenCalled();
+    expect(createComponentThemeResolverMock).not.toHaveBeenCalled();
+    expect(createComponentsThemeCssMock).not.toHaveBeenCalled();
   });
 
-  it('warm theme CSS contains both inputText and chips blocks', () => {
-    const css = getComponentsThemeCss('warm');
-    expect(css).toBeDefined();
-    // each component block is wrapped in html:root { ... }
-    const blockCount = (css?.match(/html:root\s*\{/gu) ?? []).length;
-    expect(blockCount).toBeGreaterThanOrEqual(2);
+  it('creates one resolver per discovered component and composes css for resolved theme', async () => {
+    const inputTextConfig = { input: { placeholderColor: '#111111' } };
+    const chipsConfig = { root: { color: '#222222' } };
+    const resolvedConfigs: unknown[] = [];
+
+    const resolveThemeNameMock = vi.fn((themeName: string | undefined) => (themeName ? 'warm' : undefined));
+    const getThemeComponentsMock = vi.fn(() => [
+      { name: 'inputText', config: inputTextConfig },
+      { name: 'chips', config: chipsConfig },
+    ]);
+    const getThemeComponentMock = vi.fn((_: string, componentName: string) => {
+      if (componentName === 'inputText') {
+        return inputTextConfig;
+      }
+
+      if (componentName === 'chips') {
+        return chipsConfig;
+      }
+
+      return undefined;
+    });
+
+    const inputTextCssFactory = vi.fn();
+    const chipsCssFactory = vi.fn();
+    const createComponentThemeResolverMock = vi.fn((options: { selector: string; getThemeByName: (themeName: string) => unknown }) => {
+      resolvedConfigs.push(options.getThemeByName('warm'));
+      return () => `${options.selector}-resolver`;
+    });
+    const createComponentsThemeCssMock = vi.fn(() => 'mock-css-output');
+
+    vi.doMock('@utils/theme/uiThemes', () => ({
+      resolveThemeName: resolveThemeNameMock,
+      getThemeComponents: getThemeComponentsMock,
+      getThemeComponent: getThemeComponentMock,
+    }));
+
+    vi.doMock('@utils/theme/componentThemesCss', () => ({
+      createComponentThemeResolver: createComponentThemeResolverMock,
+      createComponentsThemeCss: createComponentsThemeCssMock,
+    }));
+
+    vi.doMock('@utils/theme/createComponentThemeCss', () => ({
+      componentThemeCssMap: {
+        inputText: inputTextCssFactory,
+        chips: chipsCssFactory,
+      },
+    }));
+
+    const { getComponentsThemeCss: getComponentsThemeCssWithMocks } = await import('@utils/theme/theme');
+
+    expect(getComponentsThemeCssWithMocks('warm')).toBe('mock-css-output');
+    expect(resolveThemeNameMock).toHaveBeenCalledWith('warm');
+    expect(getThemeComponentsMock).toHaveBeenCalledWith('warm');
+    expect(createComponentThemeResolverMock).toHaveBeenCalledTimes(2);
+    expect(createComponentThemeResolverMock).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ selector: 'html:root', createThemeCss: inputTextCssFactory }),
+    );
+    expect(createComponentThemeResolverMock).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ selector: 'html:root', createThemeCss: chipsCssFactory }),
+    );
+    expect(getThemeComponentMock).toHaveBeenCalledWith('warm', 'inputText');
+    expect(getThemeComponentMock).toHaveBeenCalledWith('warm', 'chips');
+    expect(resolvedConfigs).toEqual([inputTextConfig, chipsConfig]);
+    expect(createComponentsThemeCssMock).toHaveBeenCalledWith('warm', expect.any(Array));
   });
 });

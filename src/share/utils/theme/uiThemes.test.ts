@@ -68,4 +68,20 @@ describe('theme component contracts', () => {
       }
     }
   });
+
+  it('supports optional theme registry (empty or populated) without undefined component configs', () => {
+    const themeNames = getUIThemeNames();
+    const collectedEntries = themeNames.flatMap((themeName) => getThemeComponents(themeName));
+
+    expect(Array.isArray(themeNames)).toBe(true);
+    expect(Array.isArray(collectedEntries)).toBe(true);
+
+    for (const themeName of themeNames) {
+      for (const entry of getThemeComponents(themeName)) {
+        expect(entry.config).toBeDefined();
+        expect(getThemeComponent(themeName, entry.name)).toEqual(entry.config);
+      }
+    }
+  });
+
 });

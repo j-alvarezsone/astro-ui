@@ -35,7 +35,8 @@ const UI_THEMES = {
 } as const satisfies Record<string, UIThemeConfig>;
 
 export type UIThemeComponents = UIThemeConfig['components'];
-export type UIThemeName = Keyof<typeof UI_THEMES>;
+type UILiteralThemeName = Keyof<typeof UI_THEMES>;
+export type UIThemeName = [UILiteralThemeName] extends [never] ? string : UILiteralThemeName;
 export type UIThemeComponentName = Keyof<UIThemeComponents>;
 export type UIThemeComponentEntry<TName extends UIThemeComponentName = UIThemeComponentName> = {
   name: TName;
@@ -122,7 +123,14 @@ export function resolveThemeName(themeName: string | undefined): UIThemeName | u
  * // [{ name: 'inputText', config: { ... } }]
  */
 export function getThemeComponents(themeName: UIThemeName): UIThemeComponentEntry[] {
-  const components = UI_THEMES[themeName].components;
+  const themesByName: Readonly<Record<string, UIThemeConfig>> = UI_THEMES;
+  const theme = themesByName[themeName];
+
+  if (!theme) {
+    return [];
+  }
+
+  const { components } = theme;
   const componentEntries: UIThemeComponentEntry[] = [];
 
   for (const componentName of Object.keys(components)) {
@@ -157,5 +165,6 @@ export function getThemeComponent<TName extends UIThemeComponentName>(
   themeName: UIThemeName,
   componentName: TName,
 ): UIThemeComponents[TName] | undefined {
-  return UI_THEMES[themeName].components[componentName];
+  const themesByName: Readonly<Record<string, UIThemeConfig>> = UI_THEMES;
+  return themesByName[themeName]?.components[componentName];
 }
