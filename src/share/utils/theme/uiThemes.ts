@@ -12,6 +12,11 @@ const UI_THEMES = {
       //     hoverBorderColor: '#fb923c',
       //     focusBorderColor: '#ea580c',
       //     focusRingColor: '#fb923c',
+      //     focusRingWidth: 'var(--spacing-0-5)',
+      //     errorBorderColor: '#fca5a5',
+      //     invalidRingColor: '#fee2e2',
+      //     validBorderColor: '#88e788',
+      //     validRingColor: '#ecfdf3',
       //   },
       //   label: {
       //     activeColor: '#9a3412',

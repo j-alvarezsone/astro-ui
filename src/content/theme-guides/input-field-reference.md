@@ -2,7 +2,7 @@
 title: InputField Reference
 summary: 'InputField is the shared field shell — label, border wrapper, icon, help and error text — that all text-like controls build on top of.'
 order: 3
-updatedAt: 2026-04-19
+updatedAt: 2026-04-30
 ---
 
 ## Purpose
@@ -77,7 +77,11 @@ inputField: {
     hoverBorderColor: string,
     focusBorderColor: string,
     focusRingColor: string,
+    focusRingWidth: string,
     errorBorderColor: string,
+    invalidRingColor: string,
+    validBorderColor: string,
+    validRingColor: string,
     disabledBackgroundColor: string,
     borderRadius: string,
     paddingInline: string,
@@ -116,7 +120,11 @@ In named themes, these are typically nested under `components.inputText` today, 
   --input-field-wrapper-hover-border-color: var(--color-hover-border);
   --input-field-wrapper-focus-border-color: var(--color-focus-border);
   --input-field-wrapper-focus-ring-color: var(--color-focus-ring);
+  --input-field-wrapper-focus-ring-width: var(--spacing-0-5);
   --input-field-wrapper-error-border-color: var(--color-danger-border);
+  --input-field-wrapper-invalid-ring-color: var(--color-danger-subtle);
+  --input-field-wrapper-valid-border-color: var(--color-success-border);
+  --input-field-wrapper-valid-ring-color: var(--color-success-subtle);
   --input-field-wrapper-disabled-background: var(--color-disabled-fill);
   --input-field-wrapper-border-radius: var(--rounded-lg);
   --input-field-wrapper-padding-inline: var(--spacing-3-5);
@@ -163,6 +171,10 @@ Example class-based override:
   :global(.billing-field-shell) {
     --input-field-wrapper-border-color: #7c3aed;
     --input-field-wrapper-focus-ring-color: #c4b5fd;
+    --input-field-wrapper-focus-ring-width: var(--spacing-1);
+    --input-field-wrapper-invalid-ring-color: #f5d0fe;
+    --input-field-wrapper-valid-border-color: #a3e635;
+    --input-field-wrapper-valid-ring-color: #ecfccb;
   }
 </style>
 ```

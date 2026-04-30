@@ -13,6 +13,9 @@
   --input-field-wrapper-focus-ring-color: var(--color-focus-ring);
   --input-field-wrapper-focus-ring-width: var(--spacing-0-5);
   --input-field-wrapper-error-border-color: var(--color-danger-border);
+  --input-field-wrapper-invalid-ring-color: var(--color-danger-subtle);
+  --input-field-wrapper-valid-border-color: var(--color-success-border);
+  --input-field-wrapper-valid-ring-color: var(--color-success-subtle);
   --input-field-wrapper-disabled-background: var(--color-disabled-fill);
   --input-field-wrapper-border-radius: var(--rounded-lg);
   --input-field-wrapper-padding-inline: var(--spacing-3-5);

@@ -36,6 +36,9 @@ export interface InputFieldStyleConfig {
     focusRingColor?: string;
     focusRingWidth?: string;
     errorBorderColor?: string;
+    invalidRingColor?: string;
+    validBorderColor?: string;
+    validRingColor?: string;
     disabledBackgroundColor?: string;
     borderRadius?: string;
     paddingInline?: string;

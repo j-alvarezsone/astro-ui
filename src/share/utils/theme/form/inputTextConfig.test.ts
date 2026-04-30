@@ -61,6 +61,20 @@ describe('createInputFieldStyleVars', () => {
     );
   });
 
+  it('creates invalid and valid ring/border color declarations when provided', () => {
+    expect(
+      createInputFieldStyleVars({
+        wrapper: {
+          invalidRingColor: '#fecaca',
+          validBorderColor: '#88e788',
+          validRingColor: '#d1fadf',
+        },
+      }),
+    ).toBe(
+      '--input-field-wrapper-invalid-ring-color: #fecaca; --input-field-wrapper-valid-border-color: #88e788; --input-field-wrapper-valid-ring-color: #d1fadf',
+    );
+  });
+
   it('returns undefined when no shared declarations are produced', () => {
     expect(createInputFieldStyleVars({})).toBeUndefined();
   });

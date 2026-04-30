@@ -222,6 +222,25 @@ it('<themeName> theme includes expected --<component>-* overrides', () => {
 
 Do not finish wiring a new component into `componentThemeCssMap` without this test.
 
+### 9. Always sync the component reference doc when config changes
+
+Whenever you add, rename, or remove a key in a `*StyleConfig` type or a `--*` CSS custom property for a component that has a reference entry under `src/content/theme-guides/`, you **must** update that reference in the same change:
+
+- **Style Config Keys section** — reflect the added/removed keys in the `ts` code block.
+- **CSS Custom Properties section** — reflect the added/removed tokens in the `:root {}` block.
+- **Any code examples** — update snippet values that use removed or renamed keys/tokens.
+- **`updatedAt` frontmatter field** — bump to today's date.
+
+Reference files by component:
+
+| Component | Reference file |
+|-----------|---------------|
+| InputField / InputText | `src/content/theme-guides/input-field-reference.md` |
+| InputText (control-specific) | `src/content/theme-guides/input-text-reference.md` |
+| Chips | `src/content/theme-guides/chips-reference.md` |
+
+Do not ship a config change without updating the corresponding reference.
+
 ## Current Source Of Truth
 
 When making theme changes, align with these files:

@@ -158,10 +158,14 @@ const { className: errorTextPassThroughClass, attributes: errorTextPassThroughAt
   */
   :global(form:not([novalidate]) .input-field__wrapper:has(input:user-invalid:not(:placeholder-shown))) {
     border-color: var(--input-field-wrapper-error-border-color, var(--color-danger-border));
+    box-shadow: 0 0 0 var(--input-field-wrapper-focus-ring-width, var(--spacing-0-5))
+      var(--input-field-wrapper-invalid-ring-color, var(--color-danger-subtle));
   }
 
   :global(form:not([novalidate]) .input-field__wrapper:has(input:user-valid:focus:not(:placeholder-shown))) {
-    border-color: var(--color-success-border);
+    border-color: var(--input-field-wrapper-valid-border-color, var(--color-success-border));
+    box-shadow: 0 0 0 var(--input-field-wrapper-focus-ring-width, var(--spacing-0-5))
+      var(--input-field-wrapper-valid-ring-color, var(--color-success-subtle));
   }
 
   .input-field__wrapper:has(:disabled) {

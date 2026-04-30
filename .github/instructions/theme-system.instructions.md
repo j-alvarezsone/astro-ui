@@ -243,6 +243,7 @@ Prefer sparse overrides. Do not duplicate all default values into every theme.
 | 9 | Add or update tests |
 | 10 | Run `pnpm run type:check` |
 | 11 | Verify 100% coverage for modified theme logic |
+| 12 | Update the component reference in `src/content/theme-guides/` |
 
 Follow this sequence.
 
@@ -257,6 +258,26 @@ Follow this sequence.
 9. Add or update tests.
 10. Run `pnpm run type:check`.
 11. Ensure relevant tests pass and changed theme-related logic has 100% coverage in focused tests for the modified behavior.
+12. Update the component reference doc in `src/content/theme-guides/` — bump `updatedAt`, reflect any new/changed keys in the Style Config Keys block and CSS Custom Properties block.
+
+### Keep component reference docs in sync
+
+Whenever you add, rename, or remove a key in a `*StyleConfig` type or a `--*` CSS custom property for a component that has a reference entry under `src/content/theme-guides/`, you **must** update that reference in the same change:
+
+- **Style Config Keys block** — reflect the added/removed keys.
+- **CSS Custom Properties block** — reflect the added/removed tokens.
+- **Code examples** — update any snippets that use removed or renamed keys/tokens.
+- **`updatedAt` frontmatter field** — bump to today's date.
+
+Reference files by component:
+
+| Component | Reference file |
+|-----------|---------------|
+| InputField / InputText | `src/content/theme-guides/input-field-reference.md` |
+| InputText (control-specific) | `src/content/theme-guides/input-text-reference.md` |
+| Chips | `src/content/theme-guides/chips-reference.md` |
+
+Do not ship a config change without updating the corresponding reference.
 
 ## Composition Rules
 
