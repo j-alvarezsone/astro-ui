@@ -10,13 +10,13 @@ import type { ButtonStyleConfig } from '@/types/theme/button';
  * const vars = createButtonStyleVars({
  *   root: {
  *     primaryBackgroundColor: '#2563eb',
- *     focusRingColor: '#60a5fa',
+ *     primaryFocusRingColor: '#60a5fa',
  *   },
  *   label: {
  *     mdFontSize: '0.875rem',
  *   },
  * });
- * // '--button-primary-background-color: #2563eb; --button-focus-ring-color: #60a5fa; --button-label-md-font-size: 0.875rem'
+ * // '--button-primary-background-color: #2563eb; --button-primary-focus-ring-color: #60a5fa; --button-label-md-font-size: 0.875rem'
  */
 export function createButtonStyleVars(config: ButtonStyleConfig | undefined): string | undefined {
   if (!config) {

@@ -29,7 +29,7 @@ const UI_THEMES = {
       //   root: {
       //     primaryBackgroundColor: '#ea580c',
       //     primaryHoverBackgroundColor: '#c2410c',
-      //     focusRingColor: '#fb923c',
+      //     primaryFocusRingColor: '#fb923c',
       //   },
       //   label: {
       //     mdFontSize: '0.9375rem',
