@@ -1,5 +1,6 @@
 import type { UIThemeComponentName, UIThemeComponents } from '@utils/theme/uiThemes';
 import { createChipsStyleVars } from '@utils/theme/misc/chipsConfig';
+import { createButtonStyleVars } from '@utils/theme/buttonConfig';
 import { createThemeCssFromStyleVars } from '@utils/theme/createThemeCssFromStyleVars';
 import { createInputFieldStyleVars } from '@utils/theme/form/inputFieldConfig';
 import { createInputTextStyleVars } from '@utils/theme/form/inputTextConfig';
@@ -19,4 +20,5 @@ export type ComponentThemeCssMap = {
 export const componentThemeCssMap: ComponentThemeCssMap = {
   inputText: createThemeCssFromStyleVars([createInputFieldStyleVars, createInputTextStyleVars]),
   chips: createThemeCssFromStyleVars(createChipsStyleVars),
+  button: createThemeCssFromStyleVars(createButtonStyleVars),
 };

@@ -1,0 +1,70 @@
+/* ── Button Component Default Hooks ───────────────────────────
+ * These variables style button variants, sizing, and interactive
+ * states for Button.astro.
+ */
+:root {
+  --button-gap: var(--spacing-2);
+  --button-border-width: var(--spacing-0-25);
+  --button-border-radius: var(--rounded-lg);
+  --button-rounded-border-radius: var(--rounded-full);
+
+  --button-sm-padding-block: var(--spacing-1-5);
+  --button-sm-padding-inline: var(--spacing-2-5);
+  --button-md-padding-block: var(--spacing-2);
+  --button-md-padding-inline: var(--spacing-3);
+  --button-lg-padding-block: var(--spacing-2-5);
+  --button-lg-padding-inline: var(--spacing-3-5);
+
+  --button-primary-background-color: var(--color-primary-fill);
+  --button-primary-color: var(--color-primary-on-fill);
+  --button-primary-border-color: var(--color-primary-border);
+  --button-primary-hover-background-color: var(--color-primary-fill-hover);
+
+  --button-secondary-background-color: var(--color-secondary-fill);
+  --button-secondary-color: var(--color-secondary-on-fill);
+  --button-secondary-border-color: var(--color-secondary-border);
+  --button-secondary-hover-background-color: var(--color-secondary-fill-hover);
+
+  --button-contrast-background-color: var(--color-contrast-fill);
+  --button-contrast-color: var(--color-contrast-on-fill);
+  --button-contrast-border-color: var(--color-contrast-border);
+  --button-contrast-hover-background-color: var(--color-contrast-fill-hover);
+
+  --button-success-background-color: var(--color-success-fill);
+  --button-success-color: var(--color-success-on-fill);
+  --button-success-border-color: var(--color-success-border);
+  --button-success-hover-background-color: var(--color-success-fill-hover);
+
+  --button-warning-background-color: var(--color-warning-fill);
+  --button-warning-color: var(--color-warning-on-fill);
+  --button-warning-border-color: var(--color-warning-border);
+  --button-warning-hover-background-color: var(--color-warning-fill-hover);
+
+  --button-danger-background-color: var(--color-danger-fill);
+  --button-danger-color: var(--color-danger-on-fill);
+  --button-danger-border-color: var(--color-danger-border);
+  --button-danger-hover-background-color: var(--color-danger-fill-hover);
+
+  --button-disabled-background-color: var(--color-disabled-fill);
+  --button-disabled-color: var(--color-fg-disabled);
+  --button-disabled-border-color: var(--color-disabled-border);
+  --button-link-disabled-color: var(--color-fg-disabled);
+  --button-link-disabled-opacity: 0.8;
+
+  --button-focus-ring-width: var(--spacing-0-5);
+  --button-primary-focus-ring-color: var(--color-primary-focus-ring);
+  --button-secondary-focus-ring-color: var(--color-secondary-focus-ring);
+  --button-contrast-focus-ring-color: var(--color-contrast-focus-ring);
+  --button-success-focus-ring-color: var(--color-success-focus-ring);
+  --button-warning-focus-ring-color: var(--color-warning-focus-ring);
+  --button-danger-focus-ring-color: var(--color-danger-focus-ring);
+
+  --button-icon-color: currentColor;
+
+  --button-label-sm-font-size: var(--font-size-sm);
+  --button-label-md-font-size: var(--font-size-base);
+  --button-label-lg-font-size: var(--font-size-lg);
+  --button-label-loading-opacity: 0;
+
+  --button-loader-color: currentColor;
+}
