@@ -24,4 +24,10 @@ export const THEME_COMPONENT_REFS: ComponentRef[] = [
     category: 'Misc',
     href: '/theme-system/chips',
   },
+  {
+    label: 'Button',
+    description: 'Multi-variant pt + token reference',
+    category: 'UI',
+    href: '/theme-system/button',
+  },
 ];

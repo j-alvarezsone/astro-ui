@@ -25,6 +25,72 @@ Use it when the task requires:
 6. Keep the page standalone unless the user explicitly asks for navigation changes.
 7. If multiple documentation updates conflict (e.g., overlapping frontmatter fields or contradictory examples), prioritize the most recent instruction or ask the user for clarification before proceeding.
 
+### Mandatory steps when creating a new component reference entry
+
+When a **new** component reference guide is created (e.g. `button-reference.md`), you MUST also perform the following two steps as part of the same task — do not skip them:
+
+**Step A — Create the dedicated theme-system page**
+
+Create `src/pages/theme-system/<component-name>.astro` following the pattern of existing pages (e.g. `chips.astro`, `input-field.astro`):
+
+- Import `getEntry`, `render` from `astro:content` and resolve the new entry by its collection id.
+- Import `ComponentSlotsDemo`, `ThemeDocArticle`, `ThemeLayout`.
+- Import the component's `*_PT_SLOT_NAMES` constant from `src/share/types/theme/...` and call `createComponentSlots(...)`.
+- Import the actual UI component and render a live demo inside `<ComponentSlotsDemo>`.
+- Pass `headings` from `getFilteredHeadings(rendered)` to `ThemeLayout`.
+- Set a meaningful `secondaryHref` / `secondaryLabel` pointing to a related page.
+- Throw an error if `getEntry` returns nothing.
+
+**Step A.1 — Verify `ComponentSlotsDemo` slot highlights work correctly**
+
+After creating the page, audit every slot in the live demo. The slot-highlight system draws an `outline` on elements matched by the selector. Two common failure modes must be checked and fixed:
+
+| Failure | Symptom | Fix |
+|---------|---------|-----|
+| **`overflow: hidden` on root clips child outlines** | Hovering any non-root slot shows no visible outline ring because the root element clips it (common in components that use `overflow: hidden` for effects like ripple) | Add a scoped `:global` override: `:global(.slots-demo__preview .<root-class>) { overflow: visible !important; }` in the page `<style>` block |
+| **Slot element is `position: absolute; inset: 0`** | Hovering the slot highlights the entire root area instead of just the element (e.g. a loader wrapper that fills the button) | Pass a `selectorOverrides` entry to `createComponentSlots` pointing to a more specific inner element, e.g. `{ loader: '.button__loader .loader__spinner' }` |
+
+Checklist — verify each slot before shipping:
+
+1. **Every slot item in the panel activates a highlight** — if `targets.length === 0` the item silently does nothing. Check the browser console for `Invalid selector` errors.
+2. **The highlight outlines the correct element** — the outline must be tight around the semantic part, not the full root box.
+3. **No slot outline is clipped** — if the component uses `overflow: hidden` on its root (e.g. for a ripple effect), any child slot outline will be invisible. Add the `overflow: visible !important` override on `.slots-demo__preview .<root-class>` regardless of which slots are affected.
+4. **Loading / conditional slots are present in the demo** — slots that only render in a specific state (e.g. `loader` only when `isLoading=true`) must have at least one demo instance in that state so the selector matches something in the DOM.
+
+Example with both fixes applied (Button page):
+
+```astro
+const BUTTON_SLOTS = createComponentSlots('button', BUTTON_PT_SLOT_NAMES, {
+  // .button__loader fills the whole button (position: absolute; inset: 0)
+  // — target the inner spinner so the highlight is tight.
+  loader: '.button__loader .loader__spinner',
+});
+```
+
+```astro
+<style>
+  /* Button uses overflow: hidden for ripple — allow child outlines to show. */
+  :global(.slots-demo__preview .button) {
+    overflow: visible !important;
+  }
+</style>
+```
+
+**Step B — Register the component in `THEME_COMPONENT_REFS`**
+
+Add a new entry to `src/share/constants/theme-component-refs.ts`:
+
+```ts
+{
+  label: '<ComponentName>',
+  description: '<short description matching the guide summary>',
+  category: '<Form | Misc | UI | ...>',
+  href: '/theme-system/<component-name>',
+},
+```
+
+This entry is rendered on `src/pages/theme-system/index.astro` via `<ComponentRefs refs={THEME_COMPONENT_REFS} />` and is the primary way users discover the new page from the index.
+
 **If the page contains an "On This Page" section:** include both guide-level links and section heading links (heading depth 2-3).
 
 **In the page template shell:** prefer the shared `Heading` component over raw `h1`/`h2` tags.
