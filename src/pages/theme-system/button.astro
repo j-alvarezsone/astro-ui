@@ -1,0 +1,58 @@
+---
+import ComponentSlotsDemo from '@components/theme/ComponentSlotsDemo.astro';
+import ThemeDocArticle from '@components/theme/ThemeDocArticle.astro';
+import ThemeLayout from '@layouts/ThemeLayout.astro';
+import { BUTTON_PT_SLOT_NAMES } from '@/types/theme/button';
+import { createComponentSlots } from '@utils/content/createComponentSlots';
+import { getFilteredHeadings } from '@utils/content/getFilteredHeadings';
+import { getEntry, render } from 'astro:content';
+import ButtonComponent from '@components/Button.astro';
+
+const BUTTON_SLOTS = createComponentSlots('button', BUTTON_PT_SLOT_NAMES, {
+  // .button__loader is position:absolute; inset:0 — it fills the whole button.
+  // Target the inner spinner so the highlight outlines the actual spinner element.
+  loader: '.button__loader .loader__spinner',
+});
+
+const guide = await getEntry('themeGuides', 'button-reference');
+
+if (!guide) {
+  throw new Error('Theme guide entry "button-reference" was not found.');
+}
+
+const rendered = await render(guide);
+const { Content } = rendered;
+const headings = getFilteredHeadings(rendered);
+---
+
+<ThemeLayout
+  title="Button Documentation"
+  heroTitle={guide.data.title}
+  heroSummary={guide.data.summary}
+  secondaryHref="/theme-system/chips"
+  secondaryLabel="Chips Documentation"
+  contentLabel="Button documentation content"
+  headings={headings}
+>
+  <ComponentSlotsDemo slots={BUTTON_SLOTS} label="Button pt slots">
+    <ButtonComponent label="Warning" variant="warning" />
+    <ButtonComponent label="Secondary" variant="secondary" icon={{ name: 'mdi:check' }} />
+    <ButtonComponent label="Danger" variant="danger" icon={{ name: 'mdi:trash-can' }} iconPos="right" />
+    <ButtonComponent label="Loading" variant="primary" isLoading={true} />
+  </ComponentSlotsDemo>
+
+  <ThemeDocArticle>
+    <Content />
+  </ThemeDocArticle>
+</ThemeLayout>
+
+<style>
+  /*
+   * Allow outlines on child elements (icon, label, loader) to be visible
+   * in the demo preview. The button uses overflow: hidden for the ripple
+   * effect, which would otherwise clip the slot-highlight outline.
+   */
+  :global(.slots-demo__preview .button) {
+    overflow: visible !important;
+  }
+</style>

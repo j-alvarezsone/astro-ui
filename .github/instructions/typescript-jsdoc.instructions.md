@@ -19,6 +19,8 @@ Minimum required tags:
 
 - Keep examples short and copy-pasteable.
 - Keep descriptions practical and specific to behavior.
+- Ensure examples use only real API/config keys that exist in current types.
+- Ensure example output strings (for example generated CSS vars) match the function's actual emitted names exactly.
 - Apply this to exported and non-exported functions unless the function has fewer than 3 lines of code and no branching logic.
 
 ## Signature Requirements

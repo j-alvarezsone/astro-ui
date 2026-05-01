@@ -25,16 +25,29 @@ const UI_THEMES = {
       //     placeholderColor: '#9a3412',
       //   },
       // },
-      chips: {
-        root: {
-          backgroundColor: '#fff7ed',
-          borderColor: '#fdba74',
-          color: '#9a3412',
-          activeBackgroundColor: '#fb923c',
-          activeBorderColor: '#ea580c',
-          activeColor: '#ffffff',
-        },
-      },
+      // button: {
+      //   root: {
+      //     primaryBackgroundColor: '#ea580c',
+      //     primaryHoverBackgroundColor: '#c2410c',
+      //     primaryFocusRingColor: '#fb923c',
+      //   },
+      //   label: {
+      //     mdFontSize: '0.9375rem',
+      //   },
+      //   icon: {
+      //     color: '#fff',
+      //   },
+      // },
+      // chips: {
+      //   root: {
+      //     backgroundColor: '#fff7ed',
+      //     borderColor: '#fdba74',
+      //     color: '#9a3412',
+      //     activeBackgroundColor: '#fb923c',
+      //     activeBorderColor: '#ea580c',
+      //     activeColor: '#ffffff',
+      //   },
+      // },
     },
   },
 } as const satisfies Record<string, UIThemeConfig>;

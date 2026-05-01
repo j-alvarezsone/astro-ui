@@ -102,6 +102,7 @@ describe('getComponentsThemeCss (orchestration with mocks)', () => {
       componentThemeCssMap: {
         inputText: vi.fn(),
         chips: vi.fn(),
+        button: vi.fn(),
       },
     }));
 
@@ -159,6 +160,7 @@ describe('getComponentsThemeCss (orchestration with mocks)', () => {
       componentThemeCssMap: {
         inputText: inputTextCssFactory,
         chips: chipsCssFactory,
+        button: vi.fn(),
       },
     }));
 
