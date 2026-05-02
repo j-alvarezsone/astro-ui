@@ -24,6 +24,7 @@ const { for: htmlFor, label, position = 'default', class: className, ...rest } =
     font-weight: var(--font-weight-medium);
     color: var(--input-field-label-color, var(--color-fg-muted));
     line-height: 1.2;
+    width: fit-content;
   }
 
   /* ── Required / Optional indicators (CSS-only, no props) ──
@@ -31,16 +32,41 @@ const { for: htmlFor, label, position = 'default', class: className, ...rest } =
    * Works for both default and floating label positions.
   ────────────────────────────────────────────────────────────── */
   :global(.input-field:has(input:required, textarea:required)) .input-label::after {
-    content: '*';
     margin-inline-start: var(--spacing-1);
     color: var(--input-field-label-required-color, var(--color-danger-fg));
   }
 
   :global(.input-field:has(input:optional, textarea:optional)) .input-label::after {
-    content: '(Optional)';
     margin-inline-start: var(--spacing-1);
     color: var(--input-field-label-optional-color, var(--color-fg-muted));
     font-size: var(--font-size-xs);
+  }
+
+  /* Feature-detect the content alt-text slash syntax for screen readers.
+   * Modern browsers:  content: "visible" / "accessible alt"
+   * Safari fallback:  content: "visible"; alt: "accessible alt"  (non-standard)
+   * Both produce visible text with a proper accessible name.
+  ────────────────────────────────────────────────────────────── */
+  @supports (content: 'x' / 'y') {
+    :global(.input-field:has(input:required, textarea:required)) .input-label::after {
+      content: '*' / 'Required';
+    }
+
+    :global(.input-field:has(input:optional, textarea:optional)) .input-label::after {
+      content: '(Optional)' / 'Optional';
+    }
+  }
+
+  @supports not (content: 'x' / 'y') {
+    :global(.input-field:has(input:required, textarea:required)) .input-label::after {
+      content: '*';
+      alt: 'Required';
+    }
+
+    :global(.input-field:has(input:optional, textarea:optional)) .input-label::after {
+      content: '(Optional)';
+      alt: 'Optional';
+    }
   }
 
   /* ── Default: static block above the wrapper ─────────────── */
