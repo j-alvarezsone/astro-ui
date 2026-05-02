@@ -20,6 +20,8 @@ interface Props {
   pattern?: string;
   autocomplete?: 'on' | 'off';
   value?: string;
+  autofocus?: boolean;
+  form?: string;
   readonly?: boolean;
 }
 
@@ -42,6 +44,8 @@ const {
   autocomplete = 'off',
   value,
   readonly = false,
+  autofocus = false,
+  form,
   ...rest
 } = Astro.props;
 
@@ -75,6 +79,8 @@ const describedBy = [errorTextId, helpTextId].filter(Boolean).join(' ') || undef
     pattern={pattern}
     autocomplete={autocomplete}
     value={value}
+    autofocus={autofocus}
+    form={form}
     readonly={readonly}
     aria-describedby={describedBy}
     aria-invalid={errorText ? 'true' : undefined}

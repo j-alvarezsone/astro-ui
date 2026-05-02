@@ -27,6 +27,8 @@ interface Props extends Omit<astroHTML.JSX.InputHTMLAttributes, 'class'> {
   autocomplete?: 'on' | 'off';
   value?: string | number;
   readonly?: boolean;
+  autofocus?: boolean;
+  form?: string;
   class?: ClassValue;
   pt?: InputTextPassThrough;
 }
@@ -52,6 +54,8 @@ const {
   autocomplete = 'off',
   value,
   readonly = false,
+  autofocus = false,
+  form,
   class: className,
   pt,
   ...inputAttributes
@@ -101,6 +105,8 @@ const { className: inputPassThroughClass, attributes: inputPassThroughAttributes
     value={value}
     readonly={readonly}
     aria-describedby={describedBy}
+    autofocus={autofocus}
+    form={form}
     aria-invalid={errorText ? 'true' : undefined}
     class:list={inputPassThroughClass}
     {...inputPassThroughAttributes}
