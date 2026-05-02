@@ -1,0 +1,93 @@
+---
+import InputField from './InputField.astro';
+
+interface Props {
+  name: string;
+  placeholder: string;
+  label: string;
+  required?: boolean;
+  sizes?: 'sm' | 'md' | 'lg';
+  errorText?: string;
+  helpText?: string;
+  labelPosition?: 'default' | 'over' | 'in' | 'on';
+  disabled?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  autocorrect?: 'on' | 'off';
+  autocomplete?: 'on' | 'off';
+  autofocus?: boolean;
+  rows?: string | number;
+  cols?: string | number;
+  form?: string;
+  readonly?: boolean;
+  spellcheck?: boolean;
+  wrap?: 'hard' | 'soft' | 'off';
+  value?: string;
+}
+
+const {
+  name,
+  placeholder,
+  label,
+  required = false,
+  sizes = 'md',
+  errorText,
+  helpText,
+  labelPosition = 'default',
+  disabled = false,
+  minLength,
+  maxLength,
+  autocorrect = 'off',
+  autocomplete = 'off',
+  autofocus = false,
+  rows = 5,
+  cols,
+  form,
+  readonly = false,
+  spellcheck = false,
+  wrap,
+  value = '',
+  ...rest
+} = Astro.props;
+
+const errorTextId = errorText ? `${name}-error` : undefined;
+const helpTextId = helpText ? `${name}-help` : undefined;
+const describedBy = [errorTextId, helpTextId].filter(Boolean).join(' ') || undefined;
+---
+
+<InputField
+  name={name}
+  label={label}
+  labelPosition={labelPosition}
+  sizes={sizes}
+  errorText={errorText}
+  helpText={helpText}
+  {...rest}
+>
+  <textarea
+    id={name}
+    name={name}
+    placeholder={placeholder}
+    required={required}
+    disabled={disabled}
+    minlength={minLength}
+    maxlength={maxLength}
+    autocorrect={autocorrect}
+    autocomplete={autocomplete}
+    autofocus={autofocus}
+    rows={rows}
+    cols={cols}
+    form={form}
+    readonly={readonly}
+    spellcheck={spellcheck}
+    wrap={wrap}
+    aria-describedby={describedBy}
+    aria-invalid={errorText ? 'true' : undefined}>{value}</textarea
+  >
+</InputField>
+
+<style>
+  textarea {
+    field-sizing: content;
+  }
+</style>

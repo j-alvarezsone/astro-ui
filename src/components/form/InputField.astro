@@ -159,21 +159,32 @@ const { className: errorTextPassThroughClass, attributes: errorTextPassThroughAt
    * - Valid border only after user interaction,
    *   and only once the field has a value.
   */
-  :global(form:not([novalidate]) .input-field__wrapper:has(input:user-invalid:not(:placeholder-shown))):not(
-    :focus-within
-  ) {
+  :global(
+    form:not([novalidate])
+      .input-field__wrapper:has(
+        input:user-invalid:not(:placeholder-shown),
+        textarea:user-invalid:not(:placeholder-shown)
+      )
+  ):not(:focus-within) {
     border-color: var(--input-field-wrapper-error-border-color, var(--color-danger-border));
     box-shadow: none;
   }
 
-  :global(form:not([novalidate]) .input-field__wrapper:has(input:user-valid:not(:placeholder-shown))):not(
-    :focus-within
-  ) {
+  :global(
+    form:not([novalidate])
+      .input-field__wrapper:has(input:user-valid:not(:placeholder-shown), textarea:user-valid:not(:placeholder-shown))
+  ):not(:focus-within) {
     border-color: var(--input-field-wrapper-valid-border-color, var(--color-success-border));
     box-shadow: none;
   }
 
-  :global(form:not([novalidate]) .input-field__wrapper:has(input:user-invalid:focus:not(:placeholder-shown))) {
+  :global(
+    form:not([novalidate])
+      .input-field__wrapper:has(
+        input:user-invalid:focus:not(:placeholder-shown),
+        textarea:user-invalid:focus:not(:placeholder-shown)
+      )
+  ) {
     border-color: var(--input-field-wrapper-error-border-color, var(--color-danger-border));
     box-shadow:
       0 0 0 var(--input-field-wrapper-focus-ring-width, var(--spacing-0-5))
@@ -182,7 +193,13 @@ const { className: errorTextPassThroughClass, attributes: errorTextPassThroughAt
         color-mix(in srgb, var(--input-field-wrapper-invalid-ring-color, var(--color-danger-subtle)) 28%, transparent);
   }
 
-  :global(form:not([novalidate]) .input-field__wrapper:has(input:user-valid:focus:not(:placeholder-shown))) {
+  :global(
+    form:not([novalidate])
+      .input-field__wrapper:has(
+        input:user-valid:focus:not(:placeholder-shown),
+        textarea:user-valid:focus:not(:placeholder-shown)
+      )
+  ) {
     border-color: var(--input-field-wrapper-valid-border-color, var(--color-success-border));
     box-shadow:
       0 0 0 var(--input-field-wrapper-focus-ring-width, var(--spacing-0-5))
@@ -228,7 +245,8 @@ const { className: errorTextPassThroughClass, attributes: errorTextPassThroughAt
    * Targets any input slotted inside the wrapper — no class
    * required on the concrete input elements.
   ─────────────────────────────────────────────────────────── */
-  :global(.input-field__wrapper input) {
+  :global(.input-field__wrapper input),
+  :global(.input-field__wrapper textarea) {
     flex: 1;
     min-width: 0;
     padding-block: var(--input-control-input-padding-block, var(--spacing-2-5));
@@ -239,23 +257,40 @@ const { className: errorTextPassThroughClass, attributes: errorTextPassThroughAt
     color: var(--input-control-input-color, inherit);
   }
 
+  :global(.input-field__wrapper textarea) {
+    width: calc(100% + var(--input-field-wrapper-padding-inline, var(--spacing-3-5)));
+    margin-inline-end: calc(var(--input-field-wrapper-padding-inline, var(--spacing-3-5)) * -1);
+    padding-inline-end: var(--input-field-wrapper-padding-inline, var(--spacing-3-5));
+    box-sizing: border-box;
+    resize: vertical;
+  }
+
   /* Sizes - applied via wrapper modifier, targets slotted input */
-  :global(.input-field__wrapper--sm input) {
+  :global(.input-field__wrapper--sm input),
+  :global(.input-field__wrapper--sm textarea) {
     height: var(--spacing-9);
     font-size: var(--font-size-sm);
   }
 
-  :global(.input-field__wrapper--md input) {
+  :global(.input-field__wrapper--md input),
+  :global(.input-field__wrapper--md textarea) {
     height: var(--spacing-10);
   }
 
-  :global(.input-field__wrapper--lg input) {
+  :global(.input-field__wrapper--lg input),
+  :global(.input-field__wrapper--lg textarea) {
     height: var(--spacing-11);
     font-size: var(--font-size-lg);
   }
 
+  :global(.input-field__wrapper textarea) {
+    min-height: calc(var(--spacing-10) * 2);
+    height: auto;
+  }
+
   /* Disabled text */
-  :global(.input-field__wrapper input:disabled) {
+  :global(.input-field__wrapper input:disabled),
+  :global(.input-field__wrapper textarea:disabled) {
     color: var(--input-control-input-disabled-color, var(--color-fg-disabled));
     -webkit-text-fill-color: var(--input-control-input-disabled-color, var(--color-fg-disabled));
   }
@@ -264,35 +299,45 @@ const { className: errorTextPassThroughClass, attributes: errorTextPassThroughAt
    * Default mode: always visible.
    * Floating variants: hidden at rest, fades in on focus.
   ─────────────────────────────────────────────────────────── */
-  :global(.input-field__wrapper input::placeholder) {
+  :global(.input-field__wrapper input::placeholder),
+  :global(.input-field__wrapper textarea::placeholder) {
     opacity: 1;
     color: var(--input-control-input-placeholder-color, var(--color-fg-muted));
   }
 
-  :global(.input-field__wrapper--error input::placeholder) {
+  :global(.input-field__wrapper--error input::placeholder),
+  :global(.input-field__wrapper--error textarea::placeholder) {
     color: var(--input-control-input-placeholder-error-color, var(--color-danger-fg));
   }
 
   /* Show invalid placeholder color only for forms using native validation UX. */
-  :global(form:not([novalidate]) .input-field__wrapper input:user-invalid::placeholder) {
+  :global(form:not([novalidate]) .input-field__wrapper input:user-invalid::placeholder),
+  :global(form:not([novalidate]) .input-field__wrapper textarea:user-invalid::placeholder) {
     color: var(--input-control-input-placeholder-error-color, var(--color-danger-fg));
   }
 
   :global(.input-field__wrapper--over input::placeholder),
   :global(.input-field__wrapper--in input::placeholder),
-  :global(.input-field__wrapper--on input::placeholder) {
+  :global(.input-field__wrapper--on input::placeholder),
+  :global(.input-field__wrapper--over textarea::placeholder),
+  :global(.input-field__wrapper--in textarea::placeholder),
+  :global(.input-field__wrapper--on textarea::placeholder) {
     opacity: 0;
     transition: opacity 0.18s ease;
   }
 
   :global(.input-field__wrapper--over input:focus::placeholder),
   :global(.input-field__wrapper--in input:focus::placeholder),
-  :global(.input-field__wrapper--on input:focus::placeholder) {
+  :global(.input-field__wrapper--on input:focus::placeholder),
+  :global(.input-field__wrapper--over textarea:focus::placeholder),
+  :global(.input-field__wrapper--in textarea:focus::placeholder),
+  :global(.input-field__wrapper--on textarea:focus::placeholder) {
     opacity: 1;
   }
 
   /* ── "In" variant: push cursor below the floated label ────── */
-  :global(.input-field__wrapper--in input) {
+  :global(.input-field__wrapper--in input),
+  :global(.input-field__wrapper--in textarea) {
     padding-block-start: var(--spacing-5);
     padding-block-end: var(--spacing-1);
   }

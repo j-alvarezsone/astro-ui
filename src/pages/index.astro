@@ -4,7 +4,9 @@ import Form from '@components/form/Form.astro';
 import FormGroup from '@components/form/FormGroup.astro';
 import InputAddon from '@components/form/input-group/InputAddon.astro';
 import InputGroup from '@components/form/input-group/InputGroup.astro';
+import InputEmail from '@components/form/InputEmail.astro';
 import InputText from '@components/form/InputText.astro';
+import TextArea from '@components/form/TextArea.astro';
 import Chips from '@components/misc/Chips.astro';
 import Heading from '@components/typography/Heading.astro';
 import Layout from '@layouts/Layout.astro';
@@ -20,6 +22,25 @@ import { Icon } from 'astro-icon/components';
       to help you get started.
     </p>
     <form class="demo-form">
+      <InputEmail
+        name="email"
+        label="Email"
+        placeholder="name@example.com"
+        required
+        labelPosition="over"
+        value="test"
+      />
+      <TextArea
+        name="details"
+        label="Details"
+        placeholder="Enter details..."
+        required
+        minLength={3}
+        sizes="md"
+        labelPosition="over"
+        value="test"
+      />
+
       <FormGroup legend="Validation states demo">
         <InputText
           name="test"
@@ -47,7 +68,7 @@ import { Icon } from 'astro-icon/components';
       <Button as="button" type="submit" label="Submit Form" />
     </form>
 
-    <Form initialValues={{ username: 'test', price: 42 }}>
+    <Form initialValues={{ username: 'test', price: 42, details: 'test' }} class="demo-form">
       <InputGroup>
         <InputAddon>
           <Icon name="mdi:account" />
@@ -60,6 +81,16 @@ import { Icon } from 'astro-icon/components';
         <InputText name="price" label="Price" placeholder="Price" type="number" />
         <InputAddon>.00</InputAddon>
       </InputGroup>
+
+      <TextArea
+        name="details"
+        label="Details"
+        placeholder="Enter details..."
+        required
+        minLength={3}
+        sizes="md"
+        labelPosition="over"
+      />
 
       <Button slot="reset" as="button" type="reset" label="Reset" />
       <Button slot="submit" as="button" type="submit" label="Submit" />
@@ -117,7 +148,7 @@ import { Icon } from 'astro-icon/components';
   .demo-form {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-3);
+    gap: var(--spacing-6);
   }
   /* Root-level scope class:
      useful to scope all nested field styling in one area. */

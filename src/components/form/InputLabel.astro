@@ -30,13 +30,13 @@ const { for: htmlFor, label, position = 'default', class: className, ...rest } =
    * Reads the real input state from the ancestor .input-text.
    * Works for both default and floating label positions.
   ────────────────────────────────────────────────────────────── */
-  :global(.input-field:has(input:required)) .input-label::after {
+  :global(.input-field:has(input:required, textarea:required)) .input-label::after {
     content: '*';
     margin-inline-start: var(--spacing-1);
     color: var(--input-field-label-required-color, var(--color-danger-fg));
   }
 
-  :global(.input-field:has(input:optional)) .input-label::after {
+  :global(.input-field:has(input:optional, textarea:optional)) .input-label::after {
     content: '(Optional)';
     margin-inline-start: var(--spacing-1);
     color: var(--input-field-label-optional-color, var(--color-fg-muted));
@@ -78,25 +78,36 @@ const { for: htmlFor, label, position = 'default', class: className, ...rest } =
     z-index: 1;
   }
 
+  /* Multiline controls should not rest with labels vertically centered.
+   * Keep textarea floating label variants near the top-left at rest.
+   */
+  :global(.input-field__wrapper):has(textarea) .input-label--over,
+  :global(.input-field__wrapper):has(textarea) .input-label--in,
+  :global(.input-field__wrapper):has(textarea) .input-label--on {
+    inset-block-start: var(--spacing-3);
+    transform: none;
+  }
+
   /* ── Over: floats ABOVE the top border (fully outside) ──────
    * translateY(-100%) from top:0 puts the label above the box.
   ────────────────────────────────────────────────────────────── */
-  :global(.input-field__wrapper):has(input:focus) .input-label--over,
-  :global(.input-field__wrapper):has(input:not(:placeholder-shown)) .input-label--over {
+  :global(.input-field__wrapper):has(input:focus, textarea:focus) .input-label--over,
+  :global(.input-field__wrapper):has(input:not(:placeholder-shown), textarea:not(:placeholder-shown))
+    .input-label--over {
     inset-block-start: 0;
     inset-inline-start: var(--spacing-3);
     transform: translateY(-100%);
     font-size: var(--font-size-xs);
     color: var(--input-field-label-active-color, var(--color-fg));
-    padding-block-end: var(--spacing-2-5);
+    padding-block-end: var(--spacing-1-5);
   }
 
   /* ── In: floats to the top-left area inside the wrapper ─────
    * Stays inside the box; input gets extra top padding to avoid
    * overlapping (applied in InputText.astro).
   ────────────────────────────────────────────────────────────── */
-  :global(.input-field__wrapper):has(input:focus) .input-label--in,
-  :global(.input-field__wrapper):has(input:not(:placeholder-shown)) .input-label--in {
+  :global(.input-field__wrapper):has(input:focus, textarea:focus) .input-label--in,
+  :global(.input-field__wrapper):has(input:not(:placeholder-shown), textarea:not(:placeholder-shown)) .input-label--in {
     inset-block-start: var(--spacing-1);
     inset-inline-start: var(--label-start, var(--spacing-3-5));
     transform: none;
@@ -108,8 +119,8 @@ const { for: htmlFor, label, position = 'default', class: className, ...rest } =
    * translateY(-50%) from top:0 = centered on the border.
    * White background masks the border behind the text.
   ────────────────────────────────────────────────────────────── */
-  :global(.input-field__wrapper):has(input:focus) .input-label--on,
-  :global(.input-field__wrapper):has(input:not(:placeholder-shown)) .input-label--on {
+  :global(.input-field__wrapper):has(input:focus, textarea:focus) .input-label--on,
+  :global(.input-field__wrapper):has(input:not(:placeholder-shown), textarea:not(:placeholder-shown)) .input-label--on {
     inset-block-start: 0;
     inset-inline-start: var(--spacing-3);
     transform: translateY(-50%);

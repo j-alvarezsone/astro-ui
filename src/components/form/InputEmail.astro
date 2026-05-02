@@ -1,19 +1,13 @@
 ---
 import type { IconProps } from 'astro-icon/components';
-import type { InputTextPassThrough } from '@/types/theme/form/inputText';
-import type { ClassValue } from '@/types/theme/form/shared';
-import { mergePassThroughAttributes, splitPassThroughAttributes } from '@utils/theme/passThrough';
-
 import InputField from './InputField.astro';
 
-interface Props extends Omit<astroHTML.JSX.InputHTMLAttributes, 'class'> {
+interface Props {
   name: string;
   placeholder: string;
   label: string;
   required?: boolean;
-  type?: 'text' | 'number';
   icon?: IconProps;
-  iconPos?: 'left' | 'right';
   sizes?: 'sm' | 'md' | 'lg';
   errorText?: string;
   helpText?: string;
@@ -25,9 +19,7 @@ interface Props extends Omit<astroHTML.JSX.InputHTMLAttributes, 'class'> {
   max?: number;
   pattern?: string;
   autocomplete?: 'on' | 'off';
-  value?: string | number;
-  class?: ClassValue;
-  pt?: InputTextPassThrough;
+  value?: string;
 }
 
 const {
@@ -35,9 +27,7 @@ const {
   placeholder,
   label,
   required = false,
-  type = 'text',
   icon,
-  iconPos = 'right',
   sizes = 'md',
   errorText,
   helpText,
@@ -48,20 +38,14 @@ const {
   min,
   max,
   pattern,
-  value,
   autocomplete = 'off',
-  class: className,
-  pt,
-  ...inputAttributes
+  value,
+  ...rest
 } = Astro.props;
 
 const errorTextId = errorText ? `${name}-error` : undefined;
 const helpTextId = helpText ? `${name}-help` : undefined;
 const describedBy = [errorTextId, helpTextId].filter(Boolean).join(' ') || undefined;
-
-const inputPassThrough = mergePassThroughAttributes(inputAttributes, pt?.input);
-const { className: inputPassThroughClass, attributes: inputPassThroughAttributes } =
-  splitPassThroughAttributes(inputPassThrough);
 ---
 
 <InputField
@@ -69,24 +53,16 @@ const { className: inputPassThroughClass, attributes: inputPassThroughAttributes
   label={label}
   labelPosition={labelPosition}
   sizes={sizes}
-  icon={icon}
-  iconPos={iconPos}
+  icon={{ name: 'mdi:email-outline' }}
+  iconPos="right"
   errorText={errorText}
   helpText={helpText}
-  class={className}
-  pt={{
-    root: pt?.root,
-    wrapper: pt?.wrapper,
-    label: pt?.label,
-    icon: pt?.icon,
-    helpText: pt?.helpText,
-    errorText: pt?.errorText,
-  }}
+  {...rest}
 >
   <input
     id={name}
     name={name}
-    type={type}
+    type="email"
     placeholder={placeholder}
     required={required}
     disabled={disabled}
@@ -99,7 +75,5 @@ const { className: inputPassThroughClass, attributes: inputPassThroughAttributes
     value={value}
     aria-describedby={describedBy}
     aria-invalid={errorText ? 'true' : undefined}
-    class:list={inputPassThroughClass}
-    {...inputPassThroughAttributes}
   />
 </InputField>
