@@ -18,6 +18,7 @@ type Props<Tag extends 'button' | 'a'> = Polymorphic<{
   size?: 'sm' | 'md' | 'lg';
   icon?: IconProps;
   iconPos?: 'left' | 'right';
+  outline?: boolean;
   ripple?: boolean;
   pt?: ButtonPassThrough;
 }>;
@@ -33,6 +34,7 @@ const {
   size = 'md',
   icon,
   iconPos = 'left',
+  outline = false,
   ripple = true,
   pt,
   class: className,
@@ -53,6 +55,7 @@ const buttonClasses = [
   `button--${variant}`,
   `button--${size}`,
   {
+    'button--outline': outline,
     'button--rounded': rounded,
     'button--disabled': disabled || isLoading,
     'button--icon-only': icon && !hasLabel,
@@ -177,6 +180,16 @@ const { className: loaderPassThroughClass, attributes: loaderPassThroughAttribut
     }
   }
 
+  .button--primary.button--outline {
+    background-color: transparent;
+    color: var(--button-primary-outline-color, var(--color-primary-fg));
+    border-color: var(--button-primary-outline-border-color, var(--color-primary-border));
+
+    &:hover {
+      background-color: var(--button-primary-outline-hover-background-color, var(--color-primary-subtle));
+    }
+  }
+
   .button--secondary {
     --button-focus-ring-color: var(--button-secondary-focus-ring-color, var(--color-secondary-focus-ring));
     background-color: var(--button-secondary-background-color, var(--color-secondary-fill));
@@ -186,6 +199,26 @@ const { className: loaderPassThroughClass, attributes: loaderPassThroughAttribut
 
     &:hover {
       background-color: var(--button-secondary-hover-background-color, var(--color-secondary-fill-hover));
+    }
+  }
+
+  .button--secondary.button--outline {
+    background-color: transparent;
+    color: var(--button-secondary-outline-color, var(--color-secondary-fg));
+    border-color: var(--button-secondary-outline-border-color, var(--color-secondary-border));
+
+    &:hover {
+      background-color: var(--button-secondary-outline-hover-background-color, var(--color-secondary-subtle));
+    }
+  }
+
+  .button--contrast.button--outline {
+    background-color: transparent;
+    color: var(--button-contrast-outline-color, var(--color-contrast-fg));
+    border-color: var(--button-contrast-outline-border-color, var(--color-contrast-border));
+
+    &:hover {
+      background-color: var(--button-contrast-outline-hover-background-color, var(--color-contrast-subtle));
     }
   }
 
@@ -201,6 +234,16 @@ const { className: loaderPassThroughClass, attributes: loaderPassThroughAttribut
     }
   }
 
+  .button--success.button--outline {
+    background-color: transparent;
+    color: var(--button-success-outline-color, var(--color-success-fg));
+    border-color: var(--button-success-outline-border-color, var(--color-success-border));
+
+    &:hover {
+      background-color: var(--button-success-outline-hover-background-color, var(--color-success-subtle));
+    }
+  }
+
   .button--success {
     --button-focus-ring-color: var(--button-success-focus-ring-color, var(--color-success-focus-ring));
     background-color: var(--button-success-background-color, var(--color-success-fill));
@@ -213,6 +256,16 @@ const { className: loaderPassThroughClass, attributes: loaderPassThroughAttribut
     }
   }
 
+  .button--warning.button--outline {
+    background-color: transparent;
+    color: var(--button-warning-outline-color, var(--color-warning-fg));
+    border-color: var(--button-warning-outline-border-color, var(--color-warning-border));
+
+    &:hover {
+      background-color: var(--button-warning-outline-hover-background-color, var(--color-warning-subtle));
+    }
+  }
+
   .button--warning {
     --button-focus-ring-color: var(--button-warning-focus-ring-color, var(--color-warning-focus-ring));
     background-color: var(--button-warning-background-color, var(--color-warning-fill));
@@ -222,6 +275,16 @@ const { className: loaderPassThroughClass, attributes: loaderPassThroughAttribut
 
     &:hover {
       background-color: var(--button-warning-hover-background-color, var(--color-warning-fill-hover));
+    }
+  }
+
+  .button--danger.button--outline {
+    background-color: transparent;
+    color: var(--button-danger-outline-color, var(--color-danger-fg));
+    border-color: var(--button-danger-outline-border-color, var(--color-danger-border));
+
+    &:hover {
+      background-color: var(--button-danger-outline-hover-background-color, var(--color-danger-subtle));
     }
   }
 
