@@ -156,8 +156,8 @@ const { className: errorTextPassThroughClass, attributes: errorTextPassThroughAt
   /* Validation states
    * - Invalid border only after user interaction,
    *   and only once the field has a value.
-   * - Valid border only after user interaction,
-   *   and only once the field has a value.
+    * - Valid success border only while focused,
+    *   and only once the field has a value.
   */
   :global(
     form:not([novalidate])
@@ -167,14 +167,6 @@ const { className: errorTextPassThroughClass, attributes: errorTextPassThroughAt
       )
   ):not(:focus-within) {
     border-color: var(--input-field-wrapper-error-border-color, var(--color-danger-border));
-    box-shadow: none;
-  }
-
-  :global(
-    form:not([novalidate])
-      .input-field__wrapper:has(input:user-valid:not(:placeholder-shown), textarea:user-valid:not(:placeholder-shown))
-  ):not(:focus-within) {
-    border-color: var(--input-field-wrapper-valid-border-color, var(--color-success-border));
     box-shadow: none;
   }
 
@@ -196,8 +188,8 @@ const { className: errorTextPassThroughClass, attributes: errorTextPassThroughAt
   :global(
     form:not([novalidate])
       .input-field__wrapper:has(
-        input:user-valid:focus:not(:placeholder-shown),
-        textarea:user-valid:focus:not(:placeholder-shown)
+        input:valid:focus:not(:placeholder-shown),
+        textarea:valid:focus:not(:placeholder-shown)
       )
   ) {
     border-color: var(--input-field-wrapper-valid-border-color, var(--color-success-border));
