@@ -26,6 +26,7 @@ interface Props extends Omit<astroHTML.JSX.InputHTMLAttributes, 'class'> {
   pattern?: string;
   autocomplete?: 'on' | 'off';
   value?: string | number;
+  readonly?: boolean;
   class?: ClassValue;
   pt?: InputTextPassThrough;
 }
@@ -48,8 +49,9 @@ const {
   min,
   max,
   pattern,
-  value,
   autocomplete = 'off',
+  value,
+  readonly = false,
   class: className,
   pt,
   ...inputAttributes
@@ -97,6 +99,7 @@ const { className: inputPassThroughClass, attributes: inputPassThroughAttributes
     pattern={pattern}
     autocomplete={autocomplete}
     value={value}
+    readonly={readonly}
     aria-describedby={describedBy}
     aria-invalid={errorText ? 'true' : undefined}
     class:list={inputPassThroughClass}
