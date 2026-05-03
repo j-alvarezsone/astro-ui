@@ -9,6 +9,7 @@ import InputPassword from '@components/form/InputPassword.astro';
 import InputText from '@components/form/InputText.astro';
 import TextArea from '@components/form/TextArea.astro';
 import Chips from '@components/misc/Chips.astro';
+import Divider from '@components/Divider.astro';
 import Heading from '@components/typography/Heading.astro';
 import Layout from '@layouts/Layout.astro';
 import { Icon } from 'astro-icon/components';
@@ -179,6 +180,23 @@ import { Icon } from 'astro-icon/components';
       size="md"
       removable
     />
+
+    <Heading weight="semibold">Divider</Heading>
+
+    <Divider />
+
+    <Divider align="left">Left</Divider>
+    <Divider align="center">Center</Divider>
+    <Divider align="right">Right</Divider>
+
+    <Divider type="dashed" align="center">Dashed</Divider>
+    <Divider type="dotted" align="center">Dotted</Divider>
+
+    <div style="display: flex; height: 200px; align-items: center; gap: var(--spacing-4);">
+      <p style="flex: 1;">Left content area</p>
+      <Divider layout="vertical" align="center">OR</Divider>
+      <p style="flex: 1;">Right content area</p>
+    </div>
   </div>
 </Layout>
 

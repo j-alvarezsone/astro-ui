@@ -1,0 +1,94 @@
+---
+import type { ClassValue } from '@/types/theme/form/shared';
+
+interface Props {
+  layout?: 'horizontal' | 'vertical';
+  align?: 'left' | 'center' | 'right';
+  type?: 'solid' | 'dotted' | 'dashed';
+  class?: ClassValue;
+}
+
+const { layout = 'horizontal', align = 'left', type = 'solid', class: className } = Astro.props;
+
+const hasContent = Astro.slots.has('default');
+---
+
+<div
+  class:list={['divider', `divider--${layout}`, `divider--${type}`, hasContent && `divider--${align}`, className]}
+  role="separator"
+  aria-orientation={layout}
+>
+  {
+    hasContent && (
+      <span class="divider__content">
+        <slot />
+      </span>
+    )
+  }
+</div>
+
+<style>
+  .divider {
+    display: flex;
+    align-items: center;
+    color: var(--color-fg-muted);
+    font-size: var(--font-size-sm);
+    width: 100%;
+  }
+
+  .divider:has(.divider__content) {
+    gap: var(--spacing-3);
+  }
+
+  .divider::before,
+  .divider::after {
+    content: '';
+    flex: 1;
+    border-color: var(--color-border);
+  }
+
+  .divider--horizontal::before,
+  .divider--horizontal::after {
+    border-width: 1px 0 0 0;
+  }
+
+  .divider--vertical {
+    flex-direction: column;
+    width: auto;
+    height: 100%;
+    align-self: stretch;
+  }
+
+  .divider--vertical::before,
+  .divider--vertical::after {
+    border-width: 0 0 0 1px;
+  }
+
+  .divider--solid::before,
+  .divider--solid::after {
+    border-style: solid;
+  }
+
+  .divider--dotted::before,
+  .divider--dotted::after {
+    border-style: dotted;
+  }
+
+  .divider--dashed::before,
+  .divider--dashed::after {
+    border-style: dashed;
+  }
+
+  .divider--left::before {
+    display: none;
+  }
+
+  .divider--right::after {
+    display: none;
+  }
+
+  .divider__content {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+</style>
