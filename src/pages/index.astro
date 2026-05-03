@@ -5,6 +5,7 @@ import FormGroup from '@components/form/FormGroup.astro';
 import InputAddon from '@components/form/input-group/InputAddon.astro';
 import InputGroup from '@components/form/input-group/InputGroup.astro';
 import InputEmail from '@components/form/InputEmail.astro';
+import InputPassword from '@components/form/InputPassword.astro';
 import InputText from '@components/form/InputText.astro';
 import TextArea from '@components/form/TextArea.astro';
 import Chips from '@components/misc/Chips.astro';
@@ -16,7 +17,7 @@ import { Icon } from 'astro-icon/components';
 <Layout uiTheme="warm">
   <div class="container">
     <Heading weight="bold">Hello world</Heading>
-    <Button class="test" as="button" icon={{ name: 'mdi:account-alert' }} />
+    <Button class="test" as="button" icon={{ name: 'mdi:account-alert' }} variant="success" />
     <p>
       This is a starter template for building your first Astro project. It comes with a few example pages and components
       to help you get started.
@@ -27,8 +28,38 @@ import { Icon } from 'astro-icon/components';
         label="Email"
         placeholder="name@example.com"
         required
-        labelPosition="over"
+        labelPosition="default"
         value="test"
+      />
+      <InputPassword
+        name="password"
+        label="Password"
+        placeholder="Enter your password"
+        required
+        labelPosition="default"
+        value="test"
+        promptSubLabel="Reset password"
+      />
+      <InputPassword
+        name="passwordCustom"
+        label="Password (Custom Rules)"
+        placeholder="Use 10+ chars with upper/lower/number/symbol"
+        required
+        labelPosition="default"
+        minLength={10}
+        pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{10,}"
+        promptLabel="Create a strong password"
+        weakLabel="Needs work"
+        mediumLabel="Almost there"
+        strongLabel="Great password"
+        strengthRules={[
+          { id: 'lower', label: 'Contains a lowercase letter', pattern: '[a-z]' },
+          { id: 'upper', label: 'Contains an uppercase letter', pattern: '[A-Z]' },
+          { id: 'number', label: 'Contains a number', pattern: '\\d' },
+          { id: 'special', label: 'Contains a special character', pattern: '[^\\w\\s]' },
+          { id: 'length', label: 'Minimum 10 characters', minLength: 10 },
+          { id: 'pattern', label: 'Matches the full password policy', useInputPattern: true },
+        ]}
       />
       <TextArea
         name="details"
@@ -37,7 +68,7 @@ import { Icon } from 'astro-icon/components';
         required
         minLength={3}
         sizes="md"
-        labelPosition="over"
+        labelPosition="default"
         value="test"
       />
 
@@ -53,6 +84,7 @@ import { Icon } from 'astro-icon/components';
           sizes="md"
           required
           minLength={4}
+          autofocus
         />
         <InputText
           name="age"
@@ -89,12 +121,25 @@ import { Icon } from 'astro-icon/components';
         required
         minLength={3}
         sizes="md"
-        labelPosition="over"
+        labelPosition="default"
       />
 
       <Button slot="reset" as="button" type="reset" label="Reset" />
       <Button slot="submit" as="button" type="submit" label="Submit" />
     </Form>
+
+    <!-- Outline button variants demo -->
+    <div style="display: flex; flex-direction: column; gap: var(--spacing-3);">
+      <Heading as="h3" weight="bold">Outline Variants</Heading>
+      <div style="display: flex; gap: var(--spacing-2); flex-wrap: wrap;">
+        <Button as="button" variant="primary" outline label="Primary Outline" />
+        <Button as="button" variant="secondary" outline label="Secondary Outline" />
+        <Button as="button" variant="contrast" outline label="Contrast Outline" />
+        <Button as="button" variant="success" outline label="Success Outline" />
+        <Button as="button" variant="warning" outline label="Warning Outline" />
+        <Button as="button" variant="danger" outline label="Danger Outline" />
+      </div>
+    </div>
 
     <InputText
       name="firstName"
