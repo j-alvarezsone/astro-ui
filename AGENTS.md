@@ -47,6 +47,22 @@
 - Before finalizing changes, run at least `pnpm run type:check`; run `pnpm run lint` for lint-impacting changes.
 - If blocked or ambiguous, state assumptions and choose the lowest-risk implementation.
 - **CSS token enforcement:** Never use a `var(--...)` that does not exist in `src/assets/css/tokens.css`. If a token is missing, stop and ask the user: _"The token `--your-token` does not exist in `tokens.css`. Would you like me to create it?"_ Only proceed after explicit confirmation and after adding the token to `tokens.css`. Do not invent or guess token names.
+- **Typography baseline:** Check `src/assets/css/main.css` first and rely on global base typography. Do not add `font-size: var(--font-size-base);` inside components unless a component truly needs to override inherited size.
+
+### Breakpoints
+
+Always write **mobile-first** CSS: default styles target the smallest viewport and `@media (min-width: …)` queries layer in larger-screen overrides. Never use `max-width` queries.
+
+Use this breakpoint scale for responsive work, with px-based media queries.
+
+| Size  | Min width | Typical devices                   |
+| ----- | --------- | --------------------------------- |
+| `xs`  | `0px`     | Small phones                      |
+| `sm`  | `480px`   | Large phones                      |
+| `md`  | `768px`   | Tablets / small landscape         |
+| `lg`  | `1024px`  | Tablets landscape / small laptops |
+| `xl`  | `1280px`  | Laptops / desktop                 |
+| `2xl` | `1536px`  | Large desktop                     |
 
 ## Hooks And Commits
 

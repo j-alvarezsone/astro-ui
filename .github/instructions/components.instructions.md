@@ -33,6 +33,8 @@ Key rules:
 - Expose a `class` prop to allow the parent to extend styles.
 - Keep styles scoped (`<style>` block without `:global`).
 - Default slot for content; named slots for distinct regions.
+- **Tag order inside an `.astro` file:** frontmatter (`---`) → template (HTML) → `<script>` → `<style>`. The `<script>` tag must always come before the `<style>` tag.
+- Prefer native HTML elements and CSS behavior before adding JavaScript or a custom element.
 
 ## Pass-Through (`pt`) Pattern
 
@@ -174,6 +176,8 @@ The `label` prop (optional, default `'Component pt slots'`) sets the `aria-label
 ## Web Component Pattern (`*.web.ts`)
 
 All interactive behavior that needs to be unit-tested must be a custom element in `src/web-components/`.
+
+Before creating a web component, first confirm that native HTML and CSS cannot satisfy the interaction well enough.
 
 ### Template
 

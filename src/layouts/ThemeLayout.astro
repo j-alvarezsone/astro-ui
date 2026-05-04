@@ -44,17 +44,19 @@ const {
       <div class="theme-doc-meta">
         <slot name="meta" />
       </div>
-      <p class="theme-doc-nav">
-        <a href={backHref}>{backLabel}</a>
-        {
-          secondaryHref && secondaryLabel && (
-            <>
-              <span aria-hidden="true">•</span>
-              <a href={secondaryHref}>{secondaryLabel}</a>
-            </>
-          )
-        }
-      </p>
+      {
+        backHref !== '/' && (
+          <p class="theme-doc-nav">
+            <a href={backHref}>{backLabel}</a>
+            {secondaryHref && secondaryLabel && (
+              <>
+                <span aria-hidden="true">•</span>
+                <a href={secondaryHref}>{secondaryLabel}</a>
+              </>
+            )}
+          </p>
+        )
+      }
     </section>
 
     <section class="theme-doc-layout" aria-label={contentLabel}>

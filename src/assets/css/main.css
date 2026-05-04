@@ -1,5 +1,9 @@
 @layer reset, base;
 
+@view-transition {
+  navigation: auto;
+}
+
 @layer reset {
   *,
   *::before,

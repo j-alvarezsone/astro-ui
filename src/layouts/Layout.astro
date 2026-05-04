@@ -2,10 +2,14 @@
 import { Font } from 'astro:assets';
 import { getComponentsThemeCss } from '@utils/theme/theme';
 import type { UIThemeName } from '@utils/theme/uiThemes';
+import jasDarkLogo from '@assets/logo/JAS_transparent_logo.png';
 
 import '@assets/css/tokens.css';
 import '@assets/css/theme/theme.css';
 import '@assets/css/main.css';
+import { ClientRouter } from 'astro:transitions';
+import type { NavbarAction, NavbarBrand, NavbarItem } from '@components/navigation/Navbar.astro';
+import Navbar from '@components/navigation/Navbar.astro';
 
 interface Props {
   title?: string;
@@ -14,6 +18,24 @@ interface Props {
 
 const { title = 'Home page', uiTheme } = Astro.props;
 const componentsThemeCss = getComponentsThemeCss(uiTheme);
+
+const navbarBrand: NavbarBrand = {
+  href: '/',
+  image: {
+    src: jasDarkLogo,
+    alt: 'Haramain',
+  },
+};
+
+const navbarItems: NavbarItem[] = [
+  { kind: 'link', label: 'Home', href: '/' },
+  { kind: 'link', label: 'Theme System', href: '/theme-system' },
+];
+
+const navbarActions: NavbarAction[] = [
+  { ariaLabel: 'Login account', icon: { name: 'mdi:account-circle-outline' } },
+  { ariaLabel: 'Toggle dark mode', icon: { name: 'mdi:theme-light-dark' } },
+];
 ---
 
 <Font cssVariable="--font-roboto" preload />
@@ -26,9 +48,11 @@ const componentsThemeCss = getComponentsThemeCss(uiTheme);
     <link rel="icon" href="/favicon.ico" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
+    <ClientRouter />
   </head>
   <body>
     {componentsThemeCss && <style is:global set:html={componentsThemeCss} />}
+    <Navbar brand={navbarBrand} items={navbarItems} actions={navbarActions} />
     <slot />
   </body>
 </html>

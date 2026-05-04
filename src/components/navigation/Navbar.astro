@@ -1,0 +1,268 @@
+---
+import { Icon, type IconProps } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import Dropdown, { type DropdownItem } from '@components/Dropdown.astro';
+import NavLink from './NavLink.astro';
+import NavbarDrawer from './NavbarDrawer.astro';
+import type { ClassValue } from '@/types/theme/form/shared';
+
+export interface NavbarBrandImage {
+  src: ImageMetadata;
+  alt: string;
+}
+
+export interface NavbarBrand {
+  href?: string;
+  image?: NavbarBrandImage;
+}
+
+export interface NavbarItem {
+  kind: 'link' | 'dropdown';
+  label: string;
+  href?: string;
+  placement?: string;
+  items?: DropdownItem[];
+}
+
+export interface NavbarAction {
+  icon: IconProps;
+  ariaLabel: string;
+}
+
+export type NavbarDesign = 'default' | 'glass';
+
+type DropdownPlacement = 'bottom-start' | 'bottom-end' | 'top-start' | 'top-end' | 'right-start' | 'left-start';
+
+interface Props {
+  brand?: NavbarBrand;
+  items: NavbarItem[];
+  actions?: NavbarAction[];
+  design?: NavbarDesign;
+  class?: ClassValue;
+  navAriaLabel?: string;
+  drawerAriaLabel?: string;
+}
+
+const {
+  brand,
+  items,
+  actions = [],
+  design = 'default',
+  class: className,
+  navAriaLabel = 'Primary navigation',
+  drawerAriaLabel = 'Mobile navigation',
+} = Astro.props;
+
+const brandHref = brand?.href ?? '/';
+const brandImage = brand?.image;
+
+function resolveDropdownPlacement(placement?: string): DropdownPlacement {
+  switch (placement) {
+    case 'bottom-end':
+    case 'top-start':
+    case 'top-end':
+    case 'right-start':
+    case 'left-start':
+      return placement;
+    default:
+      return 'bottom-start';
+  }
+}
+---
+
+<div class:list={['navbar', `navbar--${design}`, className]}>
+  <header class="navbar__shell">
+    <div class="navbar__inner">
+      <div class="navbar__left">
+        {
+          brandImage && (
+            <a href={brandHref} class="navbar__brand" aria-label={brandImage.alt}>
+              <Image
+                src={brandImage.src}
+                alt={brandImage.alt}
+                class="navbar__brand-image"
+                width={brandImage.src.width}
+                height={brandImage.src.height}
+                loading="eager"
+                decoding="async"
+              />
+            </a>
+          )
+        }
+      </div>
+
+      <nav class="navbar__center" aria-label={navAriaLabel}>
+        {
+          items.map((item) =>
+            item.kind === 'link' ? (
+              <NavLink href={item.href ?? '#'}>{item.label}</NavLink>
+            ) : (
+              <Dropdown
+                label={item.label}
+                placement={resolveDropdownPlacement(item.placement)}
+                items={item.items ?? []}
+              />
+            ),
+          )
+        }
+      </nav>
+
+      <div class="navbar__right">
+        {
+          actions.map((action) => (
+            <button type="button" class="navbar__icon-pill navbar__desktop-action" aria-label={action.ariaLabel}>
+              <Icon {...action.icon} aria-hidden="true" />
+            </button>
+          ))
+        }
+        <div class="navbar__mobile-menu">
+          <NavbarDrawer
+            ariaLabel={drawerAriaLabel}
+            navAriaLabel={navAriaLabel}
+            brand={brand}
+            items={items}
+            actions={actions}
+          />
+        </div>
+      </div>
+    </div>
+  </header>
+</div>
+
+<style>
+  .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    display: block;
+  }
+
+  .navbar__shell {
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+    transition:
+      background-color 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      backdrop-filter 180ms ease;
+  }
+
+  .navbar--default .navbar__shell {
+    background: color-mix(in srgb, var(--color-surface) 92%, white);
+  }
+
+  .navbar--glass .navbar__shell {
+    border-bottom-color: color-mix(in srgb, var(--color-border) 38%, transparent);
+    background: color-mix(in srgb, var(--color-surface) 58%, transparent);
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, white 18%, transparent) inset,
+      0 0.75rem 1.5rem color-mix(in srgb, var(--color-shadow, #0f172a) 8%, transparent);
+  }
+
+  .navbar__inner {
+    width: min(100%, 74rem);
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--spacing-4);
+    min-height: 4.5rem;
+    padding-inline: var(--spacing-4);
+  }
+
+  .navbar__left,
+  .navbar__right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+  }
+
+  .navbar__left {
+    min-width: 0;
+  }
+
+  .navbar__right {
+    justify-content: flex-end;
+  }
+
+  .navbar__desktop-action {
+    display: none;
+  }
+
+  .navbar__mobile-menu {
+    display: grid;
+  }
+
+  .navbar__center {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-1);
+  }
+
+  .navbar__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    text-decoration: none;
+    color: var(--color-fg);
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.01em;
+    height: 3rem;
+  }
+
+  .navbar__brand-image {
+    display: block;
+    height: 100%;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .navbar__icon-pill {
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+    border-radius: var(--rounded-full);
+    background-color: color-mix(in srgb, var(--color-primary-subtle) 40%, transparent);
+    color: var(--color-primary-fg);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+
+  .navbar__icon-pill:hover {
+    border-color: var(--color-link-border);
+    background-color: color-mix(in srgb, var(--color-link-subtle) 65%, transparent);
+  }
+
+  .navbar__icon-pill:focus-visible {
+    outline: 2px solid var(--color-focus-border);
+    outline-offset: 2px;
+  }
+
+  .navbar__icon-pill :global(svg) {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  @media (min-width: 1024px) {
+    .navbar__center {
+      display: flex;
+    }
+
+    .navbar__desktop-action {
+      display: grid;
+    }
+
+    .navbar__mobile-menu {
+      display: none;
+    }
+
+    .navbar__inner {
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    }
+  }
+</style>

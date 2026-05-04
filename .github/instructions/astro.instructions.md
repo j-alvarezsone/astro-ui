@@ -10,6 +10,13 @@ applyTo: "**/*.astro"
 2. Use `client:*` directives only for components requiring user input or dynamic updates.
 3. Use `try/catch` with typed errors for all data fetching in frontmatter.
 4. Validate content collection schemas with Zod.
+5. Prefer native HTML elements and CSS capabilities before adding JavaScript.
+
+## Native-First Interactions
+
+- Prefer native elements such as `<button>`, `<dialog>`, `<details>`, `<summary>`, `<input>`, and `<form>` before custom JavaScript behavior.
+- Prefer CSS states and platform features before JS for presentation and interaction polish.
+- Add JavaScript only for behavior that native HTML and CSS cannot provide.
 
 ## Partial Hydration (Component Islands)
 

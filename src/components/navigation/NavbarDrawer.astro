@@ -1,0 +1,289 @@
+---
+import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import Dropdown from '@components/Dropdown.astro';
+import NavLink from './NavLink.astro';
+import type { NavbarBrand, NavbarItem, NavbarAction } from './Navbar.astro';
+
+interface Props {
+  ariaLabel?: string;
+  navAriaLabel?: string;
+  brand?: NavbarBrand;
+  items: NavbarItem[];
+  actions?: NavbarAction[];
+}
+
+const {
+  ariaLabel = 'Toggle navigation menu',
+  navAriaLabel = 'Primary navigation',
+  brand,
+  items,
+  actions = [],
+} = Astro.props;
+
+const brandHref = brand?.href ?? '/';
+const brandImage = brand?.image;
+---
+
+<details class="navbar-mobile" transition:persist>
+  <summary class="navbar__toggle" aria-label={ariaLabel}>
+    <span class="navbar__toggle-icon--menu" aria-hidden="true">
+      <Icon name="mdi:menu" />
+    </span>
+    <span class="navbar__toggle-icon--close" aria-hidden="true">
+      <Icon name="mdi:close" />
+    </span>
+  </summary>
+
+  <div class="navbar__drawer">
+    <div class="navbar__drawer-backdrop"></div>
+
+    <aside class="navbar__drawer-panel" role="dialog" aria-modal="true" aria-label={navAriaLabel}>
+      {
+        brandImage && (
+          <div class="navbar__drawer-header">
+            <a href={brandHref} class="navbar__brand" aria-label={brandImage.alt}>
+              <Image
+                src={brandImage.src}
+                alt={brandImage.alt}
+                class="navbar__brand-image"
+                width={brandImage.src.width}
+                height={brandImage.src.height}
+                loading="eager"
+                decoding="async"
+              />
+            </a>
+          </div>
+        )
+      }
+
+      <div class="navbar__drawer-content">
+        <nav class="navbar__drawer-nav" aria-label={navAriaLabel}>
+          {
+            items.map((item) =>
+              item.kind === 'link' ? (
+                <NavLink href={item.href ?? '#'}>{item.label}</NavLink>
+              ) : (
+                <Dropdown label={item.label} placement="right-start" items={item.items ?? []} />
+              ),
+            )
+          }
+        </nav>
+
+        <div class="navbar__drawer-actions">
+          {
+            actions.map((action) => (
+              <button type="button" class="navbar__icon-pill" aria-label={action.ariaLabel}>
+                <Icon {...action.icon} aria-hidden="true" />
+              </button>
+            ))
+          }
+        </div>
+      </div>
+    </aside>
+  </div>
+</details>
+
+<script>
+  document.addEventListener('astro:before-preparation', () => {
+    document.querySelector('.navbar-mobile')?.removeAttribute('open');
+  });
+</script>
+
+<style>
+  .navbar-mobile {
+    display: block;
+  }
+
+  /* ── Toggle (summary) ─────────────────────────────────────────── */
+
+  /* Remove the native disclosure triangle */
+  .navbar__toggle {
+    list-style: none;
+    display: grid;
+    place-items: center;
+    position: relative;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--rounded-full);
+    cursor: pointer;
+    border: 0;
+    background: color-mix(in srgb, var(--color-primary-subtle) 45%, transparent);
+    color: var(--color-fg);
+  }
+
+  .navbar__toggle::-webkit-details-marker {
+    display: none;
+  }
+
+  .navbar__toggle:focus-visible {
+    outline: 2px solid var(--color-focus-border);
+    outline-offset: 2px;
+  }
+
+  .navbar__toggle-icon--menu,
+  .navbar__toggle-icon--close {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+  }
+
+  /* Close icon hidden by default */
+  .navbar__toggle-icon--close {
+    display: none;
+  }
+
+  .navbar__toggle-icon--menu :global(svg),
+  .navbar__toggle-icon--close :global(svg) {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  /* ── Open state ───────────────────────────────────────────────── */
+
+  /* Swap icons */
+  .navbar-mobile[open] .navbar__toggle-icon--menu {
+    display: none;
+  }
+
+  .navbar-mobile[open] .navbar__toggle-icon--close {
+    display: grid;
+    place-items: center;
+  }
+
+  /*
+   * When open, reposition the summary so it floats inside the drawer
+   * header area, acting as the close button — no JS needed.
+   */
+  .navbar-mobile[open] > .navbar__toggle {
+    position: fixed;
+    inset-block-start: var(--spacing-5);
+    inset-inline-end: var(--spacing-5);
+    z-index: 81;
+    border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+    background: color-mix(in srgb, white 82%, var(--color-surface));
+    color: var(--color-fg);
+  }
+
+  .navbar-mobile[open] > .navbar__toggle:hover {
+    border-color: var(--color-link-border);
+    background: color-mix(in srgb, var(--color-link-subtle) 28%, white);
+  }
+
+  /* ── Drawer overlay ───────────────────────────────────────────── */
+
+  /*
+   * The browser hides non-summary children of <details> when closed,
+   * so we only need to style the open state.
+   */
+  .navbar__drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    block-size: 100dvh;
+  }
+
+  .navbar__drawer-backdrop {
+    display: none;
+  }
+
+  .navbar__drawer-panel {
+    position: relative;
+    inline-size: 100%;
+    background: var(--color-surface);
+    min-block-size: 100dvh;
+    block-size: 100dvh;
+    box-sizing: border-box;
+    padding: var(--spacing-5);
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: var(--spacing-6);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    z-index: 1;
+  }
+
+  /* ── Brand ────────────────────────────────────────────────────── */
+
+  .navbar__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    text-decoration: none;
+    color: var(--color-fg);
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.01em;
+    height: 3rem;
+  }
+
+  .navbar__brand-image {
+    display: block;
+    height: 100%;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .navbar__drawer-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-4);
+    min-block-size: 2.75rem;
+    padding-inline-end: calc(2.75rem + var(--spacing-4));
+  }
+
+  /* ── Nav content ──────────────────────────────────────────────── */
+
+  .navbar__drawer-content {
+    display: grid;
+    align-content: start;
+    gap: var(--spacing-5);
+  }
+
+  .navbar__drawer-nav {
+    display: grid;
+    gap: var(--spacing-2);
+  }
+
+  .navbar__drawer-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+  }
+
+  .navbar__icon-pill {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--rounded-full);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+    background-color: color-mix(in srgb, var(--color-primary-subtle) 40%, transparent);
+    color: var(--color-primary-fg);
+  }
+
+  .navbar__icon-pill:hover {
+    border-color: var(--color-link-border);
+    background-color: color-mix(in srgb, var(--color-link-subtle) 65%, transparent);
+  }
+
+  .navbar__icon-pill:focus-visible {
+    outline: 2px solid var(--color-focus-border);
+    outline-offset: 2px;
+  }
+
+  .navbar__icon-pill :global(svg) {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  /* ── Desktop ──────────────────────────────────────────────────── */
+
+  @media (min-width: 1024px) {
+    .navbar-mobile {
+      display: none;
+    }
+  }
+</style>
