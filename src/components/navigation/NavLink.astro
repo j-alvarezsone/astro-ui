@@ -28,7 +28,7 @@ const isActive = href === '/' ? currentPath === '/' : currentPath.startsWith(hre
   aria-current={isActive ? 'page' : undefined}
   {...rest}
 >
-  {isActive && <span transition:name="active-span" class="nav-link__active" aria-hidden="true" />}
+  {isActive && <span transition:name="active-link" class="nav-link__active" aria-hidden="true" />}
   {icon && <Icon {...icon} class="nav-link__icon" aria-hidden="true" />}
   <span class="nav-link__label">
     <slot>{label}</slot>

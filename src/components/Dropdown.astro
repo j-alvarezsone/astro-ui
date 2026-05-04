@@ -35,9 +35,25 @@ const baseId = id ?? `dropdown-${Math.random().toString(36).slice(2, 10)}`;
 const panelId = `${baseId}-panel`;
 const triggerId = `${baseId}-trigger`;
 const hasCustomContent = Astro.slots.has('default');
+
+const { pathname, search } = Astro.url;
+const currentPath = `${pathname}${search}`;
+
+function isHrefActive(href: string | undefined): boolean {
+  if (!href) {
+    return false;
+  }
+
+  return href === '/' ? currentPath === '/' : currentPath.startsWith(href);
+}
+
+const hasActiveItem = items.some((item) => isHrefActive(item.href));
 ---
 
-<app-dropdown class:list={['dropdown', className]} data-placement-preference={placement}>
+<app-dropdown
+  class:list={['dropdown', { 'dropdown--active': hasActiveItem }, className]}
+  data-placement-preference={placement}
+>
   <button
     id={triggerId}
     type="button"
@@ -47,6 +63,7 @@ const hasCustomContent = Astro.slots.has('default');
     aria-controls={panelId}
     data-dropdown-trigger
   >
+    {hasActiveItem && <span class="dropdown__trigger-active" aria-hidden="true" />}
     <slot name="trigger">{label}</slot>
     <Icon name="mdi:chevron-down" class="dropdown__trigger-icon" aria-hidden="true" />
   </button>
@@ -57,34 +74,40 @@ const hasCustomContent = Astro.slots.has('default');
         <slot />
       ) : (
         <ul class="dropdown__menu" role="menu" aria-labelledby={triggerId}>
-          {items.map((item) => (
-            <li role="none">
-              {item.href ? (
-                <a
-                  href={item.href}
-                  class="dropdown__item"
-                  target={item.target}
-                  rel={item.rel}
-                  role="menuitem"
-                  data-dropdown-item
-                >
-                  {item.icon && <Icon {...item.icon} class="dropdown__item-icon" aria-hidden="true" />}
-                  <span class="dropdown__item-copy">
-                    <span class="dropdown__item-label">{item.label}</span>
-                    {item.description && <span class="dropdown__item-description">{item.description}</span>}
-                  </span>
-                </a>
-              ) : (
-                <button type="button" class="dropdown__item" data-dropdown-item role="menuitem" tabindex="0">
-                  {item.icon && <Icon {...item.icon} class="dropdown__item-icon" aria-hidden="true" />}
-                  <span class="dropdown__item-copy">
-                    <span class="dropdown__item-label">{item.label}</span>
-                    {item.description && <span class="dropdown__item-description">{item.description}</span>}
-                  </span>
-                </button>
-              )}
-            </li>
-          ))}
+          {items.map((item) => {
+            const isActive = isHrefActive(item.href);
+
+            return (
+              <li role="none">
+                {item.href ? (
+                  <a
+                    href={item.href}
+                    class:list={['dropdown__item', { 'dropdown__item--active': isActive }]}
+                    target={item.target}
+                    rel={item.rel}
+                    role="menuitem"
+                    aria-current={isActive ? 'page' : undefined}
+                    data-dropdown-item
+                  >
+                    {isActive && <span class="dropdown__item-active" aria-hidden="true" />}
+                    {item.icon && <Icon {...item.icon} class="dropdown__item-icon" aria-hidden="true" />}
+                    <span class="dropdown__item-copy">
+                      <span class="dropdown__item-label">{item.label}</span>
+                      {item.description && <span class="dropdown__item-description">{item.description}</span>}
+                    </span>
+                  </a>
+                ) : (
+                  <button type="button" class="dropdown__item" data-dropdown-item role="menuitem" tabindex="0">
+                    {item.icon && <Icon {...item.icon} class="dropdown__item-icon" aria-hidden="true" />}
+                    <span class="dropdown__item-copy">
+                      <span class="dropdown__item-label">{item.label}</span>
+                      {item.description && <span class="dropdown__item-description">{item.description}</span>}
+                    </span>
+                  </button>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )
     }
@@ -126,6 +149,7 @@ const hasCustomContent = Astro.slots.has('default');
   }
 
   .dropdown[data-open='true'] .dropdown__trigger,
+  .dropdown--active .dropdown__trigger,
   .dropdown__trigger:hover {
     background-color: color-mix(in srgb, var(--color-primary-subtle) 82%, white);
     border-color: color-mix(in srgb, var(--color-primary-border) 22%, transparent);
@@ -134,15 +158,39 @@ const hasCustomContent = Astro.slots.has('default');
     transform: translateY(-1px);
   }
 
+  .dropdown__trigger-active {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-primary-subtle) 84%, white),
+      color-mix(in srgb, var(--color-secondary-subtle) 76%, white)
+    );
+    border: 1px solid color-mix(in srgb, var(--color-primary-border) 24%, transparent);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, white 52%, transparent),
+      0 0.25rem 0.75rem color-mix(in srgb, var(--color-primary-focus-ring) 14%, transparent);
+    z-index: 0;
+    pointer-events: none;
+  }
+
   .dropdown__trigger:focus-visible {
     outline: 2px solid var(--color-focus-border);
     outline-offset: 2px;
   }
 
   .dropdown__trigger-icon {
+    position: relative;
+    z-index: 1;
     width: 1rem;
     height: 1rem;
     transition: transform 180ms ease;
+  }
+
+  .dropdown__trigger :global(*) {
+    position: relative;
+    z-index: 1;
   }
 
   .dropdown[data-open='true'] .dropdown__trigger-icon {
@@ -187,8 +235,11 @@ const hasCustomContent = Astro.slots.has('default');
     gap: var(--spacing-3);
     cursor: pointer;
     min-height: auto;
+    position: relative;
+    isolation: isolate;
   }
 
+  :global(.dropdown__item--active),
   :global(.dropdown__item:hover),
   :global(.dropdown__item:focus-visible) {
     background-color: color-mix(in srgb, var(--color-primary-subtle) 60%, transparent);
@@ -198,7 +249,30 @@ const hasCustomContent = Astro.slots.has('default');
     transform: none;
   }
 
+  :global(.dropdown__item--active) {
+    color: var(--color-primary-fg);
+  }
+
+  :global(.dropdown__item-active) {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-primary-subtle) 84%, white),
+      color-mix(in srgb, var(--color-secondary-subtle) 76%, white)
+    );
+    border: 1px solid color-mix(in srgb, var(--color-primary-border) 24%, transparent);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, white 52%, transparent),
+      0 0.25rem 0.75rem color-mix(in srgb, var(--color-primary-focus-ring) 14%, transparent);
+    z-index: 0;
+    pointer-events: none;
+  }
+
   :global(.dropdown__item-icon) {
+    position: relative;
+    z-index: 1;
     margin-top: var(--spacing-1);
     width: 1rem;
     height: 1rem;
@@ -207,6 +281,8 @@ const hasCustomContent = Astro.slots.has('default');
   }
 
   :global(.dropdown__item-copy) {
+    position: relative;
+    z-index: 1;
     display: grid;
     gap: var(--spacing-1);
   }
