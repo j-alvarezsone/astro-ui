@@ -3,7 +3,6 @@ import ComponentSlotsDemo from '@components/theme/ComponentSlotsDemo.astro';
 import ThemeDocArticle from '@components/theme/ThemeDocArticle.astro';
 import ThemeLayout from '@layouts/ThemeLayout.astro';
 import { createComponentSlots } from '@utils/content/createComponentSlots';
-import { getFilteredHeadings } from '@utils/content/getFilteredHeadings';
 import InputFieldComponent from '@components/form/InputField.astro';
 import { INPUT_FIELD_PT_SLOT_NAMES, INPUT_FIELD_SELECTOR_OVERRIDES } from '@/types/theme/form/inputField';
 import { getEntry, render } from 'astro:content';
@@ -21,8 +20,7 @@ if (!guide) {
 }
 
 const rendered = await render(guide);
-const { Content } = rendered;
-const headings = getFilteredHeadings(rendered);
+const { Content, headings } = rendered;
 ---
 
 <ThemeLayout

@@ -18,11 +18,7 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 const guideSections = await Promise.all(
   guides.map(async (entry) => {
     const rendered = await render(entry);
-    const { Content } = rendered;
-    const headings =
-      'headings' in rendered && Array.isArray(rendered.headings)
-        ? rendered.headings.filter((heading) => heading.depth >= 2 && heading.depth <= 3)
-        : [];
+    const { Content, headings } = rendered;
 
     return {
       entry,
