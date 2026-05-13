@@ -1,0 +1,152 @@
+---
+import Heading from '@components/typography/Heading.astro';
+import ThemeLayout from '@layouts/ThemeLayout.astro';
+import { getEntry, render } from 'astro:content';
+
+const guide = await getEntry('queryGuides', 'custom-fetch-query');
+
+if (!guide) {
+  throw new Error('Query guide entry "custom-fetch-query" was not found.');
+}
+
+const rendered = await render(guide);
+const { Content, headings } = rendered;
+
+const dateFormatter = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: '2-digit',
+  year: 'numeric',
+});
+
+const updatedLabel = guide.data.updatedAt ? dateFormatter.format(guide.data.updatedAt) : null;
+---
+
+<ThemeLayout
+  title="Query System Guide"
+  heroKicker="Query Documentation"
+  heroTitle={guide.data.title}
+  heroSummary={guide.data.summary}
+  contentLabel="Query guide content"
+  headings={headings}
+  backLabel="Back to Home"
+  backHref="/"
+>
+  <Fragment slot="meta">
+    <span>Complete guide</span>
+    <span>Client + Server adapters</span>
+    <span>Retry, stale cache, Astro route cache</span>
+  </Fragment>
+
+  <article class="theme-doc-card">
+    <header class="theme-doc-card__header">
+      <p class="theme-doc-card__eyebrow">Query Guide</p>
+      <Heading as="h2" size="3xl" weight="bold">
+        {guide.data.title}
+      </Heading>
+      <p>{guide.data.summary}</p>
+      {updatedLabel && <span class="theme-doc-card__date">Updated {updatedLabel}</span>}
+    </header>
+    <div class="theme-doc-content">
+      <Content />
+    </div>
+  </article>
+</ThemeLayout>
+
+<style>
+  .theme-doc-card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--rounded-2xl);
+    background-color: color-mix(in oklab, var(--color-surface) 85%, #ffffff 15%);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+    overflow: clip;
+  }
+
+  .theme-doc-card__header {
+    padding: var(--spacing-5);
+    border-bottom: 1px solid color-mix(in oklab, var(--color-border) 85%, #dbe3ed 15%);
+    background: linear-gradient(180deg, color-mix(in oklab, #f1f5f9 66%, #fff 34%), transparent);
+  }
+
+  .theme-doc-card__eyebrow {
+    margin: 0;
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: var(--font-weight-semibold);
+    color: color-mix(in oklab, var(--color-fg-muted) 80%, #0f172a 20%);
+  }
+
+  .theme-doc-card__header :global(h2.heading) {
+    margin: var(--spacing-2) 0 var(--spacing-3);
+    font-size: clamp(var(--font-size-xl), 1rem + 0.8vw, var(--font-size-2xl));
+    color: var(--color-fg);
+  }
+
+  .theme-doc-card__header p {
+    margin: 0;
+    color: color-mix(in oklab, var(--color-fg-muted) 86%, #111827 14%);
+  }
+
+  .theme-doc-card__date {
+    display: inline-flex;
+    margin-top: var(--spacing-3);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: color-mix(in oklab, var(--color-fg-muted) 70%, #334155 30%);
+  }
+
+  .theme-doc-content {
+    padding: var(--spacing-5);
+    color: color-mix(in oklab, var(--color-fg) 88%, #111827 12%);
+    max-width: 72ch;
+  }
+
+  .theme-doc-content :global(h2),
+  .theme-doc-content :global(h3),
+  .theme-doc-content :global(h4) {
+    margin-top: var(--spacing-6);
+    margin-bottom: var(--spacing-2);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  .theme-doc-content :global(p) {
+    margin-top: 0;
+    margin-bottom: var(--spacing-3);
+    line-height: 1.6;
+  }
+
+  .theme-doc-content :global(ol),
+  .theme-doc-content :global(ul) {
+    margin-top: 0;
+    margin-bottom: var(--spacing-3);
+    line-height: 1.6;
+    padding-left: var(--spacing-5);
+  }
+
+  .theme-doc-content :global(li + li) {
+    margin-top: var(--spacing-1);
+  }
+
+  .theme-doc-content :global(code) {
+    font-size: 0.9em;
+    padding: 0.12rem 0.4rem;
+    border-radius: var(--rounded-md);
+    background-color: color-mix(in oklab, #dbeafe 46%, #ffffff 54%);
+  }
+
+  .theme-doc-content :global(pre) {
+    margin-top: 0;
+    margin-bottom: var(--spacing-4);
+    border: 1px solid color-mix(in oklab, var(--color-border) 85%, #d4d4d8 15%);
+    border-radius: var(--rounded-lg);
+    background-color: color-mix(in oklab, #0f172a 92%, black 8%);
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
+  }
+
+  .theme-doc-content :global(pre code) {
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+</style>

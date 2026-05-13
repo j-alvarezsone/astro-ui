@@ -1,5 +1,6 @@
 ---
 import Button from '@components/Button.astro';
+import ClientUsersQueryDemo from '@components/query/ClientUsersQueryDemo.vue';
 import Form from '@components/form/Form.astro';
 import FormGroup from '@components/form/FormGroup.astro';
 import InputAddon from '@components/form/input-group/InputAddon.astro';
@@ -23,6 +24,19 @@ import { Icon } from 'astro-icon/components';
       This is a starter template for building your first Astro project. It comes with a few example pages and components
       to help you get started.
     </p>
+
+    <section class="query-demo">
+      <Heading as="h3" weight="bold">Client Query (Vue)</Heading>
+      <ClientUsersQueryDemo client:load />
+    </section>
+
+    <section class="query-demo">
+      <Heading as="h3" weight="bold">Web Component Pending Toggle</Heading>
+      <fetch-users-query class="fetch-users-query">
+        <Button as="button" label="Fetch Users (Web Component)" variant="primary" />
+      </fetch-users-query>
+    </section>
+
     <form class="demo-form">
       <InputEmail
         name="email"
@@ -200,6 +214,10 @@ import { Icon } from 'astro-icon/components';
   </div>
 </Layout>
 
+<script>
+  import '@web-components/fetch-users-query.web';
+</script>
+
 <style>
   .container {
     padding: var(--spacing-4);
@@ -213,6 +231,38 @@ import { Icon } from 'astro-icon/components';
     flex-direction: column;
     gap: var(--spacing-6);
   }
+
+  .query-demo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    border: 1px solid var(--color-contrast-border);
+    border-radius: var(--rounded-lg);
+    padding: var(--spacing-3);
+    background: var(--color-contrast-subtle);
+  }
+
+  .query-demo__list {
+    display: grid;
+    gap: var(--spacing-1);
+    margin: 0;
+    padding-left: var(--spacing-4);
+  }
+
+  .query-demo__item {
+    display: grid;
+  }
+
+  .query-demo__error {
+    color: var(--color-danger-fg);
+    margin: 0;
+  }
+
+  fetch-users-query.fetch-users-query {
+    display: grid;
+    gap: var(--spacing-2);
+  }
+
   /* Root-level scope class:
      useful to scope all nested field styling in one area. */
   :global(.email-field-root .input-field__wrapper) {

@@ -1,0 +1,206 @@
+import { createQueryCacheStore, getOrCreateEntry } from '@utils/query/cacheStore';
+import { executeQuery, runQueryAttempt } from '@utils/query/queryCore';
+import { hashQueryKey } from '@utils/query/key';
+
+describe('query core execution', () => {
+  it('returns cached results when the entry is fresh and force is false', async () => {
+    const store = createQueryCacheStore();
+    const queryKey = ['cache-test'];
+    const keyHash = hashQueryKey(queryKey);
+    const entry = getOrCreateEntry(store, keyHash, 1_000);
+
+    entry.hasData = true;
+    entry.data = 'cached';
+    entry.updatedAt = 1_000;
+    store.set(keyHash, entry);
+
+    const result = await executeQuery(
+      store,
+      {
+        queryKey,
+        keyHash,
+        queryFn: async () => await Promise.resolve('new'),
+        staleTime: Number.POSITIVE_INFINITY,
+        client: true,
+      },
+      {},
+    );
+
+    expect(result.fromCache).toBe(true);
+    expect(result.data).toBe('cached');
+  });
+
+  it('joins concurrent requests with the same key when dedupe mode is join', async () => {
+    const store = createQueryCacheStore();
+    const queryKey = ['dedupe-join'];
+    const keyHash = hashQueryKey(queryKey);
+    let calls = 0;
+    let release: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+
+    const queryFn = async () => {
+      calls += 1;
+      await gate;
+      return 'ok';
+    };
+
+    const promise1 = executeQuery(
+      store,
+      {
+        queryKey,
+        keyHash,
+        queryFn,
+        staleTime: 0,
+        client: true,
+      },
+      {},
+    );
+
+    const promise2 = executeQuery(
+      store,
+      {
+        queryKey,
+        keyHash,
+        queryFn,
+        staleTime: 0,
+        client: true,
+      },
+      {},
+    );
+
+    release!();
+
+    const [result1, result2] = await Promise.all([promise1, promise2]);
+
+    expect(calls).toBe(1);
+    expect(result1.data).toBe('ok');
+    expect(result2.data).toBe('ok');
+  });
+
+  it('retries failed requests when retry options allow it', async () => {
+    const store = createQueryCacheStore();
+    const queryKey = ['retry-test'];
+    const keyHash = hashQueryKey(queryKey);
+    let attempt = 0;
+
+    const queryFn = async () => {
+      attempt += 1;
+
+      if (attempt === 1) {
+        await Promise.resolve();
+        throw new Error('transient');
+      }
+
+      return await Promise.resolve('success');
+    };
+
+    const result = await executeQuery(
+      store,
+      {
+        queryKey,
+        keyHash,
+        queryFn,
+        staleTime: 0,
+        retry: 2,
+        retryDelay: 0,
+        client: true,
+      },
+      {},
+    );
+
+    expect(result.status).toBe('success');
+    expect(result.data).toBe('success');
+    expect(attempt).toBe(2);
+  });
+
+  it('runs a direct successful attempt via runQueryAttempt', async () => {
+    const store = createQueryCacheStore();
+    const queryKey = ['attempt-success'];
+    const keyHash = hashQueryKey(queryKey);
+    const entry = getOrCreateEntry<string>(store, keyHash, 1_000);
+
+    const options = {
+      queryKey,
+      keyHash,
+      queryFn: async () => await Promise.resolve('ok'),
+      staleTime: 0,
+      client: true,
+    } as const;
+
+    const context = {
+      queryKey,
+      keyHash,
+      options,
+      attempt: 1,
+      client: true,
+    };
+
+    const result = await runQueryAttempt({
+      attempt: 1,
+      entry,
+      options,
+      mergedInterceptors: [],
+      context,
+      controller: new AbortController(),
+      now: () => 2_000,
+      retryCount: 0,
+    });
+
+    expect(result.status).toBe('success');
+    expect(result.data).toBe('ok');
+    expect(entry.status).toBe('success');
+    expect(entry.updatedAt).toBe(2_000);
+  });
+
+  it('retries a direct attempt and then succeeds via runQueryAttempt', async () => {
+    const store = createQueryCacheStore();
+    const queryKey = ['attempt-retry'];
+    const keyHash = hashQueryKey(queryKey);
+    const entry = getOrCreateEntry<string>(store, keyHash, 1_000);
+    let attempts = 0;
+
+    const options = {
+      queryKey,
+      keyHash,
+      queryFn: async () => {
+        attempts += 1;
+
+        if (attempts === 1) {
+          await Promise.resolve();
+          throw new Error('retry');
+        }
+
+        return await Promise.resolve('ok');
+      },
+      staleTime: 0,
+      retry: 1,
+      retryDelay: 0,
+      client: true,
+    } as const;
+
+    const context = {
+      queryKey,
+      keyHash,
+      options,
+      attempt: 1,
+      client: true,
+    };
+
+    const result = await runQueryAttempt({
+      attempt: 1,
+      entry,
+      options,
+      mergedInterceptors: [],
+      context,
+      controller: new AbortController(),
+      now: () => 3_000,
+      retryCount: 1,
+    });
+
+    expect(result.status).toBe('success');
+    expect(result.data).toBe('ok');
+    expect(attempts).toBe(2);
+  });
+});

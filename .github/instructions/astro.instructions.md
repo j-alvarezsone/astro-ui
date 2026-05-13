@@ -98,6 +98,8 @@ export const GET: APIRoute = async () => {
 
 ## Content Collections
 
+### Schema Definition
+
 Validate schemas with Zod in `src/content/config.ts`:
 
 ```ts
@@ -109,6 +111,57 @@ export const collections = {
   }),
 };
 ```
+
+### Fetching Patterns
+
+**Single entry:** Use `getEntry()` for a known ID (e.g., a specific guide, page, or reference):
+
+```astro
+---
+const guide = await getEntry('guides', 'getting-started');
+if (!guide) throw new Error('Guide not found');
+const { Content, headings } = await render(guide);
+---
+```
+
+**All entries:** Use `getCollection()` only when you need all entries in a collection. Avoid `getCollection()` + `Promise.all(render())` for single entries:
+
+```astro
+---
+// ✅ Good: Fetch specific entry
+const page = await getEntry('docs', 'api-reference');
+
+// ❌ Avoid: Unnecessary collection mapping for one entry
+const [guide] = await getCollection('docs');
+```
+
+### Data Flow: Props vs Slots
+
+Pass processed data (like `headings`, `metadata`) as **props** to layout components, not via slots. This keeps interfaces explicit and avoids complex DOM composition:
+
+```astro
+---
+const { Content, headings } = await render(guide);
+---
+
+<ThemeLayout
+  title={guide.data.title}
+  headings={headings}
+  backHref="/"
+>
+  <Content />
+</ThemeLayout>
+
+<!-- ❌ Avoid -->
+<ThemeLayout>
+  <ol slot="index">
+    {headings.map(h => <li>{h.text}</li>)}
+  </ol>
+  <Content />
+</ThemeLayout>
+```
+
+This keeps component APIs clean and makes data dependencies visible at a glance.
 
 ## Live Content Collections (Astro 6+)
 

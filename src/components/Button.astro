@@ -402,4 +402,40 @@ const { className: loaderPassThroughClass, attributes: loaderPassThroughAttribut
   .button--icon-only {
     gap: var(--spacing-0);
   }
+
+  /****
+  Runtime loading state (set via data-loading attribute by web components)
+  ****/
+  .button[data-loading] .button__label {
+    opacity: var(--button-label-loading-opacity, 0);
+  }
+
+  .button[data-loading] {
+    cursor: not-allowed;
+  }
+
+  .button[data-loading]::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid var(--color-border-strong);
+    border-top-color: transparent;
+    border-radius: 9999px;
+    animation: button-spinner-spin 0.75s linear infinite;
+  }
+
+  @keyframes button-spinner-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .button[data-loading]::after {
+      animation: none;
+    }
+  }
 </style>
