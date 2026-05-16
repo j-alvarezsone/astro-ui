@@ -26,6 +26,20 @@ function isQueryCacheEntry<TData, TError = unknown>(value: unknown): value is Qu
 }
 
 /**
+ * Clear a scheduled garbage-collection timer from a cache entry.
+ *
+ * @param entry - Cache entry that may hold a pending GC timer.
+ */
+function clearEntryGcTimer<TData, TError = unknown>(entry: QueryCacheEntry<TData, TError>): void {
+  if (entry.gcTimeoutId === undefined) {
+    return;
+  }
+
+  clearTimeout(entry.gcTimeoutId);
+  entry.gcTimeoutId = undefined;
+}
+
+/**
  * Create an in-memory query cache store used by client and server query adapters.
  *
  * @returns A new query cache store instance.
@@ -50,9 +64,21 @@ export function createQueryCacheStore(): QueryCacheStore {
       return store.has(key);
     },
     delete(key: string): boolean {
+      const entry = store.get(key);
+
+      if (isQueryCacheEntry(entry)) {
+        clearEntryGcTimer(entry);
+      }
+
       return store.delete(key);
     },
     clear(): void {
+      for (const value of store.values()) {
+        if (isQueryCacheEntry(value)) {
+          clearEntryGcTimer(value);
+        }
+      }
+
       store.clear();
     },
   };

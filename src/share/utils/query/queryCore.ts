@@ -11,6 +11,9 @@ import type {
   QueryLifecycleContext,
 } from '@utils/query/types';
 
+const DEFAULT_GC_TIME_MS = 5 * 60 * 1000;
+const MAX_TIMEOUT_MS = 2_147_483_647; // Maximum delay for setTimeout in most browsers (approximately 24.8 days)
+
 export interface RunQueryAttemptOptions<TData, TError = unknown> {
   attempt: number;
   entry: QueryCacheEntry<TData, TError>;
@@ -68,6 +71,11 @@ export async function executeQuery<TData, TError = unknown>(
 ): Promise<QueryExecutionResult<TData, TError>> {
   const now = coreOptions.now ?? Date.now;
   const entry = getOrCreateEntry<TData, TError>(store, options.keyHash, now());
+  const effectiveGcTime = mergeGcTime(entry.gcTime, resolveGcTime(options.gcTime, options.client));
+
+  entry.gcTime = effectiveGcTime;
+  clearEntryGcTimeout(entry);
+
   const currentIsStale = isEntryStale(
     entry,
     resolveStaleTimeOption(
@@ -78,6 +86,8 @@ export async function executeQuery<TData, TError = unknown>(
   );
 
   if (!options.force && entry.hasData && !currentIsStale) {
+    scheduleEntryGc(store, options.keyHash, entry);
+
     return {
       keyHash: options.keyHash,
       fromCache: true,
@@ -108,8 +118,93 @@ export async function executeQuery<TData, TError = unknown>(
       entry.promise = undefined;
       entry.abortController = undefined;
       store.set(options.keyHash, entry);
+      scheduleEntryGc(store, options.keyHash, entry);
     }
   }
+}
+
+/**
+ * Resolve an effective garbage-collection time for a query entry.
+ *
+ * Defaults to 5 minutes for client queries and `Infinity` for server queries.
+ *
+ * @param gcTime - Optional query-specific garbage-collection time in milliseconds.
+ * @param client - Whether the query runs in a client context.
+ * @returns A non-negative GC time in milliseconds or `Infinity`.
+ */
+function resolveGcTime(gcTime: number | undefined, client: boolean): number {
+  if (gcTime === Number.POSITIVE_INFINITY) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  if (gcTime !== undefined) {
+    return Math.max(0, gcTime);
+  }
+
+  return client ? DEFAULT_GC_TIME_MS : Number.POSITIVE_INFINITY;
+}
+
+/**
+ * Merge two GC times so the longer retention period always wins.
+ *
+ * @param current - Existing GC time already associated with the cache entry.
+ * @param next - New GC time requested by a query execution.
+ * @returns The merged GC time value.
+ */
+function mergeGcTime(current: number | undefined, next: number): number {
+  if (current === undefined) {
+    return next;
+  }
+
+  if (current === Number.POSITIVE_INFINITY || next === Number.POSITIVE_INFINITY) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return Math.max(current, next);
+}
+
+/**
+ * Clear an entry GC timeout when the entry is reused.
+ *
+ * @param entry - Cache entry that may contain a pending GC timeout.
+ */
+function clearEntryGcTimeout<TData, TError = unknown>(entry: QueryCacheEntry<TData, TError>): void {
+  if (entry.gcTimeoutId === undefined) {
+    return;
+  }
+
+  clearTimeout(entry.gcTimeoutId);
+  entry.gcTimeoutId = undefined;
+}
+
+/**
+ * Schedule cache-entry garbage collection when the entry becomes inactive.
+ *
+ * @param store - Query cache store used to remove stale entries.
+ * @param keyHash - Hashed key that identifies the entry in the store.
+ * @param entry - Cache entry to schedule for eventual removal.
+ */
+function scheduleEntryGc<TData, TError = unknown>(
+  store: QueryCacheStore,
+  keyHash: string,
+  entry: QueryCacheEntry<TData, TError>,
+): void {
+  clearEntryGcTimeout(entry);
+
+  if (entry.gcTime === undefined || entry.gcTime === Number.POSITIVE_INFINITY) {
+    return;
+  }
+
+  const timeoutMs = Math.min(entry.gcTime, MAX_TIMEOUT_MS);
+  entry.gcTimeoutId = setTimeout(() => {
+    const currentEntry = store.get<TData, TError>(keyHash);
+
+    if (currentEntry !== entry || currentEntry?.promise) {
+      return;
+    }
+
+    store.delete(keyHash);
+  }, timeoutMs);
 }
 
 /**

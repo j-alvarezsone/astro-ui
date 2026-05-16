@@ -203,4 +203,137 @@ describe('query core execution', () => {
     expect(result.data).toBe('ok');
     expect(attempts).toBe(2);
   });
+
+  it('garbage collects inactive client cache entries after the default gcTime', async () => {
+    vi.useFakeTimers();
+
+    try {
+      const store = createQueryCacheStore();
+      const queryKey = ['gc-default-client'];
+      const keyHash = hashQueryKey(queryKey);
+
+      await executeQuery(
+        store,
+        {
+          queryKey,
+          keyHash,
+          queryFn: async () => await Promise.resolve('ok'),
+          staleTime: Number.POSITIVE_INFINITY,
+          client: true,
+        },
+        {},
+      );
+
+      expect(store.has(keyHash)).toBe(true);
+
+      vi.advanceTimersByTime(5 * 60 * 1000 - 1);
+      expect(store.has(keyHash)).toBe(true);
+
+      vi.advanceTimersByTime(1);
+      expect(store.has(keyHash)).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not garbage collect server entries by default (SSR Infinity)', async () => {
+    vi.useFakeTimers();
+
+    try {
+      const store = createQueryCacheStore();
+      const queryKey = ['gc-default-server'];
+      const keyHash = hashQueryKey(queryKey);
+
+      await executeQuery(
+        store,
+        {
+          queryKey,
+          keyHash,
+          queryFn: async () => await Promise.resolve('ok'),
+          staleTime: Number.POSITIVE_INFINITY,
+          client: false,
+        },
+        {},
+      );
+
+      vi.advanceTimersByTime(24 * 60 * 60 * 1000);
+      expect(store.has(keyHash)).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('uses the longest gcTime when the same cache key is executed with different values', async () => {
+    vi.useFakeTimers();
+
+    try {
+      const store = createQueryCacheStore();
+      const queryKey = ['gc-longest-wins'];
+      const keyHash = hashQueryKey(queryKey);
+
+      await executeQuery(
+        store,
+        {
+          queryKey,
+          keyHash,
+          queryFn: async () => await Promise.resolve('ok'),
+          staleTime: Number.POSITIVE_INFINITY,
+          gcTime: 1_000,
+          client: true,
+        },
+        {},
+      );
+
+      vi.advanceTimersByTime(500);
+
+      await executeQuery(
+        store,
+        {
+          queryKey,
+          keyHash,
+          queryFn: async () => await Promise.resolve('ok'),
+          staleTime: Number.POSITIVE_INFINITY,
+          gcTime: 5_000,
+          client: true,
+        },
+        {},
+      );
+
+      vi.advanceTimersByTime(4_999);
+      expect(store.has(keyHash)).toBe(true);
+
+      vi.advanceTimersByTime(1);
+      expect(store.has(keyHash)).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('disables garbage collection when gcTime is Infinity', async () => {
+    vi.useFakeTimers();
+
+    try {
+      const store = createQueryCacheStore();
+      const queryKey = ['gc-infinity'];
+      const keyHash = hashQueryKey(queryKey);
+
+      await executeQuery(
+        store,
+        {
+          queryKey,
+          keyHash,
+          queryFn: async () => await Promise.resolve('ok'),
+          staleTime: Number.POSITIVE_INFINITY,
+          gcTime: Number.POSITIVE_INFINITY,
+          client: true,
+        },
+        {},
+      );
+
+      vi.advanceTimersByTime(24 * 60 * 60 * 1000);
+      expect(store.has(keyHash)).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

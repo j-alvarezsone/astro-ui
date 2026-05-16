@@ -58,6 +58,7 @@ export interface QueryOptions<TData, TError = unknown> {
   queryFn: QueryFn<TData>;
   autoExecute?: boolean;
   staleTime?: QueryStaleTimeOption<TData, TError>;
+  gcTime?: number;
   retry?: number | QueryRetryPredicate;
   retryDelay?: number | QueryRetryDelay;
   dedupe?: QueryDedupeMode;
@@ -90,6 +91,8 @@ export interface QueryCacheEntry<TData, TError = unknown> {
   status: QueryStateStatus;
   promise?: Promise<QueryExecutionResult<TData, TError>>;
   abortController?: AbortController;
+  gcTime?: number;
+  gcTimeoutId?: ReturnType<typeof setTimeout>;
 }
 
 export interface QueryCacheStore {
