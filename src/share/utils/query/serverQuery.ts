@@ -9,6 +9,7 @@ import {
 import { hashQueryKey } from '@utils/query/key';
 import { executeQuery } from '@utils/query/queryCore';
 import type {
+  AstroRouteCacheLike,
   QueryCoreOptions,
   ServerQueryClient,
   ServerQueryClientOptions,
@@ -37,7 +38,7 @@ export function createServerQuery(options: ServerQueryClientOptions = {}): Serve
       data: undefined,
       error: null,
       keyHash,
-      fromCache: false,
+      isFromCache: false,
       isSuccess: false,
       isError: false,
       isStale: true,
@@ -66,9 +67,8 @@ export function createServerQuery(options: ServerQueryClientOptions = {}): Serve
           getOrCreateEntry<TData, TError>(store, keyHash, (options.now ?? Date.now)()),
         ),
       );
-
       applyAstroRouteCache({
-        cache: options.astroCache,
+        cache: resolveAstroCache(queryOptions.meta),
         queryKey: queryOptions.queryKey,
         staleTime,
         swr: queryOptions.swr,
@@ -90,7 +90,7 @@ export function createServerQuery(options: ServerQueryClientOptions = {}): Serve
         data: result.data,
         error: result.error ?? null,
         keyHash,
-        fromCache: result.fromCache,
+        isFromCache: result.isFromCache,
         isSuccess: result.status === 'success',
         isError: result.status === 'error',
         isStale: computeIsStale(),
@@ -115,8 +115,8 @@ export function createServerQuery(options: ServerQueryClientOptions = {}): Serve
       get keyHash() {
         return lastResult.keyHash;
       },
-      get fromCache() {
-        return lastResult.fromCache;
+      get isFromCache() {
+        return lastResult.isFromCache;
       },
       get isSuccess() {
         return lastResult.isSuccess;
@@ -144,4 +144,54 @@ export function createServerQuery(options: ServerQueryClientOptions = {}): Serve
       store.clear();
     },
   };
+}
+
+/**
+ * Resolve an Astro route-cache bridge from per-query metadata.
+ *
+ * Query metadata is the request-scoped source for `Astro.cache`.
+ *
+ * @param meta - Optional query metadata that may include `astroCache`.
+ * @returns A validated Astro route-cache bridge when available.
+ * @example
+ * ```ts
+ * resolveAstroCache({ astroCache: Astro.cache });
+ * ```
+ */
+function resolveAstroCache(
+  meta: Record<string, unknown> | undefined,
+): AstroRouteCacheLike | undefined {
+  const candidate = meta?.astroCache;
+
+  if (isAstroRouteCacheLike(candidate)) {
+    return candidate;
+  }
+
+  return undefined;
+}
+
+/**
+ * Validate the minimal Astro route-cache bridge shape used by the query layer.
+ *
+ * @param value - Unknown runtime value to validate.
+ * @returns `true` when the value is a compatible Astro route-cache bridge.
+ * @example
+ * ```ts
+ * isAstroRouteCacheLike(Astro.cache);
+ * ```
+ */
+function isAstroRouteCacheLike(value: unknown): value is AstroRouteCacheLike {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  if (!('set' in value) || typeof value.set !== 'function') {
+    return false;
+  }
+
+  if ('enabled' in value && value.enabled !== undefined && typeof value.enabled !== 'boolean') {
+    return false;
+  }
+
+  return true;
 }

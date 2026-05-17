@@ -2,6 +2,8 @@ export type QueryKey = string | readonly unknown[];
 
 export type QueryDedupeMode = 'join' | 'cancel' | 'none';
 
+export type QueryInvalidateRefetchType = 'none' | 'active';
+
 export type QueryStateStatus = 'idle' | 'pending' | 'success' | 'error';
 
 export type QueryStaleTimeValue = number | 'static';
@@ -77,7 +79,7 @@ export interface QueryExecutionOptions<TData, TError = unknown> extends QueryOpt
 
 export interface QueryExecutionResult<TData, TError = unknown> {
   keyHash: string;
-  fromCache: boolean;
+  isFromCache: boolean;
   status: 'success' | 'error';
   data?: TData;
   error?: TError | null;
@@ -133,13 +135,12 @@ export interface ClientQueryClientOptions extends QueryCoreOptions {
 
 export interface ClientQueryClient {
   createQuery: <TData, TError = unknown>(queryOptions: QueryOptions<TData, TError>) => ClientQueryController<TData, TError>;
-  invalidate: (queryKey: QueryKey) => boolean;
+  invalidate: (queryKey: QueryKey, options?: { exact?: boolean; refetchType?: QueryInvalidateRefetchType }) => boolean;
   clear: () => void;
 }
 
 export interface ServerQueryClientOptions extends QueryCoreOptions {
   store?: QueryCacheStore;
-  astroCache?: AstroRouteCacheLike;
 }
 
 export interface ServerQueryOptions<TData, TError = unknown> extends QueryOptions<TData, TError> {
@@ -152,7 +153,7 @@ export interface ServerQueryResult<TData, TError = unknown> {
   error: TError | null;
   isStale: boolean;
   keyHash: string;
-  fromCache: boolean;
+  isFromCache: boolean;
   isSuccess: boolean;
   isError: boolean;
 }

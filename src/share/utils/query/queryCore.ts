@@ -90,7 +90,7 @@ export async function executeQuery<TData, TError = unknown>(
 
     return {
       keyHash: options.keyHash,
-      fromCache: true,
+      isFromCache: true,
       status: 'success',
       data: entry.data,
     };
@@ -309,7 +309,7 @@ export async function runQueryAttempt<TData, TError = unknown>(
 
     return {
       keyHash: options.keyHash,
-      fromCache: false,
+      isFromCache: false,
       status: 'success',
       data,
     };
@@ -329,7 +329,7 @@ export async function runQueryAttempt<TData, TError = unknown>(
 
       return {
         keyHash: options.keyHash,
-        fromCache: false,
+        isFromCache: false,
         status: 'error',
         error: typedError,
       };

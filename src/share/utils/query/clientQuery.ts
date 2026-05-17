@@ -14,9 +14,35 @@ import type {
   ClientQueryState,
   QueryCacheStore,
   QueryCoreOptions,
+  QueryInvalidateRefetchType,
   QueryOptions,
   QueryStateStatus,
 } from '@utils/query/types';
+
+function isArrayKey(queryKey: QueryOptions<unknown>['queryKey']): queryKey is readonly unknown[] {
+  return Array.isArray(queryKey);
+}
+
+function matchesPartialKey(
+  partial: QueryOptions<unknown>['queryKey'],
+  full: QueryOptions<unknown>['queryKey'],
+): boolean {
+  if (!isArrayKey(partial) || !isArrayKey(full)) {
+    return hashQueryKey(partial) === hashQueryKey(full);
+  }
+
+  if (partial.length > full.length) {
+    return false;
+  }
+
+  for (let index = 0; index < partial.length; index += 1) {
+    if (!Object.is(partial[index], full[index])) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 /**
  * Create a client-side query client that manages cache entries and query controllers.
@@ -34,6 +60,12 @@ import type {
  */
 export function createClientQuery(options: ClientQueryClientOptions = {}): ClientQueryClient {
   const store = options.store ?? createQueryCacheStore();
+  const queryRecords = new Set<{
+    keyHash: string;
+    queryKey: QueryOptions<unknown>['queryKey'];
+    execute: (options?: { force?: boolean }) => Promise<unknown>;
+    isActive: () => boolean;
+  }>();
   const coreOptions: QueryCoreOptions = {
     defaultRetry: options.defaultRetry,
     interceptors: options.interceptors,
@@ -124,6 +156,7 @@ export function createClientQuery(options: ClientQueryClientOptions = {}): Clien
             isFetching: false,
             isStale: false,
           });
+          notify();
         } else {
           settleState({
             status: 'error',
@@ -132,12 +165,19 @@ export function createClientQuery(options: ClientQueryClientOptions = {}): Clien
             isFetching: false,
             isStale: stale,
           });
+          notify();
         }
-
-        notify();
 
         return state;
       };
+
+      const queryRecord = {
+        keyHash,
+        queryKey: queryOptions.queryKey,
+        execute: async (executeOptions?: { force?: boolean }) => await execute(executeOptions),
+        isActive: () => listeners.size > 0,
+      };
+      queryRecords.add(queryRecord);
 
       const controller: ClientQueryController<TData, TError> = {
         getState: () => state,
@@ -184,13 +224,35 @@ export function createClientQuery(options: ClientQueryClientOptions = {}): Clien
 
       return controller;
     },
-    invalidate(queryKey: QueryOptions<unknown>['queryKey']): boolean {
+    invalidate(
+      queryKey: QueryOptions<unknown>['queryKey'],
+      invalidateOptions: { exact?: boolean; refetchType?: QueryInvalidateRefetchType } = {},
+    ): boolean {
       const keyHash = hashQueryKey(queryKey);
+      const exact = invalidateOptions.exact ?? true;
+      const refetchType = invalidateOptions.refetchType ?? 'active';
+      let invalidated = false;
 
-      return store.delete(keyHash);
+      for (const queryRecord of queryRecords) {
+        const matches = exact
+          ? queryRecord.keyHash === keyHash
+          : matchesPartialKey(queryKey, queryRecord.queryKey);
+
+        if (!matches) {
+          continue;
+        }
+
+        invalidated = store.delete(queryRecord.keyHash) || invalidated;
+        if (refetchType === 'active' && queryRecord.isActive()) {
+          void queryRecord.execute({ force: true });
+        }
+      }
+
+      return invalidated;
     },
     clear(): void {
       store.clear();
+      queryRecords.clear();
     },
   };
 }

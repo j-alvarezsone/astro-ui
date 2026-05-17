@@ -1,6 +1,5 @@
 ---
 import Button from '@components/Button.astro';
-import ClientUsersQueryDemo from '@components/query/ClientUsersQueryDemo.vue';
 import Form from '@components/form/Form.astro';
 import FormGroup from '@components/form/FormGroup.astro';
 import InputAddon from '@components/form/input-group/InputAddon.astro';
@@ -14,6 +13,19 @@ import Divider from '@components/Divider.astro';
 import Heading from '@components/typography/Heading.astro';
 import Layout from '@layouts/Layout.astro';
 import { Icon } from 'astro-icon/components';
+import { useServerQuery } from '@utils/query';
+import { getAllUser } from '../share/queries/users';
+
+export const prerender = false;
+
+const { data: users } = await useServerQuery({
+  queryKey: ['users'],
+  queryFn: getAllUser,
+  staleTime: 6000,
+  tags: ['users'],
+  swr: 6000,
+  meta: { baseUrl: Astro.url, astroCache: Astro.cache },
+});
 ---
 
 <Layout uiTheme="warm">
@@ -25,10 +37,20 @@ import { Icon } from 'astro-icon/components';
       to help you get started.
     </p>
 
-    <section class="query-demo">
-      <Heading as="h3" weight="bold">Client Query (Vue)</Heading>
-      <ClientUsersQueryDemo client:load />
-    </section>
+    {
+      users && (
+        <div>
+          <Heading as="h3" weight="semibold">
+            Users from server query:
+          </Heading>
+          <ul>
+            {users.items.map((user) => (
+              <li>{user.name}</li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
 
     <section class="query-demo">
       <Heading as="h3" weight="bold">Web Component Pending Toggle</Heading>

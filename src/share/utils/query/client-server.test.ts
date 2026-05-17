@@ -230,12 +230,7 @@ describe('query adapters: client and server behavior', () => {
 
   it('server query result omits client loading flags and can apply Astro cache', async () => {
     const set = vi.fn();
-    const server = createServerQuery({
-      astroCache: {
-        enabled: true,
-        set,
-      },
-    });
+    const server = createServerQuery();
 
     const query = server.createQuery({
       queryKey: ['server-state'],
@@ -247,6 +242,12 @@ describe('query adapters: client and server behavior', () => {
       autoExecute: false,
       staleTime: 1500,
       tags: ['server'],
+      meta: {
+        astroCache: {
+          enabled: true,
+          set,
+        },
+      },
     });
 
     const result = await query.execute();

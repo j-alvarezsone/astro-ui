@@ -255,7 +255,7 @@ If you want to call `useServerQuery({ queryKey, queryFn: getAllUser })` directly
 ### 1) Shared API contract
 
 ```ts
-// src/share/api/user-contact.ts
+// src/share/types/user-contact.ts
 export interface UserContact {
   id: string;
   name: string;
@@ -276,7 +276,7 @@ export interface GetAllUserResponse {
 ```ts
 // src/share/queries/users.ts
 import type { QueryFn } from '@utils/query';
-import type { GetAllUserMeta, GetAllUserResponse } from '../api/user-contact';
+import type { GetAllUserMeta, GetAllUserResponse } from '../types/user-contact';
 
 export const getAllUser: QueryFn<GetAllUserResponse> = async ({ signal, meta }) => {
   const { organizationId } = meta as GetAllUserMeta;
@@ -295,7 +295,7 @@ export const getAllUser: QueryFn<GetAllUserResponse> = async ({ signal, meta }) 
 ```ts
 import { useServerQuery } from '@utils/query/appQuery';
 import { getAllUser } from '../share/queries/users';
-import type { GetAllUserResponse } from '../share/api/user-contact';
+import type { GetAllUserResponse } from '../share/types/user-contact';
 
 const result = await useServerQuery<GetAllUserResponse>({
   queryKey: ['users', { organizationId: params.id }],

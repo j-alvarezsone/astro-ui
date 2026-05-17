@@ -1,5 +1,6 @@
 import { createClientQuery } from './clientQuery';
 import { createServerQuery } from './serverQuery';
+import type {  ServerQueryController, ServerQueryOptions } from './types';
 
 
 const clientQuery = createClientQuery({
@@ -11,7 +12,6 @@ const serverQuery = createServerQuery({
 });
 
 type ClientCreateQuery = typeof clientQuery.createQuery;
-type ServerCreateQuery = typeof serverQuery.createQuery;
 type ClientInvalidate = typeof clientQuery.invalidate;
 
 /**
@@ -23,12 +23,41 @@ type ClientInvalidate = typeof clientQuery.invalidate;
 export const useClientQuery: ClientCreateQuery = (...args) => clientQuery.createQuery(...args);
 
 /**
- * Create a server query controller using the shared server query instance.
+ * Create a server query controller and optionally execute it for SSR use.
  *
- * @param args - Arguments forwarded to the shared server query creator.
- * @returns A server query controller instance.
+ * With the default `autoExecute: true`, the query fetches before the
+ * controller is returned so `data` is populated at destructuring time:
+ *
+ * ```ts
+ * const { data, execute, refetch } = await useServerQuery({ queryKey, queryFn });
+ * ```
+ *
+ * Set `autoExecute: false` to defer fetching and call `execute()` yourself.
+ * `data` is always read from the controller, never from `execute()`:
+ *
+ * ```ts
+ * const query = await useServerQuery({ queryKey, queryFn, autoExecute: false });
+ * await query.execute();
+ * const { data } = query;
+ * ```
+ *
+ * @param queryOptions - Server query options.
+ * @returns A promise that resolves to the server query controller.
  */
-export const useServerQuery: ServerCreateQuery = (...args) => serverQuery.createQuery(...args);
+export async function useServerQuery<TData, TError = unknown>(
+  queryOptions: ServerQueryOptions<TData, TError>,
+): Promise<ServerQueryController<TData, TError>> {
+  const query = serverQuery.createQuery({
+    ...queryOptions,
+    autoExecute: false,
+  });
+
+  if (queryOptions.autoExecute !== false) {
+    await query.execute();
+  }
+
+  return query;
+}
 
 /**
  * Remove a cached client query entry by query key.

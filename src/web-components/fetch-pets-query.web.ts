@@ -1,16 +1,16 @@
 import type { ClientQueryController } from '@utils/query';
+import type { GetAllPetsResponse, PetContact } from '../share/types/pet-contact';
 import { useClientQuery } from '@utils/query';
-import { getAllUser } from '../share/queries/users';
-import type { GetAllUserResponse, UserContact } from '../share/types/user-contact';
+import { getAllPets } from '../share/queries/pets';
 
-class FetchUsersQueryElement extends HTMLElement {
-  #query: ClientQueryController<GetAllUserResponse> | null = null;
+class FetchPetsQueryElement extends HTMLElement {
+  #query: ClientQueryController<GetAllPetsResponse> | null = null;
   #unsubscribe: (() => void) | null = null;
 
   connectedCallback(): void {
-    this.#query = useClientQuery<GetAllUserResponse>({
-      queryKey: ['users'],
-      queryFn: getAllUser,
+    this.#query = useClientQuery<GetAllPetsResponse>({
+      queryKey: ['pets'],
+      queryFn: getAllPets,
       staleTime: 3000,
     });
 
@@ -33,9 +33,9 @@ class FetchUsersQueryElement extends HTMLElement {
       return;
     }
 
-    const loader = this.querySelector<HTMLElement>('[data-users-loader]');
-    const list = this.querySelector<HTMLElement>('[data-users-list]');
-    const error = this.querySelector<HTMLElement>('[data-users-error]');
+    const loader = this.querySelector<HTMLElement>('[data-pets-loader]');
+    const list = this.querySelector<HTMLElement>('[data-pets-list]');
+    const error = this.querySelector<HTMLElement>('[data-pets-error]');
 
     const isLoading = this.#query.isPending || this.#query.isFetching;
 
@@ -48,7 +48,7 @@ class FetchUsersQueryElement extends HTMLElement {
       if (this.#query.isError) {
         const message = this.#query.error instanceof Error
           ? this.#query.error.message
-          : 'Failed to load users.';
+          : 'Failed to load pets.';
         error.textContent = message;
       } else {
         error.textContent = '';
@@ -59,20 +59,21 @@ class FetchUsersQueryElement extends HTMLElement {
       return;
     }
 
-    const users = this.#query.data?.items ?? [];
-    list.replaceChildren(...users.map((user) => this.#createListItem(user)));
-    list.hidden = users.length === 0;
+    const pets = this.#query.data?.items ?? [];
+
+    list.replaceChildren(...pets.map((pet) => this.#createListItem(pet)));
+    list.hidden = pets.length === 0;
   }
 
-  #createListItem(user: UserContact): HTMLLIElement {
+  #createListItem(pet: PetContact): HTMLLIElement {
     const item = document.createElement('li');
     item.className = 'query-demo__item';
-    item.textContent = user.name;
+    item.textContent = `${pet.name} (${pet.type})`;
 
     return item;
   }
 }
 
-if (!customElements.get('fetch-users-query')) {
-  customElements.define('fetch-users-query', FetchUsersQueryElement);
+if (!customElements.get('fetch-pets-query')) {
+  customElements.define('fetch-pets-query', FetchPetsQueryElement);
 }

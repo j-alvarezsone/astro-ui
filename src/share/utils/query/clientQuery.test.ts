@@ -89,4 +89,102 @@ describe('client query adapter', () => {
     expect(queryFn).toHaveBeenCalledTimes(2);
     expect(secondResult.data).toBe(2);
   });
+
+  it('runs onSuccess once per successful execution', async () => {
+    const onSuccess = vi.fn();
+    const client = createClientQuery();
+    const query = client.createQuery({
+      queryKey: ['client-on-success-once'],
+      queryFn: async () => {
+        await Promise.resolve();
+
+        return { ok: true };
+      },
+      autoExecute: false,
+      onSuccess,
+    });
+
+    await query.execute();
+
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it('invalidates and refetches only active matching queries by default', async () => {
+    const usersQueryFn = vi.fn(async () => {
+      await Promise.resolve();
+
+      return { ok: true };
+    });
+    const petsQueryFn = vi.fn(async () => {
+      await Promise.resolve();
+
+      return { ok: true };
+    });
+
+    const client = createClientQuery();
+    const usersQuery = client.createQuery({
+      queryKey: ['users', 'list'],
+      queryFn: usersQueryFn,
+      autoExecute: false,
+      staleTime: Number.POSITIVE_INFINITY,
+    });
+    const petsQuery = client.createQuery({
+      queryKey: ['pets', 'list'],
+      queryFn: petsQueryFn,
+      autoExecute: false,
+      staleTime: Number.POSITIVE_INFINITY,
+    });
+
+    const unsubscribe = usersQuery.subscribe(() => {});
+
+    await usersQuery.execute();
+    await petsQuery.execute();
+
+    expect(usersQueryFn).toHaveBeenCalledTimes(1);
+    expect(petsQueryFn).toHaveBeenCalledTimes(1);
+
+    const invalidated = client.invalidate(['users']);
+
+    expect(invalidated).toBe(false);
+
+    const invalidatedPartial = client.invalidate(['users'], { exact: false });
+
+    expect(invalidatedPartial).toBe(true);
+
+    await vi.waitFor(() => {
+      expect(usersQueryFn).toHaveBeenCalledTimes(2);
+    });
+
+    expect(petsQueryFn).toHaveBeenCalledTimes(1);
+
+    unsubscribe();
+  });
+
+  it('does not refetch active queries when invalidate refetchType is none', async () => {
+    const queryFn = vi.fn(async () => {
+      await Promise.resolve();
+
+      return { ok: true };
+    });
+
+    const client = createClientQuery();
+    const query = client.createQuery({
+      queryKey: ['products'],
+      queryFn,
+      autoExecute: false,
+      staleTime: Number.POSITIVE_INFINITY,
+    });
+
+    const unsubscribe = query.subscribe(() => {});
+
+    await query.execute();
+    expect(queryFn).toHaveBeenCalledTimes(1);
+
+    const invalidated = client.invalidate(['products'], { refetchType: 'none' });
+
+    expect(invalidated).toBe(true);
+    expect(queryFn).toHaveBeenCalledTimes(1);
+
+    unsubscribe();
+  });
 });

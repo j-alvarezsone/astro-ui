@@ -26,7 +26,7 @@ describe('query core execution', () => {
       {},
     );
 
-    expect(result.fromCache).toBe(true);
+    expect(result.isFromCache).toBe(true);
     expect(result.data).toBe('cached');
   });
 

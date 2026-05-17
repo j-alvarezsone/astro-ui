@@ -37,7 +37,7 @@ export function applyAstroRouteCache(options: AstroCacheBridgeOptions): boolean 
   const mergedTags = mergeTags(tags, queryKey);
   const cacheOptions: AstroRouteCacheSetOptions = {
     ...(maxAge !== undefined ? { maxAge } : {}),
-    ...(swr !== undefined ? { swr: Math.max(0, Math.floor(swr)) } : {}),
+    ...(swr !== undefined ? { swr: toSwrSeconds(swr) } : {}),
     ...(mergedTags.length ? { tags: mergedTags } : {}),
   };
 
@@ -74,6 +74,27 @@ export function toMaxAgeSeconds(staleTime: AstroCacheBridgeOptions['staleTime'])
   }
 
   return Math.floor(staleTime / 1000);
+}
+
+/**
+ * Convert a query SWR duration from milliseconds to Astro route-cache seconds.
+ *
+ * Astro route caching expects `swr` in seconds, while the query layer uses
+ * millisecond durations to stay consistent with `staleTime`.
+ *
+ * @param swr - SWR duration in milliseconds from query options.
+ * @returns A non-negative SWR duration in seconds.
+ * @example
+ * ```ts
+ * toSwrSeconds(60_000); // 60
+ * ```
+ */
+export function toSwrSeconds(swr: number): number {
+  if (swr <= 0) {
+    return 0;
+  }
+
+  return Math.floor(swr / 1000);
 }
 
 /**

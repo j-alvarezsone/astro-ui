@@ -1,0 +1,180 @@
+---
+import Button from '@components/Button.astro';
+import Heading from '@components/typography/Heading.astro';
+import Layout from '@layouts/Layout.astro';
+import Loader from '@components/Loader.astro';
+import { useServerQuery } from '@utils/query';
+import { getAllUser } from '../../share/queries/users';
+
+export const prerender = false;
+
+const renderedAt = new Date().toISOString();
+
+const { data: users, isFromCache } = await useServerQuery({
+  queryKey: ['users'],
+  queryFn: getAllUser,
+  staleTime: 10000,
+  tags: ['users'],
+  swr: 3000,
+  meta: { baseUrl: Astro.url, astroCache: Astro.cache },
+});
+
+const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
+---
+
+<Layout title="Server Query Demo" uiTheme="warm">
+  <div class="container">
+    {
+      users && (
+        <section class="query-demo" aria-label="Users server query demo">
+          <Heading as="h3" weight="semibold">
+            Server Query: Users
+          </Heading>
+
+          <fetch-users-query class="fetch-users-query">
+            <div data-users-loader class="fetch-users-query__loader" hidden>
+              <Loader size="sm" isTextVisible />
+            </div>
+            <p data-users-error class="query-demo__error" hidden />
+            <ul data-users-list class="query-demo__list">
+              {users.items.map((user) => (
+                <li class="query-demo__item">{user.name}</li>
+              ))}
+            </ul>
+          </fetch-users-query>
+
+          <add-user class="add-user">
+            <Button label="Add User" variant="primary" size="sm" />
+          </add-user>
+
+          <section class="query-cache-debug" aria-labelledby="query-cache-debug-title">
+            <Heading as="h4" id="query-cache-debug-title" weight="semibold">
+              Query Cache Debug
+            </Heading>
+
+            <dl class="query-cache-debug__grid">
+              <div>
+                <dt>isFromCache</dt>
+                <dd>{String(isFromCache)}</dd>
+              </div>
+              <div>
+                <dt>Route cache bridge</dt>
+                <dd>{isRouteCacheBridgeEnabled ? 'configured' : 'disabled in this runtime'}</dd>
+              </div>
+              <div>
+                <dt>Rendered at</dt>
+                <dd>{renderedAt}</dd>
+              </div>
+              <div>
+                <dt>Query key</dt>
+                <dd>{JSON.stringify(['users'])}</dd>
+              </div>
+              <div>
+                <dt>Tags</dt>
+                <dd>{['users'].join(', ')}</dd>
+              </div>
+              <div>
+                <dt>staleTime</dt>
+                <dd>10000ms</dd>
+              </div>
+              <div>
+                <dt>swr</dt>
+                <dd>3000ms</dd>
+              </div>
+            </dl>
+          </section>
+        </section>
+      )
+    }
+  </div>
+</Layout>
+
+<script>
+  import '@web-components/add-user.web';
+  import '@web-components/fetch-users-query.web';
+</script>
+
+<style>
+  .container {
+    padding: var(--spacing-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+  }
+
+  .query-demo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    border: 1px solid var(--color-contrast-border);
+    border-radius: var(--rounded-lg);
+    padding: var(--spacing-4);
+    background: var(--color-contrast-subtle);
+  }
+
+  .query-demo__list {
+    display: grid;
+    gap: var(--spacing-1);
+    margin: 0;
+    padding-left: var(--spacing-4);
+  }
+
+  .query-demo__item {
+    display: grid;
+  }
+
+  fetch-users-query.fetch-users-query {
+    display: grid;
+    gap: var(--spacing-2);
+  }
+
+  .fetch-users-query__loader {
+    display: none;
+  }
+
+  .fetch-users-query__loader:not([hidden]) {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+  }
+
+  .query-demo__error {
+    color: var(--color-danger-fg);
+    margin: 0;
+  }
+
+  .query-cache-debug {
+    margin-top: var(--spacing-3);
+    display: grid;
+    gap: var(--spacing-3);
+    border: 1px solid var(--color-primary-border);
+    border-radius: var(--rounded-lg);
+    padding: var(--spacing-3);
+    background: var(--color-primary-subtle);
+  }
+
+  .query-cache-debug__grid {
+    display: grid;
+    gap: var(--spacing-2);
+    margin: 0;
+  }
+
+  .query-cache-debug__grid div {
+    display: grid;
+    gap: var(--spacing-1);
+  }
+
+  .query-cache-debug__grid dt {
+    font-weight: 600;
+  }
+
+  .query-cache-debug__grid dd {
+    margin: 0;
+  }
+
+  @media (min-width: 768px) {
+    .query-cache-debug__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

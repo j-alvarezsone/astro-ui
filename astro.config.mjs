@@ -1,10 +1,12 @@
-import { defineConfig, fontProviders } from 'astro/config';
+import { defineConfig, fontProviders, memoryCache } from 'astro/config';
+import netlify from '@astrojs/netlify';
 
 import vue from '@astrojs/vue';
 import icon from "astro-icon";
 
 // https://astro.build/config
 export default defineConfig({
+  adapter: netlify(),
   integrations: [vue(), icon()],
   image: {
     domains: ["i.pravatar.cc"],
@@ -15,5 +17,10 @@ export default defineConfig({
     cssVariable: "--font-roboto",
     weights: [400, 500, 600, 700],
     fallbacks: ["sans-serif"],
-  }]
+  }],
+  experimental: {
+    cache: {
+      provider: memoryCache(),
+    },
+  },
 });

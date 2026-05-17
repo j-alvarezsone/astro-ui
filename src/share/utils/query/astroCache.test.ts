@@ -1,4 +1,4 @@
-import { applyAstroRouteCache, mergeTags, toMaxAgeSeconds } from '@utils/query/astroCache';
+import { applyAstroRouteCache, mergeTags, toMaxAgeSeconds, toSwrSeconds } from '@utils/query/astroCache';
 import type { AstroRouteCacheSetOptions } from '@utils/query/types';
 
 describe('query astro cache bridge', () => {
@@ -33,7 +33,7 @@ describe('query astro cache bridge', () => {
         cache,
         queryKey: ['test-key'],
         staleTime: 3_000,
-        swr: 2,
+        swr: 2_000,
         tags: ['page'],
       }),
     ).toBe(true);
@@ -62,6 +62,12 @@ describe('query astro cache bridge', () => {
     expect(toMaxAgeSeconds(Number.POSITIVE_INFINITY)).toBeUndefined();
     expect(toMaxAgeSeconds(2_500)).toBe(2);
     expect(toMaxAgeSeconds(0)).toBe(0);
+  });
+
+  it('converts swr values to seconds correctly', () => {
+    expect(toSwrSeconds(2_500)).toBe(2);
+    expect(toSwrSeconds(0)).toBe(0);
+    expect(toSwrSeconds(-100)).toBe(0);
   });
 
   it('merges explicit tags with the query-derived tag and removes duplicates', () => {
