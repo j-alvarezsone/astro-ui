@@ -1,7 +1,7 @@
-import type { ClientQueryController } from '@utils/query';
+import type { MutationController } from '@utils/query';
 import type { CreatePetBody, CreatePetResponse } from '../share/types/pet-contact';
 import { applyButtonLoadingState } from '@utils/dom/applyButtonLoadingState';
-import { invalidateQuery, useClientQuery } from '@utils/query';
+import { invalidateQuery, useMutationQuery } from '@utils/query';
 import { postNewPet } from '../share/queries/pets';
 
 const SAMPLE_PETS: CreatePetBody[] = [
@@ -16,11 +16,11 @@ let sampleIndex = 0;
 
 class AddPetElement extends HTMLElement {
   #controller: AbortController | null = null;
-  #mutation: ClientQueryController<CreatePetResponse> | null = null;
+  #mutation: MutationController<CreatePetResponse> | null = null;
   #unsubscribe: (() => void) | null = null;
 
   connectedCallback(): void {
-    this.#mutation = useClientQuery<CreatePetResponse>({
+    this.#mutation = useMutationQuery<CreatePetResponse>({
       queryKey: ['pets', 'add'],
       queryFn: async () => {
         const payload = SAMPLE_PETS[sampleIndex % SAMPLE_PETS.length];
@@ -67,7 +67,7 @@ class AddPetElement extends HTMLElement {
   #addPet(): void {
     if (!this.#mutation) return;
     if (this.#mutation.isPending || this.#mutation.isFetching) return;
-    void this.#mutation.execute();
+    void this.#mutation.mutate();
   }
 
   #resolveButton(): HTMLElement | null {

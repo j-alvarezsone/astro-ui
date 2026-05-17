@@ -72,6 +72,8 @@ export interface QueryOptions<TData, TError = unknown> {
   interceptors?: QueryInterceptor<TData, TError>[];
 }
 
+export type MutationOptions<TData, TError = unknown> = QueryOptions<TData, TError>;
+
 export interface QueryExecutionOptions<TData, TError = unknown> extends QueryOptions<TData, TError> {
   client: boolean;
   keyHash: string;
@@ -127,6 +129,10 @@ export interface ClientQueryController<TData, TError = unknown> extends ClientQu
   execute: (options?: { force?: boolean }) => Promise<ClientQueryState<TData, TError>>;
   refetch: () => Promise<ClientQueryState<TData, TError>>;
   cancel: () => void;
+}
+
+export interface MutationController<TData, TError = unknown> extends ClientQueryController<TData, TError> {
+  mutate: () => Promise<ClientQueryState<TData, TError>>;
 }
 
 export interface ClientQueryClientOptions extends QueryCoreOptions {

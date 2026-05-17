@@ -1,5 +1,5 @@
 export { applyAstroRouteCache, mergeTags, toMaxAgeSeconds } from './astroCache';
-export { clearClientQueryCache, invalidateQuery, useClientQuery, useServerQuery } from './appQuery';
+export { clearClientQueryCache, invalidateQuery, useClientQuery, useMutationQuery, useServerQuery } from './appQuery';
 export { createQueryCacheStore, getOrCreateEntry, isEntryStale } from './cacheStore';
 export { createClientQuery } from './clientQuery';
 export { mergeInterceptors } from './interceptors';
@@ -15,6 +15,8 @@ export type {
   ClientQueryClientOptions,
   ClientQueryController,
   ClientQueryState,
+  MutationController,
+  MutationOptions,
   QueryCacheEntry,
   QueryCacheStore,
   QueryCoreOptions,

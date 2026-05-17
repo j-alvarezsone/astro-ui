@@ -1,4 +1,4 @@
-import { useClientQuery, useServerQuery } from '@utils/query/appQuery';
+import { useClientQuery, useMutationQuery, useServerQuery } from '@utils/query/appQuery';
 import type { AstroRouteCacheLike, AstroRouteCacheSetOptions } from '@utils/query/types';
 
 function makeAstroCache(overrides?: Partial<AstroRouteCacheLike>) {
@@ -54,6 +54,77 @@ describe('query app wrapper', () => {
 
     expect(clientFn).toHaveBeenCalledTimes(1);
     expect(data).toBe('client-ok');
+  });
+
+  it('returns mutation controllers that only run on mutate', async () => {
+    const mutationFn = vi.fn(async () => await Promise.resolve('mutation-ok'));
+
+    const mutation = useMutationQuery({
+      queryKey: ['app-mutation'],
+      queryFn: mutationFn,
+    });
+
+    expect(mutationFn).toHaveBeenCalledTimes(0);
+
+    const { data } = await mutation.mutate();
+
+    expect(mutationFn).toHaveBeenCalledTimes(1);
+    expect(data).toBe('mutation-ok');
+  });
+
+  it('keeps mutation execute and refetch behavior available through the wrapper', async () => {
+    const mutationFn = vi.fn(async () => await Promise.resolve('mutation-execute'));
+
+    const mutation = useMutationQuery({
+      queryKey: ['app-mutation-execute-refetch'],
+      queryFn: mutationFn,
+      staleTime: Number.POSITIVE_INFINITY,
+    });
+
+    await mutation.execute();
+
+    expect(mutationFn).toHaveBeenCalledTimes(1);
+    expect(mutation.isSuccess).toBe(true);
+    expect(mutation.data).toBe('mutation-execute');
+
+    await mutation.refetch();
+
+    expect(mutationFn).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps mutation cancel behavior available through the wrapper', async () => {
+    const mutation = useMutationQuery({
+      queryKey: ['app-mutation-cancel'],
+      queryFn: async ({ signal }) => {
+        return await new Promise<string>((resolve, reject) => {
+          const timeoutId = setTimeout(() => {
+            resolve('never-resolved-before-cancel');
+          }, 60_000);
+
+          const onAbort = () => {
+            clearTimeout(timeoutId);
+            reject(new DOMException('Aborted', 'AbortError'));
+          };
+
+          if (signal.aborted) {
+            onAbort();
+            return;
+          }
+
+          signal.addEventListener('abort', onAbort, { once: true });
+
+        });
+      },
+    });
+
+    const pending = mutation.mutate();
+    await Promise.resolve();
+
+    mutation.cancel();
+
+    const result = await pending;
+
+    expect(result.isError).toBe(true);
   });
 
   describe('useServerQuery with meta.astroCache', () => {

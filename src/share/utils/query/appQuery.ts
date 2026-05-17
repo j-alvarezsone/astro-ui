@@ -1,6 +1,6 @@
 import { createClientQuery } from './clientQuery';
 import { createServerQuery } from './serverQuery';
-import type {  ServerQueryController, ServerQueryOptions } from './types';
+import type { MutationController, MutationOptions, ServerQueryController, ServerQueryOptions } from './types';
 
 
 const clientQuery = createClientQuery({
@@ -21,6 +21,63 @@ type ClientInvalidate = typeof clientQuery.invalidate;
  * @returns A client query controller instance.
  */
 export const useClientQuery: ClientCreateQuery = (...args) => clientQuery.createQuery(...args);
+
+/**
+ * Create a client mutation controller using the shared client query instance.
+ *
+ * Mutations never auto-execute and expose `mutate()` as an explicit trigger.
+ * Internally, `mutate()` forces execution to always perform a network request.
+ *
+ * @param mutationOptions - Mutation options including key, function, and callbacks.
+ * @returns A mutation controller with `mutate`, `execute`, and state flags.
+ *
+ * @example
+ * const addUser = useMutationQuery({
+ *   queryKey: ['users', 'add'],
+ *   queryFn: async () => ({ item: { id: '1', name: 'A', email: 'a@x.com' } }),
+ * });
+ * await addUser.mutate();
+ */
+export const useMutationQuery = <TData, TError = unknown>(
+  mutationOptions: MutationOptions<TData, TError>,
+): MutationController<TData, TError> => {
+  const controller = clientQuery.createQuery({
+    ...mutationOptions,
+    autoExecute: false,
+  });
+
+  return {
+    subscribe: controller.subscribe,
+    execute: controller.execute,
+    refetch: controller.refetch,
+    cancel: controller.cancel,
+    mutate: async () => await controller.execute({ force: true }),
+    get status() {
+      return controller.status;
+    },
+    get data() {
+      return controller.data;
+    },
+    get error() {
+      return controller.error;
+    },
+    get isStale() {
+      return controller.isStale;
+    },
+    get isPending() {
+      return controller.isPending;
+    },
+    get isFetching() {
+      return controller.isFetching;
+    },
+    get isSuccess() {
+      return controller.isSuccess;
+    },
+    get isError() {
+      return controller.isError;
+    },
+  };
+};
 
 /**
  * Create a server query controller and optionally execute it for SSR use.
