@@ -2,18 +2,15 @@
 import Button from '@components/Button.astro';
 import Heading from '@components/typography/Heading.astro';
 import Layout from '@layouts/Layout.astro';
-import Loader from '@components/Loader.astro';
 import { useServerQuery } from '@utils/query';
-import { getAllUser } from '../../share/queries/users';
+import { getAllUsersOptions } from '@queries/users';
 
 export const prerender = false;
 
 const renderedAt = new Date().toISOString();
 
 const { data: users, isFromCache } = await useServerQuery({
-  queryKey: ['users'],
-  queryFn: getAllUser,
-  staleTime: 10000,
+  ...getAllUsersOptions,
   tags: ['users'],
   swr: 3000,
   meta: { baseUrl: Astro.url, astroCache: Astro.cache },
@@ -31,17 +28,11 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
             Server Query: Users
           </Heading>
 
-          <fetch-users-query class="fetch-users-query">
-            <div data-users-loader class="fetch-users-query__loader" hidden>
-              <Loader size="sm" isTextVisible />
-            </div>
-            <p data-users-error class="query-demo__error" hidden />
-            <ul data-users-list class="query-demo__list">
-              {users.items.map((user) => (
-                <li class="query-demo__item">{user.name}</li>
-              ))}
-            </ul>
-          </fetch-users-query>
+          <ul data-users-list class="query-demo__list">
+            {users.items.map((user) => (
+              <li class="query-demo__item">{user.name}</li>
+            ))}
+          </ul>
 
           <add-user class="add-user">
             <Button label="Add User" variant="primary" size="sm" />
@@ -91,7 +82,6 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
 
 <script>
   import '@web-components/add-user.web';
-  import '@web-components/fetch-users-query.web';
 </script>
 
 <style>
@@ -121,26 +111,6 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
 
   .query-demo__item {
     display: grid;
-  }
-
-  fetch-users-query.fetch-users-query {
-    display: grid;
-    gap: var(--spacing-2);
-  }
-
-  .fetch-users-query__loader {
-    display: none;
-  }
-
-  .fetch-users-query__loader:not([hidden]) {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-2);
-  }
-
-  .query-demo__error {
-    color: var(--color-danger-fg);
-    margin: 0;
   }
 
   .query-cache-debug {

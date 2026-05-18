@@ -1,5 +1,12 @@
 export { applyAstroRouteCache, mergeTags, toMaxAgeSeconds } from './astroCache';
-export { clearClientQueryCache, invalidateQuery, useClientQuery, useMutationQuery, useServerQuery } from './appQuery';
+export {
+  clearClientQueryCache,
+  invalidateQuery,
+  invalidateServerQuery,
+  useClientQuery,
+  useMutationQuery,
+  useServerQuery,
+} from './appQuery';
 export { createQueryCacheStore, getOrCreateEntry, isEntryStale } from './cacheStore';
 export { createClientQuery } from './clientQuery';
 export { mergeInterceptors } from './interceptors';
@@ -11,12 +18,15 @@ export { createAbortError, delayWithSignal, isAbortError, isResponseError, resol
 export { createServerQuery } from './serverQuery';
 export type {
   AstroCacheBridgeOptions,
+  AstroRouteCacheInvalidateOptions,
+  AstroRouteCacheInvalidatorLike,
   AstroRouteCacheLike,
   AstroRouteCacheSetOptions,
   ClientQueryClient,
   ClientQueryClientOptions,
   ClientQueryController,
   ClientQueryState,
+  InvalidateServerQueryOptions,
   MutationController,
   MutationOptions,
   QueryCacheEntry,

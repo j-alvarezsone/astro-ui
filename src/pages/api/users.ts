@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { z } from 'astro/zod';
 import type { CreateUserResponse, GetAllUserResponse, UserContact } from '../../share/types/user-contact';
 import { sleep } from '@utils/time/sleep';
+import { invalidateServerQuery } from '@utils/query';
 
 export const prerender = false;
 
@@ -16,7 +17,7 @@ let fetchCount = 0;
 
 const createUserBodySchema = z.object({
   name: z.string().min(1),
-  email: z.string().email(),
+  email: z.email(),
 });
 
 /**
@@ -55,7 +56,7 @@ export const GET: APIRoute = () => {
  * // POST /api/users  { name: 'Alice', email: 'alice@example.com' }
  * // -> { item: { id: 'u-1234567890', name: 'Alice', email: 'alice@example.com' } }
  */
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cache }) => {
   await sleep(3000);
   const result = createUserBodySchema.safeParse(await request.json().catch(() => null));
 
@@ -70,6 +71,13 @@ export const POST: APIRoute = async ({ request }) => {
   };
 
   USERS.push(newUser);
+
+
+
+  await invalidateServerQuery(['users'], {
+    cache,
+    tags: ['users'],
+  });
 
   const responsePayload: CreateUserResponse = { item: newUser };
   return Response.json(responsePayload, { status: 201 });

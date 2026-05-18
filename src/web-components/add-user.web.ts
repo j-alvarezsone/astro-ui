@@ -3,6 +3,7 @@ import { applyButtonLoadingState } from '@utils/dom/applyButtonLoadingState';
 import type { MutationController } from '@utils/query';
 import { useMutationQuery } from '@utils/query';
 import { createUserOptions } from '@queries/users';
+import { navigate } from 'astro:transitions/client';
 
 const SAMPLE_USERS: CreateUserBody[] = [
   { name: 'Alice Foster', email: 'alice.foster@example.com' },
@@ -12,7 +13,18 @@ const SAMPLE_USERS: CreateUserBody[] = [
   { name: 'Eve Barton', email: 'eve.barton@example.com' },
 ];
 
-let sampleIndex = 0;
+/**
+ * Pick a random sample user payload for the add-user demo.
+ *
+ * @returns A random sample user from the predefined demo list.
+ * @example
+ * const payload = pickRandomSampleUser();
+ */
+function pickRandomSampleUser(): CreateUserBody {
+  const index = Math.floor(Math.random() * SAMPLE_USERS.length);
+
+  return SAMPLE_USERS[index];
+}
 
 class AddUserElement extends HTMLElement {
   #controller: AbortController | null = null;
@@ -20,7 +32,12 @@ class AddUserElement extends HTMLElement {
   #unsubscribe: (() => void) | null = null;
 
   connectedCallback(): void {
-    this.#mutation = useMutationQuery(createUserOptions);
+    this.#mutation = useMutationQuery({
+      ...createUserOptions,
+      onSuccess: async () => {
+        await navigate(window.location.href)
+      },
+    });
 
     const mutation = this.#mutation;
     this.#controller = new AbortController();
@@ -36,9 +53,7 @@ class AddUserElement extends HTMLElement {
     this.addEventListener(
       'click',
       (event) => {
-        if (!(event.target instanceof Element)) return;
-        if (!event.target.closest('.button')) return;
-        this.#addUser();
+        this.#handleClick(event);
       },
       { signal },
     );
@@ -53,12 +68,30 @@ class AddUserElement extends HTMLElement {
     this.#controller = null;
   }
 
-  #addUser(): void {
+  /**
+   * Start the add-user flow when the wrapped button is clicked.
+   *
+   * @param event - Click event dispatched from the custom element subtree.
+   * @returns Nothing.
+   * @example
+   * this.#handleClick(new MouseEvent('click'));
+   */
+  #handleClick(event: Event): void {
+    if (!(event.target instanceof Element)) return;
+    if (!event.target.closest('.button')) return;
+
+    this.#addUser().catch((error: unknown) => {
+      console.error(error);
+    });
+  }
+
+  async #addUser(): Promise<void> {
     if (!this.#mutation) return;
     if (this.#mutation.isPending || this.#mutation.isFetching) return;
-    const payload = SAMPLE_USERS[sampleIndex % SAMPLE_USERS.length];
-    sampleIndex += 1;
-    void this.#mutation.mutate(payload);
+
+    const payload = pickRandomSampleUser();
+
+    await this.#mutation.mutate(payload);
   }
 
   #resolveButton(): HTMLElement | null {

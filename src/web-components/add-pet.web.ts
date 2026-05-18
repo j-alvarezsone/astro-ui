@@ -38,10 +38,18 @@ class AddPetElement extends HTMLElement {
       (event) => {
         if (!(event.target instanceof Element)) return;
         if (!event.target.closest('.button')) return;
-        this.#addPet();
+        this.handleClick(event);
       },
       { signal },
     );
+  }
+
+  handleClick(event: Event): void {
+    if (!(event.target instanceof Element)) return;
+    if (!event.target.closest('.button')) return;
+    this.#addPet().catch((error: unknown) => {
+      console.error(error);
+    });
   }
 
   disconnectedCallback(): void {
@@ -53,12 +61,12 @@ class AddPetElement extends HTMLElement {
     this.#controller = null;
   }
 
-  #addPet(): void {
+  async #addPet() {
     if (!this.#mutation) return;
     if (this.#mutation.isPending || this.#mutation.isFetching) return;
     const payload = SAMPLE_PETS[sampleIndex % SAMPLE_PETS.length];
     sampleIndex += 1;
-    void this.#mutation.mutate(payload);
+    await this.#mutation.mutate(payload);
   }
 
   #resolveButton(): HTMLElement | null {

@@ -1,6 +1,5 @@
 import { queryOptions } from '@utils/query/queryOptions';
 import { mutationOptions } from '@utils/query/mutationOptions';
-import { invalidateQuery } from '@utils/query';
 import type { CreateUserBody, CreateUserResponse, GetAllUserResponse } from '@/types/user-contact';
 import { getAllUser, postNewUser } from '@actions/users';
 
@@ -31,8 +30,5 @@ export const createUserOptions = mutationOptions<CreateUserResponse, CreateUserB
     }
 
     return await postNewUser(context.payload);
-  },
-  onSuccess: () => {
-    invalidateQuery(['users']);
   },
 });

@@ -1,6 +1,13 @@
 import { createClientQuery } from './clientQuery';
 import { createServerQuery } from './serverQuery';
-import type { MutationController, MutationOptions, ServerQueryController, ServerQueryOptions } from './types';
+import type {
+  InvalidateServerQueryOptions,
+  MutationController,
+  MutationOptions,
+  QueryKey,
+  ServerQueryController,
+  ServerQueryOptions,
+} from './types';
 
 
 const clientQuery = createClientQuery({
@@ -124,8 +131,51 @@ export async function useServerQuery<TData, TError = unknown>(
  *
  * @param args - The query key arguments used to remove a cache entry.
  * @returns `true` when the cache entry existed and was removed.
+ * @example
+ * invalidateQuery(['users']);
+ * invalidateQuery(['users'], { exact: true, refetchType: 'active' });
  */
 export const invalidateQuery: ClientInvalidate = (...args) => clientQuery.invalidate(...args);
+
+/**
+ * Remove a cached server query entry by query key.
+ *
+ * This clears the shared SSR query store so the next server render executes
+ * the query function again instead of reusing stale in-memory data.
+ *
+ * When an Astro route cache invalidator is provided, this helper can also
+ * invalidate route-cache tags/path in the same call.
+ *
+ * @param queryKey - Query key used to clear the server query store entry.
+ * @param options - Optional Astro route-cache invalidation options.
+ * @returns `true` when the server query store entry existed and was removed.
+ * @example
+ * invalidateServerQuery(['users']);
+ *
+ * @example
+ * await invalidateServerQuery(['users'], {
+ *   cache,
+ *   tags: ['users'],
+ * });
+ */
+export async function invalidateServerQuery(
+  queryKey: QueryKey,
+  options: InvalidateServerQueryOptions = {},
+): Promise<boolean> {
+  const invalidated = serverQuery.invalidate(queryKey);
+
+  const hasTags = Boolean(options.tags?.length);
+  const hasPath = typeof options.path === 'string' && options.path.length > 0;
+
+  if (options.cache?.enabled && (hasTags || hasPath)) {
+    await options.cache.invalidate({
+      ...(hasPath ? { path: options.path } : {}),
+      ...(hasTags ? { tags: options.tags } : {}),
+    });
+  }
+
+  return invalidated;
+}
 
 /**
  * Clear the shared client query cache entirely.

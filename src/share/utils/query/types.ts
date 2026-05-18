@@ -190,6 +190,22 @@ export interface AstroRouteCacheLike {
   set: (options: AstroRouteCacheSetOptions | false) => void;
 }
 
+export interface AstroRouteCacheInvalidateOptions {
+  path?: string;
+  tags?: string | string[];
+}
+
+export interface AstroRouteCacheInvalidatorLike {
+  enabled?: boolean;
+  invalidate: (options: AstroRouteCacheInvalidateOptions) => Promise<void>;
+}
+
+export interface InvalidateServerQueryOptions {
+  cache?: AstroRouteCacheInvalidatorLike;
+  tags?: string[];
+  path?: string;
+}
+
 export interface AstroCacheBridgeOptions {
   cache?: AstroRouteCacheLike;
   queryKey: QueryKey;
