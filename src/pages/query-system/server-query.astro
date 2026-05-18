@@ -70,7 +70,7 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
                 </dd>
               </div>
               <div>
-                <dt>staleTime</dt>
+                <dt>staleTime(maxAge)</dt>
                 <dd>
                   10000ms
                   <span class="query-cache-debug__hint">
@@ -83,7 +83,9 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
                 <dd>
                   3000ms
                   <span class="query-cache-debug__hint">
-                    Not a fixed wait for the next fetch: after staleTime expires, stale data can still be served for up to 3000ms while a background refresh runs (for example, at 11s old data can be shown once and refreshed in parallel).
+                    Not a fixed wait for the next fetch: after staleTime expires, stale data can still be served for up
+                    to 3000ms while a background refresh runs (for example, at 11s old data can be shown once and
+                    refreshed in parallel).
                   </span>
                 </dd>
               </div>
