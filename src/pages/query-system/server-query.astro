@@ -62,15 +62,30 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
               </div>
               <div>
                 <dt>Tags</dt>
-                <dd>{['users'].join(', ')}</dd>
+                <dd>
+                  {['users'].join(', ')}
+                  <span class="query-cache-debug__hint">
+                    Labels used to invalidate related cached responses together.
+                  </span>
+                </dd>
               </div>
               <div>
                 <dt>staleTime</dt>
-                <dd>10000ms</dd>
+                <dd>
+                  10000ms
+                  <span class="query-cache-debug__hint">
+                    How long query data is treated as fresh before a refetch is needed.
+                  </span>
+                </dd>
               </div>
               <div>
                 <dt>swr</dt>
-                <dd>3000ms</dd>
+                <dd>
+                  3000ms
+                  <span class="query-cache-debug__hint">
+                    Not a fixed wait for the next fetch: after staleTime expires, stale data can still be served for up to 3000ms while a background refresh runs (for example, at 11s old data can be shown once and refreshed in parallel).
+                  </span>
+                </dd>
               </div>
             </dl>
           </section>
@@ -140,6 +155,14 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
 
   .query-cache-debug__grid dd {
     margin: 0;
+  }
+
+  .query-cache-debug__hint {
+    display: block;
+    margin-top: var(--spacing-1);
+    color: var(--color-fg-muted);
+    font-size: var(--font-size-sm);
+    line-height: 1.4;
   }
 
   @media (min-width: 768px) {
