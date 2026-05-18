@@ -10,12 +10,13 @@ import type { QueryInterceptor, QueryLifecycleContext, QueryOptions } from '@uti
  * const normalized = toUnknownQueryOptions(options);
  * ```
  */
-function toUnknownQueryOptions<TData, TError>(options: QueryOptions<TData, TError>): QueryOptions<unknown> {
+function toUnknownQueryOptions<TData, TError, TPayload>(
+  options: Omit<QueryOptions<TData, TError, TPayload>, 'queryFn'>,
+): Omit<QueryOptions<unknown>, 'queryFn'> {
   const staleTime = typeof options.staleTime === 'function' ? undefined : options.staleTime;
 
   return {
     queryKey: options.queryKey,
-    queryFn: options.queryFn,
     staleTime,
     retry: options.retry,
     retryDelay: options.retryDelay,
@@ -36,8 +37,8 @@ function toUnknownQueryOptions<TData, TError>(options: QueryOptions<TData, TErro
  * const unknownContext = toUnknownLifecycleContext(context);
  * ```
  */
-function toUnknownLifecycleContext<TData, TError>(
-  context: QueryLifecycleContext<TData, TError>,
+function toUnknownLifecycleContext<TData, TError, TPayload>(
+  context: QueryLifecycleContext<TData, TError, TPayload>,
 ): QueryLifecycleContext<unknown> {
   return {
     queryKey: context.queryKey,
@@ -58,9 +59,9 @@ function toUnknownLifecycleContext<TData, TError>(
  * const typedInterceptor = adaptGlobalInterceptor(globalInterceptor);
  * ```
  */
-function adaptGlobalInterceptor<TData, TError>(
+function adaptGlobalInterceptor<TData, TError, TPayload>(
   interceptor: QueryInterceptor<unknown>,
-): QueryInterceptor<TData, TError> {
+): QueryInterceptor<TData, TError, TPayload> {
   return {
     onRequest: interceptor.onRequest
       ? async (context): Promise<void> => {
@@ -92,12 +93,12 @@ function adaptGlobalInterceptor<TData, TError>(
  * @param localInterceptors - Interceptors specific to a single query.
  * @returns The combined interceptor list.
  */
-export function mergeInterceptors<TData, TError>(
+export function mergeInterceptors<TData, TError, TPayload>(
   globalInterceptors: QueryInterceptor<unknown>[] | undefined,
-  localInterceptors: QueryInterceptor<TData, TError>[] | undefined,
-): QueryInterceptor<TData, TError>[] {
+  localInterceptors: QueryInterceptor<TData, TError, TPayload>[] | undefined,
+): QueryInterceptor<TData, TError, TPayload>[] {
   return [
-    ...(globalInterceptors?.map((interceptor) => adaptGlobalInterceptor<TData, TError>(interceptor)) ?? []),
+    ...(globalInterceptors?.map((interceptor) => adaptGlobalInterceptor<TData, TError, TPayload>(interceptor)) ?? []),
     ...(localInterceptors ?? []),
   ];
 }
@@ -109,9 +110,9 @@ export function mergeInterceptors<TData, TError>(
  * @param context - The current query lifecycle context.
  * @returns A promise that resolves when all interceptors complete.
  */
-export async function runOnRequestInterceptors<TData, TError>(
-  interceptors: QueryInterceptor<TData, TError>[],
-  context: QueryLifecycleContext<TData, TError>,
+export async function runOnRequestInterceptors<TData, TError, TPayload = unknown>(
+  interceptors: QueryInterceptor<TData, TError, TPayload>[],
+  context: QueryLifecycleContext<TData, TError, TPayload>,
 ): Promise<void> {
   await runSequential(interceptors, async (interceptor): Promise<void> => {
     await interceptor.onRequest?.(context);
@@ -126,9 +127,9 @@ export async function runOnRequestInterceptors<TData, TError>(
  * @param error - The error thrown during the request phase.
  * @returns A promise that resolves when all interceptors complete.
  */
-export async function runOnRequestErrorInterceptors<TData, TError>(
-  interceptors: QueryInterceptor<TData, TError>[],
-  context: QueryLifecycleContext<TData, TError>,
+export async function runOnRequestErrorInterceptors<TData, TError, TPayload = unknown>(
+  interceptors: QueryInterceptor<TData, TError, TPayload>[],
+  context: QueryLifecycleContext<TData, TError, TPayload>,
   error: TError,
 ): Promise<void> {
   await runSequential(interceptors, async (interceptor): Promise<void> => {
@@ -144,9 +145,9 @@ export async function runOnRequestErrorInterceptors<TData, TError>(
  * @param data - The response data from a successful query attempt.
  * @returns A promise that resolves when all interceptors complete.
  */
-export async function runOnResponseInterceptors<TData, TError>(
-  interceptors: QueryInterceptor<TData, TError>[],
-  context: QueryLifecycleContext<TData, TError>,
+export async function runOnResponseInterceptors<TData, TError, TPayload = unknown>(
+  interceptors: QueryInterceptor<TData, TError, TPayload>[],
+  context: QueryLifecycleContext<TData, TError, TPayload>,
   data: TData,
 ): Promise<void> {
   await runSequential(interceptors, async (interceptor): Promise<void> => {
@@ -162,9 +163,9 @@ export async function runOnResponseInterceptors<TData, TError>(
  * @param error - The error thrown during the response phase.
  * @returns A promise that resolves when all interceptors complete.
  */
-export async function runOnResponseErrorInterceptors<TData, TError>(
-  interceptors: QueryInterceptor<TData, TError>[],
-  context: QueryLifecycleContext<TData, TError>,
+export async function runOnResponseErrorInterceptors<TData, TError, TPayload = unknown>(
+  interceptors: QueryInterceptor<TData, TError, TPayload>[],
+  context: QueryLifecycleContext<TData, TError, TPayload>,
   error: TError,
 ): Promise<void> {
   await runSequential(interceptors, async (interceptor): Promise<void> => {
@@ -172,9 +173,9 @@ export async function runOnResponseErrorInterceptors<TData, TError>(
   });
 }
 
-async function runSequential<TData, TError>(
-  interceptors: QueryInterceptor<TData, TError>[],
-  executor: (interceptor: QueryInterceptor<TData, TError>) => Promise<void> | void,
+async function runSequential<TData, TError, TPayload = unknown>(
+  interceptors: QueryInterceptor<TData, TError, TPayload>[],
+  executor: (interceptor: QueryInterceptor<TData, TError, TPayload>) => Promise<void> | void,
 ): Promise<void> {
   return interceptors.reduce<Promise<void>>(async (pending, interceptor) => {
     await pending;

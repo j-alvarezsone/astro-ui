@@ -56,6 +56,23 @@ describe('query app wrapper', () => {
     expect(data).toBe('client-ok');
   });
 
+  it('forwards typed payload to context.payload on mutate', async () => {
+    type Payload = { name: string; email: string };
+    let capturedPayload: unknown;
+
+    const mutation = useMutationQuery<string, unknown, Payload>({
+      queryKey: ['app-mutation-payload'],
+      queryFn: async (context) => {
+        capturedPayload = context.payload;
+        return await Promise.resolve('payload-ok');
+      },
+    });
+
+    await mutation.mutate({ name: 'Alice', email: 'alice@example.com' });
+
+    expect(capturedPayload).toEqual({ name: 'Alice', email: 'alice@example.com' });
+  });
+
   it('returns mutation controllers that only run on mutate', async () => {
     const mutationFn = vi.fn(async () => await Promise.resolve('mutation-ok'));
 

@@ -34,13 +34,16 @@ export const useClientQuery: ClientCreateQuery = (...args) => clientQuery.create
  * @example
  * const addUser = useMutationQuery({
  *   queryKey: ['users', 'add'],
- *   queryFn: async () => ({ item: { id: '1', name: 'A', email: 'a@x.com' } }),
+ *   queryFn: async (context) => {
+ *     const userData = context.payload as CreateUserBody;
+ *     return postNewUser(userData);
+ *   },
  * });
- * await addUser.mutate();
+ * await addUser.mutate({ name: 'Alice', email: 'alice@example.com' });
  */
-export const useMutationQuery = <TData, TError = unknown>(
-  mutationOptions: MutationOptions<TData, TError>,
-): MutationController<TData, TError> => {
+export const useMutationQuery = <TData, TPayload = unknown, TError = unknown>(
+  mutationOptions: MutationOptions<TData, TPayload, TError>,
+): MutationController<TData, TPayload, TError> => {
   const controller = clientQuery.createQuery({
     ...mutationOptions,
     autoExecute: false,
@@ -51,7 +54,7 @@ export const useMutationQuery = <TData, TError = unknown>(
     execute: controller.execute,
     refetch: controller.refetch,
     cancel: controller.cancel,
-    mutate: async () => await controller.execute({ force: true }),
+    mutate: async (payload?: TPayload) => await controller.execute({ force: true, payload }),
     get status() {
       return controller.status;
     },

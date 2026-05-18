@@ -187,4 +187,62 @@ describe('client query adapter', () => {
 
     unsubscribe();
   });
+
+  it('passes typed payload from execute options to the query function context', async () => {
+    type Payload = { name: string };
+    let capturedPayload: unknown;
+
+    const client = createClientQuery();
+    const query = client.createQuery<string, unknown, Payload>({
+      queryKey: ['client-payload-execute'],
+      queryFn: async (context) => {
+        capturedPayload = context.payload;
+        return await Promise.resolve('ok');
+      },
+      autoExecute: false,
+    });
+
+    await query.execute({ payload: { name: 'Alice' } });
+
+    expect(capturedPayload).toEqual({ name: 'Alice' });
+  });
+
+  it('does not pass payload when execute is called without it', async () => {
+    type Payload = { name: string };
+    let capturedPayload: unknown = 'NOT_CALLED';
+
+    const client = createClientQuery();
+    const query = client.createQuery<string, unknown, Payload>({
+      queryKey: ['client-payload-undefined'],
+      queryFn: async (context) => {
+        capturedPayload = context.payload;
+        return await Promise.resolve('ok');
+      },
+      autoExecute: false,
+    });
+
+    await query.execute();
+
+    expect(capturedPayload).toEqual(undefined);
+  });
+
+  it('still passes queryOptions.meta to context.meta independently', async () => {
+    let capturedMeta: Record<string, unknown> | undefined;
+    type Payload = { id: number };
+
+    const client = createClientQuery();
+    const query = client.createQuery<string, unknown, Payload>({
+      queryKey: ['client-meta-preserved'],
+      queryFn: async (context) => {
+        capturedMeta = context.meta;
+        return await Promise.resolve('ok');
+      },
+      autoExecute: false,
+      meta: { source: 'query', tracing: 'enabled' },
+    });
+
+    await query.execute({ payload: { id: 42 } });
+
+    expect(capturedMeta).toEqual({ source: 'query', tracing: 'enabled' });
+  });
 });

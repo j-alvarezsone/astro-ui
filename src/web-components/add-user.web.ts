@@ -1,8 +1,8 @@
 import type { CreateUserBody, CreateUserResponse } from '../share/types/user-contact';
 import { applyButtonLoadingState } from '@utils/dom/applyButtonLoadingState';
 import type { MutationController } from '@utils/query';
-import { invalidateQuery, useMutationQuery } from '@utils/query';
-import { postNewUser } from '../share/queries/users';
+import { useMutationQuery } from '@utils/query';
+import { createUserOptions } from '@queries/users';
 
 const SAMPLE_USERS: CreateUserBody[] = [
   { name: 'Alice Foster', email: 'alice.foster@example.com' },
@@ -16,22 +16,11 @@ let sampleIndex = 0;
 
 class AddUserElement extends HTMLElement {
   #controller: AbortController | null = null;
-  #mutation: MutationController<CreateUserResponse> | null = null;
+  #mutation: MutationController<CreateUserResponse, CreateUserBody> | null = null;
   #unsubscribe: (() => void) | null = null;
 
   connectedCallback(): void {
-    this.#mutation = useMutationQuery({
-      queryKey: ['users', 'add'],
-      queryFn: async () => {
-        const payload = SAMPLE_USERS[sampleIndex % SAMPLE_USERS.length];
-        sampleIndex += 1;
-        return postNewUser(payload);
-      },
-      autoExecute: false,
-      onSuccess: () => {
-        invalidateQuery(['users']);
-      },
-    });
+    this.#mutation = useMutationQuery(createUserOptions);
 
     const mutation = this.#mutation;
     this.#controller = new AbortController();
@@ -67,7 +56,9 @@ class AddUserElement extends HTMLElement {
   #addUser(): void {
     if (!this.#mutation) return;
     if (this.#mutation.isPending || this.#mutation.isFetching) return;
-    void this.#mutation.mutate();
+    const payload = SAMPLE_USERS[sampleIndex % SAMPLE_USERS.length];
+    sampleIndex += 1;
+    void this.#mutation.mutate(payload);
   }
 
   #resolveButton(): HTMLElement | null {

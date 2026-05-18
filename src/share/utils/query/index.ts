@@ -4,7 +4,9 @@ export { createQueryCacheStore, getOrCreateEntry, isEntryStale } from './cacheSt
 export { createClientQuery } from './clientQuery';
 export { mergeInterceptors } from './interceptors';
 export { hashQueryKey } from './key';
+export { mutationOptions } from './mutationOptions';
 export { executeQuery } from './queryCore';
+export { queryOptions } from './queryOptions';
 export { createAbortError, delayWithSignal, isAbortError, isResponseError, resolveRetryCount, resolveRetryDelay, shouldRetry } from './retry';
 export { createServerQuery } from './serverQuery';
 export type {

@@ -73,7 +73,7 @@ export function createClientQuery(options: ClientQueryClientOptions = {}): Clien
   };
 
   return {
-    createQuery<TData, TError = unknown>(queryOptions: QueryOptions<TData, TError>): ClientQueryController<TData, TError> {
+    createQuery<TData, TError = unknown, TPayload = unknown>(queryOptions: QueryOptions<TData, TError, TPayload>): ClientQueryController<TData, TError, TPayload> {
       const keyHash = hashQueryKey(queryOptions.queryKey);
       const listeners = new Set<(state: ClientQueryState<TData, TError>) => void>();
       let state: ClientQueryState<TData, TError> = createInitialClientState(store, keyHash, queryOptions, options.now);
@@ -103,7 +103,7 @@ export function createClientQuery(options: ClientQueryClientOptions = {}): Clien
         };
       };
 
-      const execute = async (executeOptions: { force?: boolean } = {}): Promise<ClientQueryState<TData, TError>> => {
+      const execute = async (executeOptions: { force?: boolean; payload?: TPayload } = {}): Promise<ClientQueryState<TData, TError>> => {
         const now = (options.now ?? Date.now)();
         const entry = getOrCreateEntry<TData, TError>(store, keyHash, now);
         const stale = isEntryStale(
@@ -144,6 +144,7 @@ export function createClientQuery(options: ClientQueryClientOptions = {}): Clien
             force: executeOptions.force,
             keyHash,
             client: true,
+            payload: executeOptions.payload,
           },
           coreOptions,
         );
@@ -179,8 +180,7 @@ export function createClientQuery(options: ClientQueryClientOptions = {}): Clien
       };
       queryRecords.add(queryRecord);
 
-      const controller: ClientQueryController<TData, TError> = {
-        getState: () => state,
+      const controller: ClientQueryController<TData, TError, TPayload> = {
         subscribe(listener: (nextState: ClientQueryState<TData, TError>) => void): () => void {
           listeners.add(listener);
 
@@ -216,7 +216,7 @@ export function createClientQuery(options: ClientQueryClientOptions = {}): Clien
         get isError() {
           return state.isError;
         },
-      } as ClientQueryController<TData, TError>;
+      };
 
       if (queryOptions.autoExecute ?? true) {
         void execute();
@@ -270,10 +270,10 @@ export function createClientQuery(options: ClientQueryClientOptions = {}): Clien
  * const initialState = createInitialClientState(store, keyHash, queryOptions, Date.now);
  * ```
  */
-function createInitialClientState<TData, TError = unknown>(
+function createInitialClientState<TData, TError = unknown, TPayload = unknown>(
   store: QueryCacheStore,
   keyHash: string,
-  queryOptions: QueryOptions<TData, TError>,
+  queryOptions: QueryOptions<TData, TError, TPayload>,
   nowFactory: (() => number) | undefined,
 ): ClientQueryState<TData, TError> {
   const now = (nowFactory ?? Date.now)();

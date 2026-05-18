@@ -1,18 +1,14 @@
 import type { ClientQueryController } from '@utils/query';
 import type { GetAllPetsResponse, PetContact } from '../share/types/pet-contact';
 import { useClientQuery } from '@utils/query';
-import { getAllPets } from '../share/queries/pets';
+import { getAllPetsOptions } from '../share/queries/pets';
 
 class FetchPetsQueryElement extends HTMLElement {
   #query: ClientQueryController<GetAllPetsResponse> | null = null;
   #unsubscribe: (() => void) | null = null;
 
   connectedCallback(): void {
-    this.#query = useClientQuery<GetAllPetsResponse>({
-      queryKey: ['pets'],
-      queryFn: getAllPets,
-      staleTime: 3000,
-    });
+    this.#query = useClientQuery(getAllPetsOptions);
 
     this.#unsubscribe = this.#query.subscribe(() => {
       this.#render();

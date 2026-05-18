@@ -37,6 +37,12 @@
       "@constants/*": [
         "./src/share/constants/*"
       ],
+      "@queries/*": [
+        "./src/share/queries/*"
+      ],
+      "@actions/*": [
+        "./src/share/actions/*"
+      ]
     }
   }
 }

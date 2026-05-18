@@ -14,12 +14,12 @@ import type {
 const DEFAULT_GC_TIME_MS = 5 * 60 * 1000;
 const MAX_TIMEOUT_MS = 2_147_483_647; // Maximum delay for setTimeout in most browsers (approximately 24.8 days)
 
-export interface RunQueryAttemptOptions<TData, TError = unknown> {
+export interface RunQueryAttemptOptions<TData, TError = unknown, TPayload = unknown> {
   attempt: number;
   entry: QueryCacheEntry<TData, TError>;
-  options: QueryExecutionOptions<TData, TError>;
-  mergedInterceptors: QueryInterceptor<TData, TError>[];
-  context: QueryLifecycleContext<TData, TError>;
+  options: QueryExecutionOptions<TData, TError, TPayload>;
+  mergedInterceptors: QueryInterceptor<TData, TError, TPayload>[];
+  context: QueryLifecycleContext<TData, TError, TPayload>;
   controller: AbortController;
   now: () => number;
   retryCount: number;
@@ -64,9 +64,9 @@ function toTypedError<TError>(error: unknown): TError {
  * }, { now: Date.now });
  * ```
  */
-export async function executeQuery<TData, TError = unknown>(
+export async function executeQuery<TData, TError = unknown, TPayload = unknown>(
   store: QueryCacheStore,
-  options: QueryExecutionOptions<TData, TError>,
+  options: QueryExecutionOptions<TData, TError, TPayload>,
   coreOptions: QueryCoreOptions,
 ): Promise<QueryExecutionResult<TData, TError>> {
   const now = coreOptions.now ?? Date.now;
@@ -106,7 +106,7 @@ export async function executeQuery<TData, TError = unknown>(
     }
   }
 
-  const executionPromise = executeWithLifecycle<TData, TError>(entry, options, coreOptions, now);
+  const executionPromise = executeWithLifecycle<TData, TError, TPayload>(entry, options, coreOptions, now);
   entry.promise = executionPromise;
 
   store.set(options.keyHash, entry);
@@ -220,16 +220,19 @@ function scheduleEntryGc<TData, TError = unknown>(
  * const result = await executeWithLifecycle(entry, options, coreOptions, Date.now);
  * ```
  */
-async function executeWithLifecycle<TData, TError = unknown>(
+async function executeWithLifecycle<TData, TError = unknown, TPayload = unknown>(
   entry: QueryCacheEntry<TData, TError>,
-  options: QueryExecutionOptions<TData, TError>,
+  options: QueryExecutionOptions<TData, TError, TPayload>,
   coreOptions: QueryCoreOptions,
   now: () => number,
 ): Promise<QueryExecutionResult<TData, TError>> {
-  const mergedInterceptors = mergeInterceptors<TData, TError>(coreOptions.interceptors, options.interceptors);
+  const mergedInterceptors = mergeInterceptors<TData, TError, TPayload>(
+    coreOptions.interceptors,
+    options.interceptors,
+  );
   const retryCount = resolveRetryCount(options.retry, coreOptions.defaultRetry);
   const controller = createLinkedAbortController(options.signal);
-  const context: QueryLifecycleContext<TData, TError> = {
+  const context: QueryLifecycleContext<TData, TError, TPayload> = {
     queryKey: options.queryKey,
     keyHash: options.keyHash,
     options,
@@ -273,8 +276,8 @@ async function executeWithLifecycle<TData, TError = unknown>(
  * });
  * ```
  */
-export async function runQueryAttempt<TData, TError = unknown>(
-  runOptions: RunQueryAttemptOptions<TData, TError>,
+export async function runQueryAttempt<TData, TError = unknown, TPayload = unknown>(
+  runOptions: RunQueryAttemptOptions<TData, TError, TPayload>,
 ): Promise<QueryExecutionResult<TData, TError>> {
   const {
     attempt,
@@ -295,6 +298,7 @@ export async function runQueryAttempt<TData, TError = unknown>(
       signal: controller.signal,
       attempt,
       client: options.client,
+      payload: options.payload,
       meta: options.meta,
     });
 

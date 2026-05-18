@@ -1,6 +1,6 @@
 import type { ClientQueryController } from '@utils/query';
 import { useClientQuery } from '@utils/query';
-import { getAllUser } from '../share/queries/users';
+import { getAllUsersOptions } from '../share/queries/users';
 import type { GetAllUserResponse, UserContact } from '../share/types/user-contact';
 
 class FetchUsersQueryElement extends HTMLElement {
@@ -8,11 +8,7 @@ class FetchUsersQueryElement extends HTMLElement {
   #unsubscribe: (() => void) | null = null;
 
   connectedCallback(): void {
-    this.#query = useClientQuery<GetAllUserResponse>({
-      queryKey: ['users'],
-      queryFn: getAllUser,
-      staleTime: 3000,
-    });
+    this.#query = useClientQuery(getAllUsersOptions);
 
     this.#unsubscribe = this.#query.subscribe(() => {
       this.#render();

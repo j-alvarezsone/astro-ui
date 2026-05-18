@@ -1,90 +1,38 @@
-import type { QueryFn } from '@utils/query';
-import { isUnknownRecord } from '@utils/object/isUnknownRecord';
-import { fetchJsonResponse } from '@utils/json/fetchJsonResponse';
-import { resolveBaseUrl } from '@utils/url/resolveBaseUrl';
-import type { CreateUserBody, CreateUserResponse, GetAllUserResponse } from '../types/user-contact';
+import { queryOptions } from '@utils/query/queryOptions';
+import { mutationOptions } from '@utils/query/mutationOptions';
+import { invalidateQuery } from '@utils/query';
+import type { CreateUserBody, CreateUserResponse, GetAllUserResponse } from '@/types/user-contact';
+import { getAllUser, postNewUser } from '@actions/users';
 
 /**
- * Fetches all users from the API.
- *
- * @param context - Query function context carrying abort signal.
- * @returns The typed user list response payload.
+ * Query options for fetching all users.
  *
  * @example
- * const data = await getAllUser({
- *   queryKey: ['users'],
- *   signal: new AbortController().signal,
- *   attempt: 1,
- *   client: false,
- * });
+ * const { data } = await useServerQuery(getAllUsersOptions);
  */
-export const getAllUser: QueryFn<GetAllUserResponse> = async ({ signal, meta }) => {
-  const baseUrl = resolveBaseUrl(meta);
-  const input = baseUrl ? new URL('/api/users', baseUrl) : '/api/users';
-
-  return await fetchJsonResponse<GetAllUserResponse>(
-    input,
-    {
-      init: {
-        method: 'GET',
-        signal,
-      },
-      validate: isGetAllUserResponse,
-    },
-  );
-};
+export const getAllUsersOptions = queryOptions<GetAllUserResponse>({
+  queryKey: ['users'],
+  queryFn: getAllUser,
+  staleTime: 10_000,
+});
 
 /**
- * Creates a new user by sending a POST request to the users API.
- *
- * @param body - User payload used to create a new user.
- * @returns The created user wrapped in the response envelope.
+ * Mutation options for creating a new user.
  *
  * @example
- * const created = await postNewUser({ name: 'Alice', email: 'alice@example.com' });
+ * const mutation = useMutationQuery<CreateUserResponse, CreateUserBody>(createUserOptions);
+ * await mutation.mutate({ name: 'Alice', email: 'alice@example.com' });
  */
-export async function postNewUser(body: CreateUserBody): Promise<CreateUserResponse> {
-  return await fetchJsonResponse<CreateUserResponse>(
-    '/api/users',
-    {
-      init: {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      },
-      validate: isCreateUserResponse,
-    },
-  );
-}
-
-function isGetAllUserResponse(value: unknown): value is GetAllUserResponse {
-  if (!isUnknownRecord(value)) {
-    return false;
-  }
-
-  const items = value.items;
-
-  if (!Array.isArray(items)) {
-    return false;
-  }
-
-  for (const item of items) {
-    if (!isUserContactShape(item)) {
-      return false;
+export const createUserOptions = mutationOptions<CreateUserResponse, CreateUserBody>({
+  queryKey: ['users', 'create'],
+  queryFn: async (context) => {
+    if (!context.payload) {
+      throw new Error('User payload is required');
     }
-  }
 
-  return true;
-}
-
-function isUserContactShape(value: unknown): boolean {
-  return isUnknownRecord(value) && typeof value.id === 'string' && typeof value.name === 'string' && typeof value.email === 'string';
-}
-
-function isCreateUserResponse(value: unknown): value is CreateUserResponse {
-  if (!isUnknownRecord(value)) {
-    return false;
-  }
-
-  return isUserContactShape(value.item);
-}
+    return await postNewUser(context.payload);
+  },
+  onSuccess: () => {
+    invalidateQuery(['users']);
+  },
+});
