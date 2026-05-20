@@ -13,52 +13,11 @@ import Divider from '@components/Divider.astro';
 import Heading from '@components/typography/Heading.astro';
 import Layout from '@layouts/Layout.astro';
 import { Icon } from 'astro-icon/components';
-import { useServerQuery } from '@utils/query';
-import { getAllUser } from '../share/queries/users';
-
-export const prerender = false;
-
-const { data: users } = await useServerQuery({
-  queryKey: ['users'],
-  queryFn: getAllUser,
-  staleTime: 6000,
-  tags: ['users'],
-  swr: 6000,
-  meta: { baseUrl: Astro.url, astroCache: Astro.cache },
-});
 ---
 
 <Layout uiTheme="warm">
   <div class="container">
     <Heading weight="bold">Hello world</Heading>
-    <Button class="test" as="button" icon={{ name: 'mdi:account-alert' }} variant="success" />
-    <p>
-      This is a starter template for building your first Astro project. It comes with a few example pages and components
-      to help you get started.
-    </p>
-
-    {
-      users && (
-        <div>
-          <Heading as="h3" weight="semibold">
-            Users from server query:
-          </Heading>
-          <ul>
-            {users.items.map((user) => (
-              <li>{user.name}</li>
-            ))}
-          </ul>
-        </div>
-      )
-    }
-
-    <section class="query-demo">
-      <Heading as="h3" weight="bold">Web Component Pending Toggle</Heading>
-      <fetch-users-query class="fetch-users-query">
-        <Button as="button" label="Fetch Users (Web Component)" variant="primary" />
-      </fetch-users-query>
-    </section>
-
     <form class="demo-form">
       <InputEmail
         name="email"
@@ -235,10 +194,6 @@ const { data: users } = await useServerQuery({
     </div>
   </div>
 </Layout>
-
-<script>
-  import '@web-components/fetch-users-query.web';
-</script>
 
 <style>
   .container {
