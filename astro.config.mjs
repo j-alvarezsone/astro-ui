@@ -9,6 +9,9 @@ export default defineConfig({
   adapter: netlify(),
   integrations: [vue(), icon()],
   image: {
+    service: {
+      entrypoint: 'astro/assets/services/sharp',
+    },
     domains: ["i.pravatar.cc"],
   },
   fonts: [{

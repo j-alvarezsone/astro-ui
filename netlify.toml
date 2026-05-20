@@ -1,3 +1,6 @@
+# Enable remote images for Netlify image CDN and local dev
+[images]
+remote_images = ["i.pravatar.cc"]
 [build]
   command = "pnpm run build"
   publish = "dist"
