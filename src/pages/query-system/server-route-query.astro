@@ -14,9 +14,9 @@ const { data: users } = await useServerQuery({
   cacheMode: 'route',
   routeCache: {
     cache: Astro.cache,
-    maxAge: 3000,
+    maxAge: 10000,
     tags: ['users'],
-    swr: 1000,
+    swr: 50000,
   },
   meta: { baseUrl: Astro.url },
 });
@@ -83,7 +83,7 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
               <div>
                 <dt>maxAge</dt>
                 <dd>
-                  3000ms
+                  10000ms
                   <span class="query-cache-debug__hint">
                     How long route cache marks responses fresh before serving stale via SWR.
                   </span>
@@ -92,7 +92,7 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
               <div>
                 <dt>swr</dt>
                 <dd>
-                  1000ms
+                  50000ms
                   <span class="query-cache-debug__hint">
                     Additional stale-while-revalidate window after maxAge expires.
                   </span>

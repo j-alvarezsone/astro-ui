@@ -2,7 +2,7 @@
 title: 'Query API Reference'
 summary: 'Complete API reference for useClientQuery, useServerQuery, useMutationQuery, and queryOptions with every option explained.'
 order: 0
-updatedAt: 2026-05-26
+updatedAt: 2026-05-27
 ---
 
 ## Query System API
@@ -555,6 +555,21 @@ const { data: users } = await useServerQuery<User[]>({
 `isFromCache` is a query-store cache hit signal and is meaningful in query mode.
 In route mode, execution is uncached at the query layer and cache behavior is
 controlled by Astro route cache (`routeCache`).
+
+### Route cache diagnostics on Netlify
+
+When validating route mode on Netlify, treat Astro cache and Netlify CDN cache as separate layers:
+
+- `x-astro-cache: HIT|MISS` reflects Astro route cache behavior for the request.
+- `cache-status: "Netlify Edge" ...` and `cache-status: "Netlify Durable" ...` reflect CDN/storage cache behavior.
+
+You can see `x-astro-cache: HIT` while Netlify still reports edge miss or durable bypass. That is expected when the route response is not CDN-cacheable (for example with `cache-control: no-cache`) but Astro route cache is active in the runtime.
+
+Quick check pattern:
+
+1. Make two immediate requests to the same route-mode endpoint.
+2. First response commonly shows `x-astro-cache: MISS`.
+3. Second response should show `x-astro-cache: HIT` when Astro route cache is active.
 
 ## `queryOptions`
 
