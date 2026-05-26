@@ -4,9 +4,14 @@ import type {
   InvalidateServerQueryOptions,
   MutationController,
   MutationOptions,
+  MutationState,
   QueryKey,
   ServerQueryController,
+  ServerQueryDefaultModeOptions,
   ServerQueryOptions,
+  ServerQueryQueryModeOptions,
+  ServerQueryRouteController,
+  ServerQueryRouteModeOptions,
 } from './types';
 
 
@@ -20,6 +25,39 @@ const serverQuery = createServerQuery({
 
 type ClientCreateQuery = typeof clientQuery.createQuery;
 type ClientInvalidate = typeof clientQuery.invalidate;
+
+type MutationSnapshot<TData, TError = unknown> = {
+  status: MutationState<TData, TError>['status'];
+  data?: TData;
+  error: TError | null;
+  isFetching?: boolean;
+};
+
+/**
+ * Convert internal query state into the mutation-focused public state.
+ *
+ * For mutations, any in-flight request is surfaced as `pending` so UI loading
+ * behavior is consistent across first and subsequent mutation executions.
+ *
+ * @param state - Internal mutation snapshot from the query controller.
+ * @returns Public mutation state with status-derived boolean flags.
+ * @example
+ * const mapped = toMutationState({ status: 'success', isFetching: true, error: null });
+ * // mapped.status === 'pending'
+ */
+function toMutationState<TData, TError = unknown>(state: MutationSnapshot<TData, TError>): MutationState<TData, TError> {
+  const resolvedStatus = state.isFetching ? 'pending' : state.status;
+
+  return {
+    status: resolvedStatus,
+    data: state.data,
+    error: state.error,
+    isIdle: resolvedStatus === 'idle',
+    isPending: resolvedStatus === 'pending',
+    isSuccess: resolvedStatus === 'success',
+    isError: resolvedStatus === 'error',
+  };
+}
 
 /**
  * Create a client query controller using the shared client query instance.
@@ -36,7 +74,7 @@ export const useClientQuery: ClientCreateQuery = (...args) => clientQuery.create
  * Internally, `mutate()` forces execution to always perform a network request.
  *
  * @param mutationOptions - Mutation options including key, function, and callbacks.
- * @returns A mutation controller with `mutate`, `execute`, and state flags.
+ * @returns A mutation controller with `mutate`, `reset`, `subscribe`, and status-derived flags.
  *
  * @example
  * const addUser = useMutationQuery({
@@ -56,35 +94,79 @@ export const useMutationQuery = <TData, TPayload = unknown, TError = unknown>(
     autoExecute: false,
   });
 
+  const listeners = new Set<(state: MutationState<TData, TError>) => void>();
+
+  let mutationState = toMutationState({
+    status: controller.status,
+    data: controller.data,
+    error: controller.error,
+  });
+
+  const notify = (): void => {
+    for (const listener of listeners) {
+      listener(mutationState);
+    }
+  };
+
+  controller.subscribe((state) => {
+    mutationState = toMutationState({
+      status: state.status,
+      data: state.data,
+      error: state.error,
+      isFetching: state.isFetching,
+    });
+    notify();
+  });
+
   return {
-    subscribe: controller.subscribe,
-    execute: controller.execute,
-    refetch: controller.refetch,
-    cancel: controller.cancel,
-    mutate: async (payload?: TPayload) => await controller.execute({ force: true, payload }),
+    subscribe: (listener) => {
+      listeners.add(listener);
+
+      return () => listeners.delete(listener);
+    },
+    mutate: async (payload?: TPayload): Promise<MutationState<TData, TError>> => {
+      const state = await controller.execute({ force: true, payload });
+      mutationState = toMutationState({
+        status: state.status,
+        data: state.data,
+        error: state.error,
+      });
+      notify();
+
+      return mutationState;
+    },
+    reset: () => {
+      mutationState = {
+        status: 'idle',
+        data: undefined,
+        error: null,
+        isIdle: true,
+        isPending: false,
+        isSuccess: false,
+        isError: false,
+      };
+      notify();
+    },
     get status() {
-      return controller.status;
+      return mutationState.status;
     },
     get data() {
-      return controller.data;
+      return mutationState.data;
     },
     get error() {
-      return controller.error;
+      return mutationState.error;
     },
-    get isStale() {
-      return controller.isStale;
+    get isIdle() {
+      return mutationState.isIdle;
     },
     get isPending() {
-      return controller.isPending;
-    },
-    get isFetching() {
-      return controller.isFetching;
+      return mutationState.isPending;
     },
     get isSuccess() {
-      return controller.isSuccess;
+      return mutationState.isSuccess;
     },
     get isError() {
-      return controller.isError;
+      return mutationState.isError;
     },
   };
 };
@@ -112,12 +194,31 @@ export const useMutationQuery = <TData, TPayload = unknown, TError = unknown>(
  * @returns A promise that resolves to the server query controller.
  */
 export async function useServerQuery<TData, TError = unknown>(
+  queryOptions: ServerQueryDefaultModeOptions<TData, TError>,
+): Promise<ServerQueryController<TData, TError>>;
+export async function useServerQuery<TData, TError = unknown>(
+  queryOptions: ServerQueryQueryModeOptions<TData, TError>,
+): Promise<ServerQueryController<TData, TError>>;
+export async function useServerQuery<TData, TError = unknown>(
+  queryOptions: ServerQueryRouteModeOptions<TData, TError>,
+): Promise<ServerQueryRouteController<TData, TError>>;
+export async function useServerQuery<TData, TError = unknown>(
   queryOptions: ServerQueryOptions<TData, TError>,
-): Promise<ServerQueryController<TData, TError>> {
-  const query = serverQuery.createQuery({
-    ...queryOptions,
-    autoExecute: false,
-  });
+): Promise<ServerQueryController<TData, TError> | ServerQueryRouteController<TData, TError>> {
+  const query = queryOptions.cacheMode === 'route'
+    ? serverQuery.createQuery({
+      ...queryOptions,
+      autoExecute: false,
+    })
+    : queryOptions.cacheMode === 'query'
+      ? serverQuery.createQuery({
+        ...queryOptions,
+        autoExecute: false,
+      })
+      : serverQuery.createQuery({
+        ...queryOptions,
+        autoExecute: false,
+      });
 
   if (queryOptions.autoExecute !== false) {
     await query.execute();

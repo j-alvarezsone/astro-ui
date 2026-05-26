@@ -32,19 +32,41 @@ describe('mutationOptions', () => {
     expect(result.onSuccess).toBe(onSuccess);
   });
 
-  it('works with typed generic parameters', () => {
+  it('supports explicit response and payload generic parameters', async () => {
     interface CreateUserResponse {
       item: { id: string; name: string; email: string };
     }
 
-    const result = mutationOptions<CreateUserResponse, Error>({
+    interface CreateUserPayload {
+      name: string;
+      email: string;
+    }
+
+    const result = mutationOptions<CreateUserResponse, CreateUserPayload>({
       queryKey: ['users', 'create'],
-      queryFn: async () => await Promise.resolve({
-        item: { id: '1', name: 'Alice', email: 'alice@example.com' },
-      }),
+      queryFn: async (context) => {
+        const payload = context.payload;
+
+        if (!payload) {
+          throw new Error('Payload is required');
+        }
+
+        return await Promise.resolve({
+          item: { id: '1', name: payload.name, email: payload.email },
+        });
+      },
+    });
+
+    const response = await result.queryFn({
+      queryKey: ['users', 'create'],
+      signal: new AbortController().signal,
+      attempt: 1,
+      client: true,
+      payload: { name: 'Alice', email: 'alice@example.com' },
     });
 
     expect(result.queryKey).toEqual(['users', 'create']);
+    expect(response.item.email).toBe('alice@example.com');
   });
 
   it('supports onSuccess callback for cache invalidation', () => {

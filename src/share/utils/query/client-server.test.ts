@@ -233,20 +233,20 @@ describe('query adapters: client and server behavior', () => {
     const server = createServerQuery();
 
     const query = server.createQuery({
-      queryKey: ['server-state'],
       queryFn: async () => {
         await Promise.resolve();
 
         return { ok: true };
       },
       autoExecute: false,
-      staleTime: 1500,
-      tags: ['server'],
-      meta: {
-        astroCache: {
+      cacheMode: 'route',
+      routeCache: {
+        cache: {
           enabled: true,
           set,
         },
+        maxAge: 1500,
+        tags: ['server'],
       },
     });
 

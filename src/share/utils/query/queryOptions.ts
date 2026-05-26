@@ -22,6 +22,10 @@ import type { QueryOptions } from './types';
  * // or
  * const query = useClientQuery(getAllUsersOptions);
  */
-export const queryOptions = <TData, TError = unknown>(
-  options: QueryOptions<TData, TError>,
-): QueryOptions<TData, TError> => options;
+export const queryOptions = <
+  TData,
+  TError = unknown,
+  TOptions extends QueryOptions<TData, TError> = QueryOptions<TData, TError>,
+>(
+  options: TOptions,
+): TOptions => options;

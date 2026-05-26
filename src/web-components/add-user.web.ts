@@ -46,7 +46,7 @@ class AddUserElement extends HTMLElement {
     this.#unsubscribe = mutation.subscribe(() => {
       const button = this.#resolveButton();
       if (button) {
-        applyButtonLoadingState(button, mutation.isPending || mutation.isFetching);
+        applyButtonLoadingState(button, mutation.isPending);
       }
     });
 
@@ -62,7 +62,6 @@ class AddUserElement extends HTMLElement {
   disconnectedCallback(): void {
     this.#unsubscribe?.();
     this.#unsubscribe = null;
-    this.#mutation?.cancel();
     this.#mutation = null;
     this.#controller?.abort();
     this.#controller = null;
@@ -87,7 +86,7 @@ class AddUserElement extends HTMLElement {
 
   async #addUser(): Promise<void> {
     if (!this.#mutation) return;
-    if (this.#mutation.isPending || this.#mutation.isFetching) return;
+    if (this.#mutation.isPending) return;
 
     const payload = pickRandomSampleUser();
 

@@ -7,16 +7,24 @@ import {
   resolveStaleTimeOption,
 } from '@utils/query/cacheStore';
 import { hashQueryKey } from '@utils/query/key';
-import { executeQuery } from '@utils/query/queryCore';
+import { executeQuery, executeQueryUncached } from '@utils/query/queryCore';
 import type {
-  AstroRouteCacheLike,
+  QueryKey,
   QueryCoreOptions,
   ServerQueryClient,
   ServerQueryClientOptions,
   ServerQueryController,
+  ServerQueryDefaultModeOptions,
   ServerQueryOptions,
+  ServerQueryQueryModeOptions,
+  ServerQueryRouteController,
+  ServerQueryRouteModeOptions,
+  ServerQueryRouteResult,
   ServerQueryResult,
 } from '@utils/query/types';
+
+const ROUTE_EXECUTION_QUERY_KEY: QueryKey = '__route-execution';
+const ROUTE_EXECUTION_KEY_HASH = '__route-execution-hash';
 
 /**
  * Create a server-side query client with cache support and optional Astro cache bridging.
@@ -32,12 +40,26 @@ export function createServerQuery(options: ServerQueryClientOptions = {}): Serve
     now: options.now,
   };
 
-  const createQuery = <TData, TError = unknown>(queryOptions: ServerQueryOptions<TData, TError>): ServerQueryController<TData, TError> => {
-    const keyHash = hashQueryKey(queryOptions.queryKey);
-    let lastResult: ServerQueryResult<TData, TError> = {
+  function createQuery<TData, TError = unknown>(
+    queryOptions: ServerQueryDefaultModeOptions<TData, TError>,
+  ): ServerQueryController<TData, TError>;
+  function createQuery<TData, TError = unknown>(
+    queryOptions: ServerQueryQueryModeOptions<TData, TError>,
+  ): ServerQueryController<TData, TError>;
+  function createQuery<TData, TError = unknown>(
+    queryOptions: ServerQueryRouteModeOptions<TData, TError>,
+  ): ServerQueryRouteController<TData, TError>;
+  function createQuery<TData, TError = unknown>(
+    queryOptions: ServerQueryOptions<TData, TError>,
+  ): ServerQueryController<TData, TError> | ServerQueryRouteController<TData, TError> {
+    const isRouteMode = queryOptions.cacheMode === 'route';
+    // Route mode identifiers are execution metadata only, not shared cache-store keys.
+    const executionQueryKey: QueryKey = isRouteMode ? ROUTE_EXECUTION_QUERY_KEY : queryOptions.queryKey;
+    const executionKeyHash = isRouteMode ? ROUTE_EXECUTION_KEY_HASH : hashQueryKey(queryOptions.queryKey);
+    let lastResult: ServerQueryResult<TData, TError> | ServerQueryRouteResult<TData, TError> = {
       data: undefined,
       error: null,
-      keyHash,
+      keyHash: executionKeyHash,
       isFromCache: false,
       isSuccess: false,
       isError: false,
@@ -45,56 +67,79 @@ export function createServerQuery(options: ServerQueryClientOptions = {}): Serve
     };
 
     const computeIsStale = (): boolean => {
+      if (isRouteMode) {
+        return false;
+      }
+
       const now = (options.now ?? Date.now)();
-      const entry = getOrCreateEntry<TData, TError>(store, keyHash, now);
+      const entry = getOrCreateEntry<TData, TError>(store, executionKeyHash, now);
 
       return isEntryStale(
         entry,
         resolveStaleTimeOption(
           queryOptions.staleTime,
-          createQueryStaleTimeContext(queryOptions.queryKey, keyHash, entry),
+          createQueryStaleTimeContext(executionQueryKey, executionKeyHash, entry),
         ),
         now,
       );
     };
 
-    const execute = async (executeOptions: { force?: boolean } = {}): Promise<ServerQueryResult<TData, TError>> => {
-      const staleTime = resolveStaleTimeOption(
-        queryOptions.staleTime,
-        createQueryStaleTimeContext(
-          queryOptions.queryKey,
-          keyHash,
-          getOrCreateEntry<TData, TError>(store, keyHash, (options.now ?? Date.now)()),
-        ),
-      );
+    const execute = async (
+      executeOptions: { force?: boolean } = {},
+    ): Promise<ServerQueryResult<TData, TError> | ServerQueryRouteResult<TData, TError>> => {
+      const routeCache = isRouteMode ? queryOptions.routeCache : undefined;
+
       applyAstroRouteCache({
-        cache: resolveAstroCache(queryOptions.meta),
-        queryKey: queryOptions.queryKey,
-        staleTime,
-        swr: queryOptions.swr,
-        tags: queryOptions.tags,
+        cache: routeCache?.cache,
+        queryKey: isRouteMode ? undefined : queryOptions.queryKey,
+        maxAge: routeCache?.maxAge,
+        swr: routeCache?.swr,
+        tags: routeCache?.tags,
       });
 
-      const result = await executeQuery(
-        store,
-        {
-          ...queryOptions,
-          force: executeOptions.force,
-          keyHash,
-          client: false,
-        },
-        coreOptions,
-      );
+      const result = isRouteMode
+        ? await executeQueryUncached(
+          {
+            ...queryOptions,
+            queryKey: executionQueryKey,
+            force: executeOptions.force,
+            keyHash: executionKeyHash,
+            client: false,
+          },
+          coreOptions,
+        )
+        : await executeQuery(
+          store,
+          {
+            ...queryOptions,
+            queryKey: executionQueryKey,
+            force: executeOptions.force,
+            keyHash: executionKeyHash,
+            client: false,
+          },
+          coreOptions,
+        );
 
-      lastResult = {
-        data: result.data,
-        error: result.error ?? null,
-        keyHash,
-        isFromCache: result.isFromCache,
-        isSuccess: result.status === 'success',
-        isError: result.status === 'error',
-        isStale: computeIsStale(),
-      };
+      if (isRouteMode) {
+        lastResult = {
+          data: result.data,
+          error: result.error ?? null,
+          keyHash: executionKeyHash,
+          isSuccess: result.status === 'success',
+          isError: result.status === 'error',
+          isStale: computeIsStale(),
+        };
+      } else {
+        lastResult = {
+          data: result.data,
+          error: result.error ?? null,
+          keyHash: executionKeyHash,
+          isFromCache: result.isFromCache,
+          isSuccess: result.status === 'success',
+          isError: result.status === 'error',
+          isStale: computeIsStale(),
+        };
+      }
 
       return lastResult;
     };
@@ -116,7 +161,7 @@ export function createServerQuery(options: ServerQueryClientOptions = {}): Serve
         return lastResult.keyHash;
       },
       get isFromCache() {
-        return lastResult.isFromCache;
+        return 'isFromCache' in lastResult ? lastResult.isFromCache : false;
       },
       get isSuccess() {
         return lastResult.isSuccess;
@@ -126,72 +171,22 @@ export function createServerQuery(options: ServerQueryClientOptions = {}): Serve
       },
       execute,
       refetch: async () => await execute({ force: true }),
-    } as ServerQueryController<TData, TError>;
+    } as ServerQueryController<TData, TError> | ServerQueryRouteController<TData, TError>;
 
     if (queryOptions.autoExecute ?? true) {
       void execute();
     }
 
     return controller;
-  };
+  }
 
   return {
     createQuery,
-    invalidate(queryKey: ServerQueryOptions<unknown>['queryKey']): boolean {
+    invalidate(queryKey: QueryKey): boolean {
       return store.delete(hashQueryKey(queryKey));
     },
     clear(): void {
       store.clear();
     },
   };
-}
-
-/**
- * Resolve an Astro route-cache bridge from per-query metadata.
- *
- * Query metadata is the request-scoped source for `Astro.cache`.
- *
- * @param meta - Optional query metadata that may include `astroCache`.
- * @returns A validated Astro route-cache bridge when available.
- * @example
- * ```ts
- * resolveAstroCache({ astroCache: Astro.cache });
- * ```
- */
-function resolveAstroCache(
-  meta: Record<string, unknown> | undefined,
-): AstroRouteCacheLike | undefined {
-  const candidate = meta?.astroCache;
-
-  if (isAstroRouteCacheLike(candidate)) {
-    return candidate;
-  }
-
-  return undefined;
-}
-
-/**
- * Validate the minimal Astro route-cache bridge shape used by the query layer.
- *
- * @param value - Unknown runtime value to validate.
- * @returns `true` when the value is a compatible Astro route-cache bridge.
- * @example
- * ```ts
- * isAstroRouteCacheLike(Astro.cache);
- * ```
- */
-function isAstroRouteCacheLike(value: unknown): value is AstroRouteCacheLike {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-
-  if (!('set' in value) || typeof value.set !== 'function') {
-    return false;
-  }
-
-  if ('enabled' in value && value.enabled !== undefined && typeof value.enabled !== 'boolean') {
-    return false;
-  }
-
-  return true;
 }

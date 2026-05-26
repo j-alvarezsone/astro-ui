@@ -65,7 +65,6 @@ export interface QueryOptions<TData, TError = unknown, TPayload = unknown> {
   retry?: number | QueryRetryPredicate;
   retryDelay?: number | QueryRetryDelay;
   dedupe?: QueryDedupeMode;
-  signal?: AbortSignal;
   force?: boolean;
   meta?: Record<string, unknown>;
   onSuccess?: (data: TData) => Promise<void> | void;
@@ -79,6 +78,7 @@ export interface QueryExecutionOptions<TData, TError = unknown, TPayload = unkno
   client: boolean;
   keyHash: string;
   payload?: TPayload;
+  signal?: AbortSignal;
 }
 
 export interface QueryExecutionResult<TData, TError = unknown> {
@@ -133,8 +133,20 @@ export interface ClientQueryController<TData, TError = unknown, TPayload = unkno
   cancel: () => void;
 }
 
-export interface MutationController<TData, TPayload = unknown, TError = unknown> extends ClientQueryController<TData, TError, TPayload> {
-  mutate: (payload?: TPayload) => Promise<ClientQueryState<TData, TError>>;
+export interface MutationState<TData, TError = unknown> {
+  status: QueryStateStatus;
+  data?: TData;
+  error: TError | null;
+  isIdle: boolean;
+  isPending: boolean;
+  isSuccess: boolean;
+  isError: boolean;
+}
+
+export interface MutationController<TData, TPayload = unknown, TError = unknown> extends MutationState<TData, TError> {
+  subscribe: (listener: (state: MutationState<TData, TError>) => void) => () => void;
+  mutate: (payload?: TPayload) => Promise<MutationState<TData, TError>>;
+  reset: () => void;
 }
 
 export interface ClientQueryClientOptions extends QueryCoreOptions {
@@ -151,17 +163,58 @@ export interface ServerQueryClientOptions extends QueryCoreOptions {
   store?: QueryCacheStore;
 }
 
-export interface ServerQueryOptions<TData, TError = unknown> extends QueryOptions<TData, TError> {
+export type ServerCacheMode = 'query' | 'route';
+
+export interface RouteCacheOptions {
+  cache: AstroRouteCacheLike;
+  maxAge?: QueryStaleTimeValue;
   swr?: number;
   tags?: string[];
 }
+
+export type ServerQueryDefaultModeOptions<TData, TError = unknown> = QueryOptions<TData, TError> & {
+  cacheMode?: undefined;
+  routeCache?: never;
+};
+
+export type ServerQueryQueryModeOptions<TData, TError = unknown> = QueryOptions<TData, TError> & {
+  cacheMode: 'query';
+  routeCache?: never;
+};
+
+export type ServerQueryRouteModeOptions<TData, TError = unknown> = Omit<QueryOptions<TData, TError>, 'queryKey' | 'staleTime'> & {
+  cacheMode: 'route';
+  queryKey?: never;
+  staleTime?: never;
+  routeCache: RouteCacheOptions;
+};
+
+export type ServerQueryOptions<TData, TError = unknown> =
+  | ServerQueryDefaultModeOptions<TData, TError>
+  | ServerQueryQueryModeOptions<TData, TError>
+  | ServerQueryRouteModeOptions<TData, TError>;
 
 export interface ServerQueryResult<TData, TError = unknown> {
   data?: TData;
   error: TError | null;
   isStale: boolean;
   keyHash: string;
+  /**
+   * Query-store cache hit flag.
+   *
+   * This is meaningful for `cacheMode: 'query'` executions. Route mode runs
+   * through the uncached execution path, so this remains `false` there.
+   */
   isFromCache: boolean;
+  isSuccess: boolean;
+  isError: boolean;
+}
+
+export interface ServerQueryRouteResult<TData, TError = unknown> {
+  data?: TData;
+  error: TError | null;
+  isStale: boolean;
+  keyHash: string;
   isSuccess: boolean;
   isError: boolean;
 }
@@ -171,8 +224,17 @@ export interface ServerQueryController<TData, TError = unknown> extends ServerQu
   refetch: () => Promise<ServerQueryResult<TData, TError>>;
 }
 
+export interface ServerQueryRouteController<TData, TError = unknown> extends ServerQueryRouteResult<TData, TError> {
+  execute: (options?: { force?: boolean }) => Promise<ServerQueryRouteResult<TData, TError>>;
+  refetch: () => Promise<ServerQueryRouteResult<TData, TError>>;
+}
+
 export interface ServerQueryClient {
-  createQuery: <TData, TError = unknown>(queryOptions: ServerQueryOptions<TData, TError>) => ServerQueryController<TData, TError>;
+  createQuery: {
+    <TData, TError = unknown>(queryOptions: ServerQueryDefaultModeOptions<TData, TError>): ServerQueryController<TData, TError>;
+    <TData, TError = unknown>(queryOptions: ServerQueryQueryModeOptions<TData, TError>): ServerQueryController<TData, TError>;
+    <TData, TError = unknown>(queryOptions: ServerQueryRouteModeOptions<TData, TError>): ServerQueryRouteController<TData, TError>;
+  };
   invalidate: (queryKey: QueryKey) => boolean;
   clear: () => void;
 }
@@ -208,8 +270,8 @@ export interface InvalidateServerQueryOptions {
 
 export interface AstroCacheBridgeOptions {
   cache?: AstroRouteCacheLike;
-  queryKey: QueryKey;
-  staleTime?: QueryStaleTimeValue;
+  queryKey?: QueryKey;
+  maxAge?: QueryStaleTimeValue;
   swr?: number;
   tags?: string[];
 }

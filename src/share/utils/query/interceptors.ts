@@ -21,7 +21,6 @@ function toUnknownQueryOptions<TData, TError, TPayload>(
     retry: options.retry,
     retryDelay: options.retryDelay,
     dedupe: options.dedupe,
-    signal: options.signal,
     force: options.force,
     meta: options.meta,
   };

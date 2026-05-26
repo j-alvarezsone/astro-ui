@@ -25,11 +25,10 @@ class AddPetElement extends HTMLElement {
     const mutation = this.#mutation;
     this.#controller = new AbortController();
     const { signal } = this.#controller;
-
     this.#unsubscribe = mutation.subscribe(() => {
       const button = this.#resolveButton();
       if (button) {
-        applyButtonLoadingState(button, mutation.isPending || mutation.isFetching);
+        applyButtonLoadingState(button, mutation.isPending);
       }
     });
 
@@ -55,7 +54,6 @@ class AddPetElement extends HTMLElement {
   disconnectedCallback(): void {
     this.#unsubscribe?.();
     this.#unsubscribe = null;
-    this.#mutation?.cancel();
     this.#mutation = null;
     this.#controller?.abort();
     this.#controller = null;
@@ -63,7 +61,7 @@ class AddPetElement extends HTMLElement {
 
   async #addPet() {
     if (!this.#mutation) return;
-    if (this.#mutation.isPending || this.#mutation.isFetching) return;
+    if (this.#mutation.isPending) return;
     const payload = SAMPLE_PETS[sampleIndex % SAMPLE_PETS.length];
     sampleIndex += 1;
     await this.#mutation.mutate(payload);

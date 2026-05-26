@@ -22,7 +22,7 @@ describe('query astro cache bridge', () => {
     expect(set).not.toHaveBeenCalled();
   });
 
-  it('applies route cache directives when staleTime, swr, or tags are present', () => {
+  it('applies route cache directives when maxAge, swr, or tags are present', () => {
     const set = vi.fn((options: AstroRouteCacheSetOptions | false): void => {
       void options;
     });
@@ -32,7 +32,7 @@ describe('query astro cache bridge', () => {
       applyAstroRouteCache({
         cache,
         queryKey: ['test-key'],
-        staleTime: 3_000,
+        maxAge: 3_000,
         swr: 2_000,
         tags: ['page'],
       }),
@@ -56,7 +56,7 @@ describe('query astro cache bridge', () => {
     }
   });
 
-  it('converts staleTime values to max-age seconds correctly', () => {
+  it('converts maxAge values to max-age seconds correctly', () => {
     expect(toMaxAgeSeconds(undefined)).toBeUndefined();
     expect(toMaxAgeSeconds('static')).toBeUndefined();
     expect(toMaxAgeSeconds(Number.POSITIVE_INFINITY)).toBeUndefined();

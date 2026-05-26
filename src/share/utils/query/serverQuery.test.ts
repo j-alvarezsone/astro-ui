@@ -1,6 +1,42 @@
 import { createServerQuery } from '@utils/query/serverQuery';
+import type { ServerQueryOptions } from '@utils/query/types';
 
 describe('server query adapter', () => {
+  it('accepts explicit query mode while keeping route-only options exclusive', () => {
+    const queryModeOptions: ServerQueryOptions<string> = {
+      queryKey: ['server-explicit-query-mode'],
+      queryFn: async () => await Promise.resolve('query-ok'),
+      cacheMode: 'query',
+    };
+    const routeModeOptions: ServerQueryOptions<string> = {
+      queryFn: async () => await Promise.resolve('route-ok'),
+      cacheMode: 'route',
+      routeCache: {
+        cache: {
+          enabled: true,
+          set: vi.fn(),
+        },
+      },
+    };
+
+    expect(queryModeOptions.cacheMode).toBe('query');
+    expect(routeModeOptions.cacheMode).toBe('route');
+
+    // @ts-expect-error Route cache options are only valid when cacheMode is "route".
+    const invalidQueryModeOptions: ServerQueryOptions<string> = {
+      queryKey: ['server-invalid-query-mode'],
+      queryFn: async () => await Promise.resolve('invalid'),
+      cacheMode: 'query',
+      routeCache: {
+        cache: {
+          set: vi.fn(),
+        },
+      },
+    };
+
+    expect(invalidQueryModeOptions).toBeDefined();
+  });
+
   it('refetch forces a new request even when cache is fresh', async () => {
     const queryFn = vi.fn(async () => {
       await Promise.resolve();

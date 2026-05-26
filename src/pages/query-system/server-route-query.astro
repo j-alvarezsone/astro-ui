@@ -9,19 +9,28 @@ export const prerender = false;
 
 const renderedAt = new Date().toISOString();
 
-const { data: users, isFromCache } = await useServerQuery({
-  ...getAllUsersOptions,
+const { data: users } = await useServerQuery({
+  queryFn: getAllUsersOptions.queryFn,
+  cacheMode: 'route',
+  routeCache: {
+    cache: Astro.cache,
+    maxAge: 3000,
+    tags: ['users'],
+    swr: 1000,
+  },
   meta: { baseUrl: Astro.url },
 });
+
+const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
 ---
 
-<Layout title="Server Query Demo" uiTheme="warm">
+<Layout title="Server Route Query Demo" uiTheme="warm">
   <div class="container">
     {
       users && (
-        <section class="query-demo" aria-label="Users server query demo">
+        <section class="query-demo" aria-label="Users server route query demo">
           <Heading as="h3" weight="semibold">
-            Server Query: Users
+            Server Route Query: Users
           </Heading>
 
           <ul data-users-list class="query-demo__list">
@@ -42,35 +51,50 @@ const { data: users, isFromCache } = await useServerQuery({
             <dl class="query-cache-debug__grid">
               <div>
                 <dt>Cache mode</dt>
-                <dd>query</dd>
+                <dd>route</dd>
               </div>
               <div>
                 <dt>Query cache hit</dt>
                 <dd>
-                  {String(isFromCache)}
+                  n/a in route mode
                   <span class="query-cache-debug__hint">
-                    True when the in-memory server query store returned cached query data.
+                    `isFromCache` applies to query-store cache mode. Route mode uses uncached query execution and relies
+                    on Astro route-cache directives.
                   </span>
                 </dd>
               </div>
               <div>
                 <dt>Route cache bridge</dt>
-                <dd>not used in query mode</dd>
+                <dd>{isRouteCacheBridgeEnabled ? 'configured' : 'disabled in this runtime'}</dd>
               </div>
               <div>
                 <dt>Rendered at</dt>
                 <dd>{renderedAt}</dd>
               </div>
               <div>
-                <dt>Query key</dt>
-                <dd>{JSON.stringify(['users'])}</dd>
+                <dt>Tags</dt>
+                <dd>
+                  {['users'].join(', ')}
+                  <span class="query-cache-debug__hint">
+                    Labels used to invalidate related cached responses together.
+                  </span>
+                </dd>
               </div>
               <div>
-                <dt>staleTime</dt>
+                <dt>maxAge</dt>
                 <dd>
-                  30000ms
+                  3000ms
                   <span class="query-cache-debug__hint">
-                    How long query data is treated as fresh before a refetch is needed.
+                    How long route cache marks responses fresh before serving stale via SWR.
+                  </span>
+                </dd>
+              </div>
+              <div>
+                <dt>swr</dt>
+                <dd>
+                  1000ms
+                  <span class="query-cache-debug__hint">
+                    Additional stale-while-revalidate window after maxAge expires.
                   </span>
                 </dd>
               </div>

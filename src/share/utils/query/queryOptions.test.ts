@@ -46,4 +46,5 @@ describe('queryOptions', () => {
 
     expect(result.queryKey).toEqual(['user', 1]);
   });
+
 });

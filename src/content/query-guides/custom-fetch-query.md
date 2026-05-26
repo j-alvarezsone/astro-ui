@@ -1,535 +1,712 @@
 ---
-title: 'Custom Fetch Query Guide'
-summary: 'How to configure, consume, and scale the custom client/server query APIs with real examples.'
+title: 'Query API Reference'
+summary: 'Complete API reference for useClientQuery, useServerQuery, useMutationQuery, and queryOptions with every option explained.'
 order: 0
-updatedAt: 2026-05-10
+updatedAt: 2026-05-26
 ---
 
-## Mental Model
+## Query System API
 
-This project exposes two adapters over one shared core:
+This project exposes four primary APIs for feature code:
 
-- `createServerQuery()` for server execution (`createQuery`)
-- `createClientQuery()` for browser state + subscriptions (`createQuery`)
+- `useClientQuery(options)`
+- `useServerQuery(options)`
+- `useMutationQuery(options)`
+- `queryOptions(options)`
 
-Both adapters use the same query options (`queryKey`, `queryFn`, `retry`, `staleTime`, `interceptors`, and callbacks).
+All of them are built around a shared query options contract and a shared execution core.
 
-## Do We Need To Create Both Clients?
+## Shared Types
 
-Usually yes, once per runtime boundary:
-
-- Server pages/endpoints use one server client instance.
-- Client islands/components use one client client instance.
-
-You do **not** create a new client per request unless you have a strong reason.
-
-## Global Configuration: Where And Why
-
-Create one project-level wrapper so app code imports small helpers instead of calling constructors repeatedly.
-
-### Suggested App Wrapper
+### `QueryKey`
 
 ```ts
-// src/share/utils/query/appQuery.ts
-import { createClientQuery, createServerQuery } from '@utils/query';
-
-const clientQuery = createClientQuery({
-  defaultRetry: 2,
-  interceptors: [
-    {
-      onRequest: ({ queryKey, attempt }) => {
-        console.debug('[client] request', queryKey, attempt);
-      },
-    },
-  ],
-});
-
-const serverQuery = createServerQuery({
-  defaultRetry: 2,
-  // astroCache can be passed from runtime when available
-});
-
-export const useClientQuery = clientQuery.createQuery;
-export const useServerQuery = serverQuery.createQuery;
-export const invalidateQuery = clientQuery.invalidate;
-export const clearClientQueryCache = clientQuery.clear;
+type QueryKey = string | readonly unknown[];
 ```
 
-This keeps naming explicit by runtime boundary and avoids repeating constructors in feature files.
+Use stable keys such as `['users']` or `['user', userId]`.
 
-If you prefer shorter aliases, you can re-export both names:
+### `QueryFnContext<TPayload>`
 
 ```ts
-export const useQuery = useClientQuery;
+interface QueryFnContext<TPayload = unknown> {
+  queryKey: QueryKey;
+  signal: AbortSignal;
+  attempt: number;
+  client: boolean;
+  payload?: TPayload;
+  meta?: Record<string, unknown>;
+}
 ```
 
-## API Reference
+Every `queryFn` receives this context.
 
-### QueryOptions<TData>
+### `QueryStateStatus`
 
 ```ts
-interface QueryOptions<TData> {
-  queryKey: string | readonly unknown[];
-  queryFn: (context) => Promise<TData>;
+type QueryStateStatus = 'idle' | 'pending' | 'success' | 'error';
+```
+
+### `QueryOptions<TData, TError, TPayload>`
+
+```ts
+interface QueryOptions<TData, TError = unknown, TPayload = unknown> {
+  queryKey: QueryKey;
+  queryFn: (context: QueryFnContext<TPayload>) => Promise<TData>;
   autoExecute?: boolean;
-  staleTime?: number;
+  staleTime?: number | 'static' | ((query) => number | 'static');
+  gcTime?: number;
   retry?: number | ((error: unknown, attempt: number) => boolean);
   retryDelay?: number | ((attempt: number, error: unknown) => number);
   dedupe?: 'join' | 'cancel' | 'none';
-  signal?: AbortSignal;
   force?: boolean;
   meta?: Record<string, unknown>;
   onSuccess?: (data: TData) => Promise<void> | void;
-  onError?: (error: unknown) => Promise<void> | void;
-  interceptors?: QueryInterceptor<TData>[];
+  onError?: (error: TError) => Promise<void> | void;
+  interceptors?: QueryInterceptor<TData, TError, TPayload>[];
 }
 ```
 
-### Important Options
+## `useClientQuery`
 
-- `queryKey`: cache identity. Prefer tuples like `['product', productId]`.
-- `autoExecute`: defaults to `true`. Set to `false` for manual execution via `execute()`.
-- `staleTime`: cache freshness window in milliseconds.
-- `retry`: retry count or predicate.
-- `dedupe`:
-  - `join`: share in-flight promise for same key.
-  - `cancel`: abort previous in-flight and start new one.
-  - `none`: run independently.
-- `meta`: custom context bag passed into `queryFn`.
-- `interceptors`: lifecycle hooks (`onRequest`, `onRequestError`, `onResponse`, `onResponseError`) at attempt level.
-- `onSuccess` / `onError`: final query-level callbacks.
+Create a client-side query controller backed by the shared browser cache.
 
-### Error Typing Note
-
-- Query errors are thrown at runtime as unknown values and then forwarded through the query error channel.
-- When your `onError` callback expects a specific shape, narrow it before reading properties.
+### Signature
 
 ```ts
-onError: (error) => {
-  if (error instanceof Error) {
-    console.error(error.message);
-    return;
+function useClientQuery<TData, TError = unknown, TPayload = unknown>(
+  options: QueryOptions<TData, TError, TPayload>,
+): ClientQueryController<TData, TError, TPayload>;
+```
+
+### Parameter 1: `options`
+
+- `queryKey` (required): unique cache identity.
+- `queryFn` (required): async function that returns data.
+- `autoExecute` (default `true`): runs immediately after controller creation.
+- `staleTime` (default stale): fresh window. Accepts number in ms, `'static'`, or resolver function.
+- `gcTime` (default `300000` in client): cache entry retention in ms.
+- `retry` (default from app client config): number of retries or predicate.
+- `retryDelay` (optional): ms or function to compute delay between retries.
+- `dedupe` (default `'join'`): behavior for concurrent same-key requests.
+- `force` (optional): force network execution (normally set via `execute({ force: true })`).
+- `meta` (optional): arbitrary metadata available in `queryFn` context.
+- `onSuccess` (optional): called once when query settles successfully.
+- `onError` (optional): called once when query settles as failure.
+- `interceptors` (optional): lifecycle hooks per attempt (`onRequest`, `onRequestError`, `onResponse`, `onResponseError`).
+
+### Returns: `ClientQueryController`
+
+```ts
+interface ClientQueryController<TData, TError, TPayload> {
+  subscribe(listener): () => void;
+  execute(options?: { force?: boolean; payload?: TPayload }): Promise<ClientQueryState<TData, TError>>;
+  refetch(): Promise<ClientQueryState<TData, TError>>;
+  cancel(): void;
+
+  readonly status: 'idle' | 'pending' | 'success' | 'error';
+  readonly data?: TData;
+  readonly error: TError | null;
+  readonly isStale: boolean;
+  readonly isPending: boolean;
+  readonly isFetching: boolean;
+  readonly isSuccess: boolean;
+  readonly isError: boolean;
+}
+```
+
+### Client controller method semantics
+
+- `execute()`:
+  - Runs the query while respecting freshness.
+  - If cached data is still fresh and `force` is not set, it can return from cache.
+  - Use for normal/manual execution flow.
+- `execute({ force: true })`:
+  - Forces a network execution even when cached data is fresh.
+- `refetch()`:
+  - Equivalent to `execute({ force: true })`.
+  - Use when the user explicitly requests a refresh.
+- `cancel()`:
+  - Aborts the current in-flight request for this controller key.
+- `subscribe(listener)`:
+  - Receives every state transition and returns an unsubscribe function.
+
+### Client state fields
+
+- `status`: `'idle' | 'pending' | 'success' | 'error'`.
+- `data`: latest successful payload when available.
+- `error`: latest terminal error or `null`.
+- `isPending`: `true` when first load is in-flight and no successful data exists yet.
+- `isFetching`: `true` whenever a request is in-flight (first load or background refresh).
+- `isSuccess`: `true` after successful completion.
+- `isError`: `true` after terminal failure.
+- `isStale`: `true` when cached data is considered stale under `staleTime` rules.
+
+### Execute vs Refetch (quick rule)
+
+- Use `execute()` for normal program flow, especially with `autoExecute: false`.
+- Use `refetch()` for explicit user refresh actions (refresh button, retry-now, pull-to-refresh).
+
+### Example
+
+```ts
+import type { ClientQueryController } from '@utils/query';
+import type { GetAllPetsResponse } from '../share/types/pet-contact';
+import { useClientQuery } from '@utils/query';
+import { getAllPetsOptions } from '../share/queries/pets';
+
+class FetchPetsQueryElement extends HTMLElement {
+  #query: ClientQueryController<GetAllPetsResponse> | null = null;
+  #unsubscribe: (() => void) | null = null;
+
+  connectedCallback(): void {
+    // autoExecute defaults to true, so this starts fetching immediately.
+    this.#query = useClientQuery(getAllPetsOptions);
+
+    this.#unsubscribe = this.#query.subscribe(() => {
+      this.#render();
+    });
+
+    this.#render();
   }
 
-  console.error('Unknown query error', error);
-};
+  disconnectedCallback(): void {
+    this.#unsubscribe?.();
+    this.#unsubscribe = null;
+    this.#query?.cancel();
+    this.#query = null;
+  }
+
+  async refresh(): Promise<void> {
+    // Explicit user refresh path.
+    await this.#query?.refetch();
+  }
+
+  #render(): void {
+    if (!this.#query) {
+      return;
+    }
+
+    const isLoading = this.#query.isPending || this.#query.isFetching;
+    const hasError = this.#query.isError;
+    const pets = this.#query.data?.items ?? [];
+
+    console.log({ isLoading, hasError, pets });
+  }
+}
+
+if (!customElements.get('fetch-pets-query')) {
+  customElements.define('fetch-pets-query', FetchPetsQueryElement);
+}
 ```
 
-## Dedupe Modes Explained
+## `useMutationQuery`
 
-`dedupe` controls what happens when a second request for the same `queryKey` starts while the first one is still in-flight.
+Create a mutation controller backed by the client query runtime.
+
+### Signature
 
 ```ts
-dedupe?: 'join' | 'cancel' | 'none';
+function useMutationQuery<TData, TPayload = unknown, TError = unknown>(
+  options: MutationOptions<TData, TPayload, TError>,
+): MutationController<TData, TPayload, TError>;
 ```
+
+`MutationOptions` is the same shape as `QueryOptions`, but this wrapper always starts in manual mode.
+
+### Mutation behavior
+
+- Mutations do not auto-run.
+- `mutate(payload)` executes with `force: true`.
+- `context.payload` in `queryFn` receives your payload.
+
+### Parameter 1: `options`
+
+Use the same fields as `useClientQuery` options.
+
+- For mutations, `queryKey` should represent the action, for example `['pets', 'create']`.
+- `dedupe`/`retry` still apply because execution uses the same core engine.
+
+### Returns: `MutationController`
+
+`MutationController` is the mutation-focused controller. In docs and usage, prefer the mutation-specific surface:
+
+```ts
+mutate(payload?: TPayload): Promise<{
+  status: QueryStateStatus;
+  data?: TData;
+  error: TError | null;
+  isIdle: boolean;
+  isPending: boolean;
+  isSuccess: boolean;
+  isError: boolean;
+}>;
+
+reset(): void;
+```
+
+Mutation state intentionally excludes `isFetching` and `isStale`.
+`isIdle`, `isPending`, `isSuccess`, and `isError` are derived from `status`.
+
+### Mutation method semantics
+
+- `mutate(payload)`:
+  - Primary mutation trigger.
+  - Runs the write operation using your payload.
+- `reset()`:
+  - Clears mutation state back to initial idle.
+  - Use this after showing a success/error message when you want a clean form state.
+- `subscribe(listener)`:
+  - Observe pending/success/error changes to update UI state.
+
+### Example
+
+```ts
+import { invalidateQuery } from '@utils/query';
+
+const createPet = useMutationQuery<CreatePetResponse, CreatePetBody>({
+  queryKey: ['pets', 'create'],
+  queryFn: async ({ payload }) => {
+    if (!payload) throw new Error('Pet payload is required');
+    const response = await fetch('/api/pets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  },
+  onSuccess: () => {
+    invalidateQuery(['pets']);
+  },
+});
+
+await createPet.mutate({ name: 'Buddy', type: 'dog' });
+```
+
+### Reusable `mutationOptions` example (project pattern)
+
+```ts
+import { invalidateQuery } from '@utils/query';
+import { mutationOptions } from '@utils/query/mutationOptions';
+import type { CreatePetBody, CreatePetResponse } from '@/types/pet-contact';
+import { postNewPet } from '@/actions/pets';
+
+export const createPetOptions = mutationOptions<CreatePetResponse, CreatePetBody>({
+  queryKey: ['pets', 'create'],
+  queryFn: async (context) => {
+    if (!context.payload) {
+      throw new Error('Pet payload is required');
+    }
+
+    return await postNewPet(context.payload);
+  },
+  onSuccess: () => {
+    invalidateQuery(['pets']);
+  },
+});
+```
+
+Then use it (same pattern as `add-pet.web.ts`):
+
+```ts
+import { useMutationQuery } from '@utils/query';
+import { createPetOptions } from '@queries/pets';
+
+const mutation = useMutationQuery(createPetOptions);
+
+if (!mutation.isPending) {
+  await mutation.mutate({ name: 'Buddy', type: 'dog' });
+}
+```
+
+### Exact web-component integration (`add-pet.web.ts` pattern)
+
+```ts
+import type { MutationController } from '@utils/query';
+import type { CreatePetBody, CreatePetResponse } from '@/types/pet-contact';
+import { applyButtonLoadingState } from '@utils/dom/applyButtonLoadingState';
+import { useMutationQuery } from '@utils/query';
+import { createPetOptions } from '@queries/pets';
+
+const SAMPLE_PETS: CreatePetBody[] = [
+  { name: 'Buddy', type: 'dog' },
+  { name: 'Whiskers', type: 'cat' },
+];
+
+let sampleIndex = 0;
+
+class AddPetElement extends HTMLElement {
+  #mutation: MutationController<CreatePetResponse, CreatePetBody> | null = null;
+  #unsubscribe: (() => void) | null = null;
+
+  connectedCallback(): void {
+    this.#mutation = useMutationQuery(createPetOptions);
+    const mutation = this.#mutation;
+
+    this.#unsubscribe = mutation.subscribe(() => {
+      const button = this.querySelector<HTMLElement>('.button');
+      if (button) {
+        applyButtonLoadingState(button, mutation.isPending);
+      }
+    });
+
+    this.addEventListener('click', () => {
+      this.#addPet().catch(console.error);
+    });
+  }
+
+  disconnectedCallback(): void {
+    this.#unsubscribe?.();
+    this.#unsubscribe = null;
+    this.#mutation = null;
+  }
+
+  async #addPet(): Promise<void> {
+    if (!this.#mutation) return;
+    if (this.#mutation.isPending) return;
+
+    const payload = SAMPLE_PETS[sampleIndex % SAMPLE_PETS.length];
+    sampleIndex += 1;
+
+    await this.#mutation.mutate(payload);
+  }
+}
+```
+
+## `invalidateQuery`
+
+Invalidate client query cache entries by key.
+
+### Signature
+
+```ts
+function invalidateQuery(
+  queryKey: QueryKey,
+  options?: {
+    exact?: boolean;
+    refetchType?: 'none' | 'active';
+  },
+): boolean;
+```
+
+### Parameters
+
+- `queryKey` (required): key (or key prefix when `exact: false`) to invalidate.
+- `options.exact` (default `true`):
+  - `true`: only invalidate exact key match.
+  - `false`: invalidate keys that start with the provided key parts.
+- `options.refetchType` (default `'active'`):
+  - `'active'`: immediately refetch matching queries that currently have subscribers.
+  - `'none'`: invalidate only; do not auto-refetch.
+
+### Returns
+
+- `true` if at least one cache entry was invalidated.
+- `false` if no matching cache entries were found.
+
+### Examples
+
+```ts
+// Exact key invalidation (default behavior).
+invalidateQuery(['pets']);
+
+// Invalidate all keys prefixed by ['pets'] and refetch active subscribers.
+invalidateQuery(['pets'], { exact: false, refetchType: 'active' });
+
+// Invalidate without auto-refetch.
+invalidateQuery(['pets'], { refetchType: 'none' });
+```
+
+## `useServerQuery`
+
+Create a server query controller and optionally auto-execute it.
+
+### Signatures
+
+```ts
+function useServerQuery<TData, TError = unknown>(
+  options: ServerQueryDefaultModeOptions<TData, TError>,
+): Promise<ServerQueryController<TData, TError>>;
+
+function useServerQuery<TData, TError = unknown>(
+  options: ServerQueryQueryModeOptions<TData, TError>,
+): Promise<ServerQueryController<TData, TError>>;
+
+function useServerQuery<TData, TError = unknown>(
+  options: ServerQueryRouteModeOptions<TData, TError>,
+): Promise<ServerQueryController<TData, TError>>;
+```
+
+### Mode A: default/query cache mode
+
+Use standard query cache behavior.
+
+- `cacheMode` omitted or `'query'`
+- `queryKey` required
+- `staleTime` allowed
+
+Supported options are the shared `QueryOptions` fields.
+
+### Mode B: route cache mode
+
+Use Astro route cache directives per execution.
+
+Required/allowed fields:
+
+- `cacheMode: 'route'`
+- `routeCache` (required):
+  - `cache`: Astro route cache object
+  - `maxAge?`: number ms, `Infinity`, or `'static'`
+  - `swr?`: number ms
+  - `tags?`: string[]
+- `queryFn` (required)
+- `queryKey` not allowed
+- `staleTime` not allowed
+
+### Auto execution behavior
+
+`useServerQuery` creates the controller in manual mode internally, then:
+
+- if `options.autoExecute !== false`, it awaits `query.execute()` before returning.
+- if `options.autoExecute === false`, it returns without executing.
+
+### Returns: `ServerQueryController`
+
+```ts
+interface ServerQueryController<TData, TError> {
+  execute(options?: { force?: boolean }): Promise<ServerQueryResult<TData, TError>>;
+  refetch(): Promise<ServerQueryResult<TData, TError>>;
+
+  readonly data?: TData;
+  readonly error: TError | null;
+  readonly isStale: boolean;
+  readonly keyHash: string;
+  readonly isFromCache: boolean;
+  readonly isSuccess: boolean;
+  readonly isError: boolean;
+}
+```
+
+### Server controller method semantics
+
+- `execute()`:
+  - Runs the query once, respecting stale/cache behavior in query mode.
+  - In route mode, runs using route-cache directives.
+- `execute({ force: true })`:
+  - Forces a fresh execution.
+- `refetch()`:
+  - Equivalent to `execute({ force: true })`.
+
+### Server result fields
+
+- `data`: latest successful payload.
+- `error`: terminal error or `null`.
+- `isSuccess`: `true` when last execution succeeded.
+- `isError`: `true` when last execution failed.
+- `isFromCache`: `true` when served from query cache.
+- `isStale`: stale state for cached query mode.
+- `keyHash`: stable hash for the execution key.
+
+### Query mode example
+
+```ts
+const {
+  data: users,
+  isFromCache,
+  isError,
+  error,
+} = await useServerQuery<User[]>({
+  queryKey: ['users'],
+  staleTime: 60_000,
+  queryFn: async ({ signal }) => {
+    const response = await fetch('https://example.com/api/users', { signal });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  },
+});
+
+if (isError) {
+  throw error;
+}
+
+console.log(isFromCache);
+```
+
+### Route mode example
+
+```ts
+const { data: users } = await useServerQuery<User[]>({
+  cacheMode: 'route',
+  routeCache: {
+    cache,
+    maxAge: 30_000,
+    swr: 60_000,
+    tags: ['users'],
+  },
+  queryFn: async ({ signal }) => {
+    const response = await fetch('https://example.com/api/users', { signal });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  },
+});
+```
+
+`isFromCache` is a query-store cache hit signal and is meaningful in query mode.
+In route mode, execution is uncached at the query layer and cache behavior is
+controlled by Astro route cache (`routeCache`).
+
+## `queryOptions`
+
+Create reusable, strongly-typed query option objects.
+
+### Signature
+
+```ts
+const queryOptions = <
+  TData,
+  TError = unknown,
+  TOptions extends QueryOptions<TData, TError> = QueryOptions<TData, TError>,
+>(
+  options: TOptions,
+): TOptions => options;
+```
+
+### Parameter 1: `options`
+
+- Same shape as `QueryOptions`.
+- Returned as-is with preserved generic inference.
+- `TData` is inferred from `queryFn` return type in normal usage.
+- Explicit generics like `queryOptions<GetAllPetsResponse>(...)` are optional and usually only needed when inference cannot resolve an inline/union function shape.
+
+### Important scope note
+
+`queryOptions()` is for `QueryOptions` shape (query key based mode). For `useServerQuery` route mode (`cacheMode: 'route'`), pass the object directly to `useServerQuery` instead of wrapping it in `queryOptions()`.
+
+### Example
+
+```ts
+export const getAllPetsOptions = queryOptions({
+  queryKey: ['pets'],
+  staleTime: 3_000,
+  queryFn: getAllPets,
+});
+
+const petsOnServer = await useServerQuery(getAllPetsOptions);
+const petsOnClient = useClientQuery(getAllPetsOptions);
+```
+
+## Option Details Reference
+
+This section applies to `useClientQuery`, `useMutationQuery`, and query-mode `useServerQuery`.
+
+- `queryKey`: cache identity. Array keys are recommended for composite identity.
+- `queryFn`: execution function. Must return a promise.
+- `autoExecute`: immediately execute after controller creation. Default `true` (except mutation wrapper semantics).
+- `staleTime`:
+  - number: fresh duration in ms
+  - `'static'`: never stale
+  - resolver function: computed per entry using current state context
+  - numeric separators are only visual formatting: `30_000 === 30000` (30s), while `3_000 === 3000` (3s)
+- `gcTime`: cache retention ms. Client default is `300000`; server default is `Infinity`.
+- `retry`:
+  - number: max retry count
+  - function: custom retry decision per attempt/error
+- `retryDelay`:
+  - number: fixed delay in ms
+  - function: dynamic delay by attempt/error
+- `dedupe`:
+  - `'join'`: reuse the active in-flight promise
+  - `'cancel'`: abort active request and start a new one
+  - `'none'`: run requests independently
+- `force`: bypass stale cache checks and execute fresh.
+- `meta`: custom values available in `queryFn` context.
+- `onSuccess`: runs after final success.
+- `onError`: runs after final failure.
+- `interceptors`: attempt-level lifecycle hooks.
+
+## Dedupe Behavior (`join`, `cancel`, `none`)
+
+`dedupe` only matters when a second request for the same `queryKey` starts while the first one is still in-flight.
+
+If there is no in-flight request, all modes behave the same.
 
 ### `join` (default)
 
-- If a request is already running for the same key, the new call reuses the same in-flight promise.
+- The second call reuses the first call's in-flight promise.
 - Only one network request runs.
-- All callers receive the same result.
+- Both callers resolve/reject with the same final result.
 
-Use when: most read/query flows where duplicate clicks or re-renders may trigger the same request.
+Use when you want to avoid duplicate traffic for the same data.
 
 ### `cancel`
 
-- If a request is already running for the same key, the previous one is aborted.
+- The second call aborts the previous in-flight request.
 - A new request starts immediately.
-- Best when the latest input should always win.
+- The latest caller controls the final result for that key.
 
-Use when: live search/filter changes where older responses are no longer relevant.
+Use when newest user intent should win (for example fast-changing filters/search).
 
 ### `none`
 
-- No deduplication behavior is applied.
-- If another request is in-flight, a second independent request is started.
-- This can create concurrent requests for the same key.
+- No deduplication is applied.
+- Multiple same-key requests run concurrently.
+- The cache ends with whichever request finishes last.
 
-Use when: you explicitly want separate executions, even with the same key.
+Use only when parallel same-key requests are intentional.
 
 ### Timeline Example
 
-Assume two calls happen quickly with the same key `['products']`.
+Assume two executions happen close together for the same key `['users']`:
 
-- `join`: call B waits for call A, both resolve from the same request.
-- `cancel`: call B aborts call A, then call B performs a fresh request.
-- `none`: call A and call B both run; whichever finishes updates the cache entry last.
+- `join`: request B waits for request A, both share one fetch.
+- `cancel`: request B aborts request A, then B performs a new fetch.
+- `none`: request A and B both fetch in parallel; last completion wins cache state.
 
-### Recommendation
+### Practical Recommendation
 
-- Start with `join` for predictable and efficient behavior.
-- Switch to `cancel` for "latest intent wins" UI interactions.
-- Use `none` only when parallel duplicate requests are intentional.
+- Start with `join` unless you have a strong reason not to.
+- Use `cancel` for latest-input-wins UX.
+- Avoid `none` for regular reads because it can introduce racey cache outcomes.
 
-## Server Example (Astro)
+## Interceptor Lifecycle
+
+If interceptors are configured, the execution order is:
+
+1. `onRequest`
+2. `queryFn`
+3. `onResponse` on success, or `onResponseError` on failure
+4. Retry if configured
+5. `onSuccess` (final success) or `onError` (terminal failure)
+
+## Usage Patterns
+
+### Reusable options colocated with query functions
 
 ```ts
-import { useServerQuery } from '@utils/query/appQuery';
-
-const query = useServerQuery<{ id: string; name: string; price: number }>({
-  queryKey: ['product', params.id],
-  staleTime: 30_000,
-  retry: 2,
-  queryFn: async ({ signal }) => {
-    const response = await fetch(`https://api.example.com/products/${params.id}`, { signal });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    return (await response.json()) as { id: string; name: string; price: number };
-  },
-  onSuccess: (data) => {
-    console.info('final server success', data.id);
-  },
-  onError: (error) => {
-    console.error('final server failure', error);
-  },
+export const getAllUsersOptions = queryOptions({
+  queryKey: ['users'],
+  queryFn: getAllUsers,
+  staleTime: 10_000,
 });
-
-if (query.isError) {
-  // return fallback UI / 500 / typed error payload
-}
 ```
 
-## Automatic vs Manual Execution
-
-Both adapters now support the same pattern:
-
-- default `autoExecute: true`: starts execution immediately after query creation.
-- `autoExecute: false`: does not run until you call `execute()`.
-
-Manual mode example:
+### Manual execution pattern
 
 ```ts
 const query = useClientQuery({
-  queryKey: ['products'],
+  queryKey: ['users'],
   autoExecute: false,
-  queryFn: async ({ signal }) => getProducts({ signal }),
+  queryFn: getAllUsers,
 });
 
-// later
 await query.execute();
 ```
 
-## Client Example (Vue/Astro Island)
+### Force refresh pattern
 
 ```ts
-import { useClientQuery } from '@utils/query/appQuery';
-
-const { execute, refetch, cancel, getState, subscribe } = useClientQuery<{ id: string; name: string }>({
-  queryKey: ['product', 'p-42'],
-  staleTime: 10_000,
-  dedupe: 'join',
-  meta: { source: 'product-card' },
-  queryFn: async ({ signal, meta }) => {
-    console.debug('meta', meta);
-
-    const response = await fetch('/api/product/p-42', { signal });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    return (await response.json()) as { id: string; name: string };
-  },
-});
-
-const unsubscribe = subscribe((state) => {
-  console.log(state.status, state.isFetching, state.data, state.error);
-});
-
-await execute();
-await refetch();
-// cancel();
-
-const { status, isFetching, data, error } = getState();
-
-unsubscribe();
+await query.execute({ force: true });
+// equivalent intent
+await query.refetch();
 ```
-
-`subscribe` is optional. Use it when you need to react to transitions (status/fetching changes). If you only need the latest snapshot after an action, call `getState()`.
-
-## Typed queryFn in Separate Files (Direct Function Pattern)
-
-If you want to call `useServerQuery({ queryKey, queryFn: getAllUser })` directly, define request/response API interfaces first, then type `getAllUser` with `QueryFn<TData>`.
-
-### 1) Shared API contract
-
-```ts
-// src/share/types/user-contact.ts
-export interface UserContact {
-  id: string;
-  name: string;
-  email: string;
-}
-
-export interface GetAllUserMeta {
-  organizationId: string;
-}
-
-export interface GetAllUserResponse {
-  items: UserContact[];
-}
-```
-
-### 2) Reusable queryFn
-
-```ts
-// src/share/queries/users.ts
-import type { QueryFn } from '@utils/query';
-import type { GetAllUserMeta, GetAllUserResponse } from '../types/user-contact';
-
-export const getAllUser: QueryFn<GetAllUserResponse> = async ({ signal, meta }) => {
-  const { organizationId } = meta as GetAllUserMeta;
-
-  const response = await fetch(`/api/users?organizationId=${organizationId}`, { signal });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-
-  return (await response.json()) as GetAllUserResponse;
-};
-```
-
-### 3) Direct use in server query
-
-```ts
-import { useServerQuery } from '@utils/query/appQuery';
-import { getAllUser } from '../share/queries/users';
-import type { GetAllUserResponse } from '../share/types/user-contact';
-
-const result = await useServerQuery<GetAllUserResponse>({
-  queryKey: ['users', { organizationId: params.id }],
-  meta: { organizationId: params.id },
-  queryFn: getAllUser,
-});
-```
-
-This matches your preferred shape: shared API interfaces + direct reusable `queryFn` function.
-
-### Optional: keep `queryKey` simple and let `meta` carry request params
-
-```ts
-await useServerQuery<GetAllUserResponse>({
-  queryKey: ['users', params.id],
-  meta: { organizationId: params.id },
-  queryFn: getAllUser,
-});
-```
-
-## Interceptors vs Success/Error Callbacks
-
-### Attempt-level
-
-- `onResponse`: runs each successful attempt.
-- `onResponseError`: runs each failed attempt.
-
-### Final-level
-
-- `onSuccess`: runs once after query settles successfully.
-- `onError`: runs once if query ultimately fails after retries.
-
-If retries are enabled, `onResponseError` may run multiple times while `onError` runs once.
-
-## Caching Strategies: staleTime and swr
-
-These two options control how long data stays fresh and when revalidation happens. Understanding their interaction is crucial for good caching behavior.
-
-### Core Concepts
-
-**`staleTime`** (milliseconds)
-
-- How long cached data is considered "fresh."
-- After `staleTime` expires, data is marked stale.
-- On the next access, a fresh fetch is triggered.
-- When stale, client queries block on refetch; server queries serve stale data if SWR is set.
-- This is your **freshness guarantee.**
-
-**`swr`** (milliseconds, server-only via Astro)
-
-- Stale-While-Revalidate: grace period to serve stale data **while revalidating in the background.**
-- Only works in server runtime with Astro route cache.
-- Allows page to render quickly with stale data, then update as fresh data arrives.
-- Ignored in client queries (has no effect).
-
-### Scenario 1: Only `staleTime` (no `swr`)
-
-```ts
-await useServerQuery({
-  queryKey: ['products'],
-  staleTime: 30_000, // 30 seconds
-  queryFn: async ({ signal }) => getProducts({ signal }),
-});
-```
-
-**Timeline:**
-
-- **0-30s**: Serve cached data (fresh)
-- **30s+**: Cache is stale; next request blocks until fresh data arrives
-
-**Behavior:**
-
-- Users get data instantly for 30 seconds.
-- After 30s, the site feels slow because rendering blocks on a fetch.
-
-**Use when:** You want freshness guarantees and don't mind the occasional blocking refetch.
-
----
-
-### Scenario 2: Only `swr` (no `staleTime`)
-
-```ts
-await useServerQuery({
-  queryKey: ['products'],
-  swr: 60_000, // 60 seconds, no staleTime
-  queryFn: async ({ signal }) => getProducts({ signal }),
-});
-```
-
-**Timeline:**
-
-- **Immediately**: Data is always stale (no freshness window defined)
-- **0-60s**: Serve stale data while revalidating in background
-- **60s+**: Cache expired, block until fresh
-
-**Behavior:**
-
-- First request always revalidates (slow).
-- Subsequent requests within 60s are fast but return old data.
-- After 60s, slow again.
-
-**Use when:** You want graceful fallback but don't care much about freshness guarantees. Rarely recommended alone.
-
----
-
-### Scenario 3: Both `staleTime` and `swr` (Recommended for Server)
-
-```ts
-await useServerQuery({
-  queryKey: ['products'],
-  staleTime: 30_000, // 30 seconds fresh
-  swr: 60_000, // 60 seconds SWR window
-  queryFn: async ({ signal }) => getProducts({ signal }),
-});
-```
-
-**Timeline:**
-
-- **0-30s**: Serve fresh cached data (no refetch)
-- **30-90s**: Data is stale, but serve it anyway while refetching in background
-- **90s+**: Both windows expired, block until fresh
-
-**Behavior:**
-
-- **0-30s**: Fast, guaranteed fresh.
-- **30-90s**: Fast (serves stale), revalidation happens quietly in background. Page may update as fresh data arrives.
-- **90s+**: Slow (blocks on refetch).
-
-**Example user experience:**
-
-```
-User loads /products at t=0
-  ↓ gets fresh data instantly
-  ↓ data stays cached for 30s
-
-User loads /products again at t=45s
-  ↓ gets stale data instantly (from SWR window)
-  ↓ background revalidation starts
-  ↓ page updates with fresh data when ready
-```
-
-**Use when:** You want the best of both worlds — speed + eventual freshness. Typical for server-rendered pages.
-
----
-
-### Scenario 4: Neither `staleTime` nor `swr`
-
-```ts
-await useServerQuery({
-  queryKey: ['products'],
-  // no staleTime, no swr
-  queryFn: async ({ signal }) => getProducts({ signal }),
-});
-```
-
-**Timeline:**
-
-- **Every request**: Revalidate (always fresh, always slow)
-
-**Behavior:**
-
-- No caching benefit; identical to not caching at all.
-- Every render fetches from scratch.
-
-**Use when:** You have real-time data and can't afford stale content.
-
----
-
-### Decision Matrix
-
-| Goal                                            | staleTime | swr    | Result                                               |
-| ----------------------------------------------- | --------- | ------ | ---------------------------------------------------- |
-| Fast responses with eventual freshness (server) | ✅ 30s    | ✅ 60s | Fast for 30s, then fast+bg revalidation for 60s more |
-| Strict freshness, willing to block              | ✅ 30s    | ❌     | Fast for 30s, then blocks                            |
-| Best effort, no freshness guarantee             | ❌        | ✅ 60s | Slow first, then fast but stale                      |
-| Always fresh, no caching                        | ❌        | ❌     | Every request blocks                                 |
-
----
-
-### Key Insights
-
-1. **`staleTime` is always meaningful** — it's your freshness contract. Set it even in client queries.
-2. **`swr` only helps server** — it tells Astro to serve stale data without blocking. Ignored client-side.
-3. **Combine them** for best UX on server: users get speed + eventual freshness.
-4. **`swr` > `staleTime`** — if you set `swr: 60_000` and `staleTime: 30_000`, the SWR window is 30-90s (staleTime to staleTime+swr).
-
----
-
-## Astro Cache Bridge Notes
-
-`createServerQuery({ astroCache })` enables route-cache mapping via `staleTime`, `swr`, and `tags` on server query calls.
-
-- `staleTime` maps to `maxAge` (seconds)
-- `swr` maps to stale-while-revalidate window
-- `tags` maps to cache invalidation tags
-- A deterministic `query:<hash(queryKey)>` tag is always added when cache directives are applied, so you do not need to repeat the query key manually.
-
-### Do I Need To Pass `tags` If I Already Have `queryKey`?
-
-`queryKey` and `tags` are related but not the same:
-
-- `queryKey` identifies one exact query instance (exact cache key).
-- `tags` are labels used to invalidate groups of different keys together.
-
-So: no for single-query invalidation, yes for grouped invalidation.
-
-- Skip `tags` when you only need a stable per-query cache identity; `queryKey` already produces `query:<hash>`.
-- Add `tags` when you want to invalidate many related queries at once (for example all `products` queries).
-
-```ts
-await useServerQuery({
-  queryKey: ['product', productId],
-  staleTime: 30_000,
-  queryFn,
-  // auto tag exists: query:<hash(['product', productId])>
-  // good for this exact query only
-});
-
-await useServerQuery({
-  queryKey: ['product', productId],
-  staleTime: 30_000,
-  tags: ['products'],
-  queryFn,
-  // extra grouped tag: "products"
-  // lets you invalidate product list + product detail keys together
-});
-```
-
-Use this only in server runtime where Astro cache is available.
-
-## Practical Conventions
-
-- Keep `queryKey` stable and serializable.
-- Put auth/session headers inside `queryFn` or request interceptors.
-- Use `meta` for optional context, not core business data.
-- Prefer `onSuccess` / `onError` for UI toasts and analytics events that should happen once.
-- Prefer interceptors for request/response instrumentation and retry-aware side effects.

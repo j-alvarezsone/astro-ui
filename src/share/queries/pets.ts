@@ -1,7 +1,7 @@
 import { queryOptions } from '@utils/query/queryOptions';
 import { mutationOptions } from '@utils/query/mutationOptions';
 import { invalidateQuery } from '@utils/query';
-import type { CreatePetBody, CreatePetResponse, GetAllPetsResponse } from '../types/pet-contact';
+import type { CreatePetBody, CreatePetResponse } from '../types/pet-contact';
 import { getAllPets, postNewPet } from '../actions/pets';
 
 /**
@@ -10,7 +10,7 @@ import { getAllPets, postNewPet } from '../actions/pets';
  * @example
  * const { data } = await useServerQuery(getAllPetsOptions);
  */
-export const getAllPetsOptions = queryOptions<GetAllPetsResponse>({
+export const getAllPetsOptions = queryOptions({
   queryKey: ['pets'],
   queryFn: getAllPets,
   staleTime: 3_000,

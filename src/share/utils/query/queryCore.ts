@@ -124,6 +124,70 @@ export async function executeQuery<TData, TError = unknown, TPayload = unknown>(
 }
 
 /**
+ * Execute a query lifecycle without using the shared cache store.
+ *
+ * This helper preserves retry, interceptor, callback, and abort semantics from
+ * the core query engine while skipping stale checks, dedupe, and persistence.
+ *
+ * @param options - Query execution options for a one-off uncached execution.
+ * @param coreOptions - Global core options such as interceptors and now provider.
+ * @returns A query execution result that is always marked as a non-cache hit.
+ * @example
+ * ```ts
+ * const result = await executeQueryUncached({
+ *   queryKey: ['route-execution'],
+ *   queryFn: async ({ signal }) => fetchUsers({ signal }),
+ *   client: false,
+ * }, { now: Date.now });
+ * ```
+ */
+export async function executeQueryUncached<TData, TError = unknown, TPayload = unknown>(
+  options: Omit<QueryExecutionOptions<TData, TError, TPayload>, 'keyHash'> & { keyHash?: string },
+  coreOptions: QueryCoreOptions,
+): Promise<QueryExecutionResult<TData, TError>> {
+  const now = coreOptions.now ?? Date.now;
+  const keyHash = options.keyHash ?? 'uncached-query';
+  const executionOptions: QueryExecutionOptions<TData, TError, TPayload> = {
+    ...options,
+    keyHash,
+  };
+  const mergedInterceptors = mergeInterceptors<TData, TError, TPayload>(
+    coreOptions.interceptors,
+    executionOptions.interceptors,
+  );
+  const retryCount = resolveRetryCount(executionOptions.retry, coreOptions.defaultRetry);
+  const controller = createLinkedAbortController(executionOptions.signal);
+  const entry: QueryCacheEntry<TData, TError> = {
+    hasData: false,
+    updatedAt: now(),
+    status: 'idle',
+  };
+  const context: QueryLifecycleContext<TData, TError, TPayload> = {
+    queryKey: executionOptions.queryKey,
+    keyHash,
+    options: executionOptions,
+    attempt: 1,
+    client: executionOptions.client,
+  };
+
+  entry.abortController = controller;
+  entry.status = 'pending';
+
+  await runOnRequestInterceptors(mergedInterceptors, context);
+
+  return await runQueryAttempt({
+    attempt: 1,
+    entry,
+    options: executionOptions,
+    mergedInterceptors,
+    context,
+    controller,
+    now,
+    retryCount,
+  });
+}
+
+/**
  * Resolve an effective garbage-collection time for a query entry.
  *
  * Defaults to 5 minutes for client queries and `Infinity` for server queries.

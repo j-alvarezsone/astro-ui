@@ -14,21 +14,21 @@ import type { AstroCacheBridgeOptions, AstroRouteCacheSetOptions } from '@utils/
  * applyAstroRouteCache({
  *   cache: astroCache,
  *   queryKey: ['product', '123'],
- *   staleTime: 30_000,
+ *   maxAge: 30_000,
  *   swr: 60_000,
  *   tags: ['products'],
  * });
  * ```
  */
 export function applyAstroRouteCache(options: AstroCacheBridgeOptions): boolean {
-  const { cache, staleTime, swr, tags, queryKey } = options;
+  const { cache, maxAge, swr, tags, queryKey } = options;
 
   if (!cache || cache.enabled === false) {
     return false;
   }
 
-  const maxAge = toMaxAgeSeconds(staleTime);
-  const hasExplicitDirectives = maxAge !== undefined || swr !== undefined || Boolean(tags?.length);
+  const maxAgeSeconds = toMaxAgeSeconds(maxAge);
+  const hasExplicitDirectives = maxAgeSeconds !== undefined || swr !== undefined || Boolean(tags?.length);
 
   if (!hasExplicitDirectives) {
     return false;
@@ -36,7 +36,7 @@ export function applyAstroRouteCache(options: AstroCacheBridgeOptions): boolean 
 
   const mergedTags = mergeTags(tags, queryKey);
   const cacheOptions: AstroRouteCacheSetOptions = {
-    ...(maxAge !== undefined ? { maxAge } : {}),
+    ...(maxAgeSeconds !== undefined ? { maxAge: maxAgeSeconds } : {}),
     ...(swr !== undefined ? { swr: toSwrSeconds(swr) } : {}),
     ...(mergedTags.length ? { tags: mergedTags } : {}),
   };
@@ -52,7 +52,7 @@ export function applyAstroRouteCache(options: AstroCacheBridgeOptions): boolean 
  * Returns `undefined` for `static` and `Infinity` so Astro can treat the
  * result as a non-expiring route cache entry.
  *
- * @param staleTime - The query stale time value from cache bridge options.
+ * @param maxAge - The route max-age value from cache bridge options.
  * @returns A max-age in seconds or `undefined` for non-expiring values.
  * @example
  * ```ts
@@ -60,20 +60,20 @@ export function applyAstroRouteCache(options: AstroCacheBridgeOptions): boolean 
  * toMaxAgeSeconds('static'); // undefined
  * ```
  */
-export function toMaxAgeSeconds(staleTime: AstroCacheBridgeOptions['staleTime']): number | undefined {
-  if (staleTime === undefined) {
+export function toMaxAgeSeconds(maxAge: AstroCacheBridgeOptions['maxAge']): number | undefined {
+  if (maxAge === undefined) {
     return undefined;
   }
 
-  if (staleTime === 'static' || staleTime === Number.POSITIVE_INFINITY) {
+  if (maxAge === 'static' || maxAge === Number.POSITIVE_INFINITY) {
     return undefined;
   }
 
-  if (staleTime <= 0) {
+  if (maxAge <= 0) {
     return 0;
   }
 
-  return Math.floor(staleTime / 1000);
+  return Math.floor(maxAge / 1000);
 }
 
 /**
@@ -111,10 +111,13 @@ export function toSwrSeconds(swr: number): number {
  * ```
  */
 export function mergeTags(tags: string[] | undefined, queryKey: AstroCacheBridgeOptions['queryKey']): string[] {
-  const queryTag = `query:${hashQueryKey(queryKey)}`;
-  const allTags = [...(tags ?? []), queryTag]
+  const allTags = [...(tags ?? [])]
     .map((tag) => tag.trim())
     .filter(Boolean);
+
+  if (queryKey !== undefined) {
+    allTags.push(`query:${hashQueryKey(queryKey)}`);
+  }
 
   return [...new Set(allTags)];
 }

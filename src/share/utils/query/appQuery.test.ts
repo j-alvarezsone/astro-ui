@@ -1,6 +1,8 @@
 import { useClientQuery, useMutationQuery, useServerQuery } from '@utils/query/appQuery';
 import type { AstroRouteCacheLike, AstroRouteCacheSetOptions } from '@utils/query/types';
 
+const NOOP_STRING_RESOLVER = (_value: string): void => {};
+
 function makeAstroCache(overrides?: Partial<AstroRouteCacheLike>) {
   return {
     enabled: true,
@@ -82,14 +84,17 @@ describe('query app wrapper', () => {
     });
 
     expect(mutationFn).toHaveBeenCalledTimes(0);
+    expect(mutation.isIdle).toBe(true);
 
     const { data } = await mutation.mutate();
 
     expect(mutationFn).toHaveBeenCalledTimes(1);
     expect(data).toBe('mutation-ok');
+    expect(mutation.isSuccess).toBe(true);
+    expect(mutation.isIdle).toBe(false);
   });
 
-  it('keeps mutation execute and refetch behavior available through the wrapper', async () => {
+  it('exposes the mutation-focused controller surface', async () => {
     const mutationFn = vi.fn(async () => await Promise.resolve('mutation-execute'));
 
     const mutation = useMutationQuery({
@@ -98,64 +103,92 @@ describe('query app wrapper', () => {
       staleTime: Number.POSITIVE_INFINITY,
     });
 
-    await mutation.execute();
+    expect(typeof mutation.mutate).toBe('function');
+    expect(typeof mutation.reset).toBe('function');
+    expect(typeof mutation.subscribe).toBe('function');
+    expect(typeof mutation.isIdle).toBe('boolean');
+    expect(typeof mutation.isPending).toBe('boolean');
+    expect(typeof mutation.isSuccess).toBe('boolean');
+    expect(typeof mutation.isError).toBe('boolean');
+
+    const { data } = await mutation.mutate();
 
     expect(mutationFn).toHaveBeenCalledTimes(1);
-    expect(mutation.isSuccess).toBe(true);
-    expect(mutation.data).toBe('mutation-execute');
-
-    await mutation.refetch();
-
-    expect(mutationFn).toHaveBeenCalledTimes(2);
+    expect(data).toBe('mutation-execute');
   });
 
-  it('keeps mutation cancel behavior available through the wrapper', async () => {
+  it('resets mutation state to initial idle state', async () => {
+    const mutationFn = vi.fn(async () => await Promise.resolve('mutation-reset'));
+
     const mutation = useMutationQuery({
-      queryKey: ['app-mutation-cancel'],
-      queryFn: async ({ signal }) => {
-        return await new Promise<string>((resolve, reject) => {
-          const timeoutId = setTimeout(() => {
-            resolve('never-resolved-before-cancel');
-          }, 60_000);
-
-          const onAbort = () => {
-            clearTimeout(timeoutId);
-            reject(new DOMException('Aborted', 'AbortError'));
-          };
-
-          if (signal.aborted) {
-            onAbort();
-            return;
-          }
-
-          signal.addEventListener('abort', onAbort, { once: true });
-
-        });
-      },
+      queryKey: ['app-mutation-reset'],
+      queryFn: mutationFn,
     });
 
-    const pending = mutation.mutate();
-    await Promise.resolve();
+    await mutation.mutate();
+    expect(mutation.isSuccess).toBe(true);
+    expect(mutation.isIdle).toBe(false);
 
-    mutation.cancel();
+    mutation.reset();
 
-    const result = await pending;
-
-    expect(result.isError).toBe(true);
+    expect(mutation.status).toBe('idle');
+    expect(mutation.data).toBeUndefined();
+    expect(mutation.error).toBeNull();
+    expect(mutation.isIdle).toBe(true);
+    expect(mutation.isPending).toBe(false);
+    expect(mutation.isSuccess).toBe(false);
+    expect(mutation.isError).toBe(false);
   });
 
-  describe('useServerQuery with meta.astroCache', () => {
-    it('calls cache.set when a valid astroCache and staleTime are provided', async () => {
+  it('sets pending state again on a second mutate call', async () => {
+    let secondResolve: (value: string) => void = NOOP_STRING_RESOLVER;
+    const secondResult = new Promise<string>((resolve) => {
+      secondResolve = resolve;
+    });
+    let callCount = 0;
+    const mutationFn = vi.fn(async () => {
+      callCount += 1;
+      if (callCount === 1) {
+        return await Promise.resolve('first-result');
+      }
+
+      return await secondResult;
+    });
+
+    const mutation = useMutationQuery({
+      queryKey: ['app-mutation-second-pending'],
+      queryFn: mutationFn,
+    });
+
+    await mutation.mutate();
+    expect(mutation.isSuccess).toBe(true);
+
+    const pendingRun = mutation.mutate();
+    await Promise.resolve();
+
+    expect(mutation.isPending).toBe(true);
+
+    secondResolve('second-result');
+    await pendingRun;
+
+    expect(mutation.isSuccess).toBe(true);
+    expect(mutation.data).toBe('second-result');
+  });
+
+  describe('useServerQuery with routeCache.cache', () => {
+    it('calls cache.set when route cache options are provided', async () => {
       const cache = makeAstroCache();
       const serverFn = vi.fn(async () => await Promise.resolve('cached-ok'));
 
       const { data } = await useServerQuery({
-        queryKey: ['app-server-cache'],
         queryFn: serverFn,
-        staleTime: 30_000,
-        swr: 60_000,
-        tags: ['users'],
-        meta: { astroCache: cache },
+        cacheMode: 'route',
+        routeCache: {
+          cache,
+          maxAge: 30_000,
+          swr: 60_000,
+          tags: ['users'],
+        },
       });
 
       expect(data).toBe('cached-ok');
@@ -170,32 +203,36 @@ describe('query app wrapper', () => {
       const serverFn = vi.fn(async () => await Promise.resolve('disabled-cache'));
 
       const { data } = await useServerQuery({
-        queryKey: ['app-server-cache-disabled'],
         queryFn: serverFn,
-        staleTime: 30_000,
-        meta: { astroCache: cache },
+        cacheMode: 'route',
+        routeCache: {
+          cache,
+          maxAge: 30_000,
+        },
       });
 
       expect(data).toBe('disabled-cache');
       expect(cache.set).not.toHaveBeenCalled();
     });
 
-    it('does not call cache.set when staleTime is static and no swr or tags are provided', async () => {
+    it('does not call cache.set when route maxAge is static and no swr or tags are provided', async () => {
       const cache = makeAstroCache();
       const serverFn = vi.fn(async () => await Promise.resolve('no-directives'));
 
       const { data } = await useServerQuery({
-        queryKey: ['app-server-cache-no-directives'],
         queryFn: serverFn,
-        staleTime: 'static',
-        meta: { astroCache: cache },
+        cacheMode: 'route',
+        routeCache: {
+          cache,
+          maxAge: 'static',
+        },
       });
 
       expect(data).toBe('no-directives');
       expect(cache.set).not.toHaveBeenCalled();
     });
 
-    it('still executes successfully when meta.astroCache is absent', async () => {
+    it('still executes successfully in query mode without route cache options', async () => {
       const serverFn = vi.fn(async () => await Promise.resolve('no-cache'));
 
       const { data } = await useServerQuery({
@@ -206,35 +243,6 @@ describe('query app wrapper', () => {
 
       expect(data).toBe('no-cache');
       expect(serverFn).toHaveBeenCalledTimes(1);
-    });
-
-    it('ignores meta.astroCache when it has no set function', async () => {
-      const serverFn = vi.fn(async () => await Promise.resolve('invalid-cache'));
-
-      const { data } = await useServerQuery({
-        queryKey: ['app-server-invalid-cache'],
-        queryFn: serverFn,
-        staleTime: 10_000,
-        meta: { astroCache: { enabled: true } },
-      });
-
-      expect(data).toBe('invalid-cache');
-      expect(serverFn).toHaveBeenCalledTimes(1);
-    });
-
-    it('ignores meta.astroCache when enabled is a non-boolean', async () => {
-      const setMock = vi.fn();
-      const serverFn = vi.fn(async () => await Promise.resolve('bad-enabled'));
-
-      const { data } = await useServerQuery({
-        queryKey: ['app-server-bad-enabled'],
-        queryFn: serverFn,
-        staleTime: 10_000,
-        meta: { astroCache: { enabled: 'yes', set: setMock } },
-      });
-
-      expect(data).toBe('bad-enabled');
-      expect(setMock).not.toHaveBeenCalled();
     });
   });
 });

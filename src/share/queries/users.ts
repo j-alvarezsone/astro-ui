@@ -1,6 +1,6 @@
 import { queryOptions } from '@utils/query/queryOptions';
 import { mutationOptions } from '@utils/query/mutationOptions';
-import type { CreateUserBody, CreateUserResponse, GetAllUserResponse } from '@/types/user-contact';
+import type { CreateUserBody, CreateUserResponse } from '@/types/user-contact';
 import { getAllUser, postNewUser } from '@actions/users';
 
 /**
@@ -9,10 +9,10 @@ import { getAllUser, postNewUser } from '@actions/users';
  * @example
  * const { data } = await useServerQuery(getAllUsersOptions);
  */
-export const getAllUsersOptions = queryOptions<GetAllUserResponse>({
+export const getAllUsersOptions = queryOptions({
   queryKey: ['users'],
   queryFn: getAllUser,
-  staleTime: 10_000,
+  staleTime: 3000,
 });
 
 /**
