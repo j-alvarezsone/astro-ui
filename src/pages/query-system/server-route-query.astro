@@ -68,6 +68,13 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
                 <dd>{isRouteCacheBridgeEnabled ? 'configured' : 'disabled in this runtime'}</dd>
               </div>
               <div>
+                <dt>Route cache status legend</dt>
+                <dd>
+                  HIT (fresh): served within maxAge. HIT (stale): served within swr while revalidating. MISS: no usable
+                  entry for this execution.
+                </dd>
+              </div>
+              <div>
                 <dt>Rendered at</dt>
                 <dd>{renderedAt}</dd>
               </div>

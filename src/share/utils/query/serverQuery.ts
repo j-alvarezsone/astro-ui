@@ -23,7 +23,7 @@ import type {
   ServerQueryResult,
 } from '@utils/query/types';
 
-const ROUTE_EXECUTION_QUERY_KEY: QueryKey = '__route-execution';
+const ROUTE_EXECUTION_QUERY_KEY: QueryKey = ['__route-execution'];
 const ROUTE_EXECUTION_KEY_HASH = '__route-execution-hash';
 
 /**

@@ -13,6 +13,7 @@ This project exposes four primary APIs for feature code:
 - `useServerQuery(options)`
 - `useMutationQuery(options)`
 - `queryOptions(options)`
+- `invalidateServerQuery(options)`
 
 All of them are built around a shared query options contract and a shared execution core.
 
@@ -21,7 +22,7 @@ All of them are built around a shared query options contract and a shared execut
 ### `QueryKey`
 
 ```ts
-type QueryKey = string | readonly unknown[];
+type QueryKey = readonly unknown[];
 ```
 
 Use stable keys such as `['users']` or `['user', userId]`.
@@ -418,6 +419,66 @@ invalidateQuery(['pets'], { exact: false, refetchType: 'active' });
 invalidateQuery(['pets'], { refetchType: 'none' });
 ```
 
+## `invalidateServerQuery`
+
+Invalidate server query cache entries by key, with optional Astro route-cache invalidation.
+
+### Signature
+
+```ts
+async function invalidateServerQuery(options: {
+  queryKey?: QueryKey;
+  cache?: AstroRouteCacheInvalidatorLike;
+  tags?: string[];
+  path?: string;
+}): Promise<boolean>;
+```
+
+### Parameters
+
+- `options.queryKey` (optional): key used to remove the server query-store entry.
+- `options.cache` (optional): Astro route-cache invalidator object (for API routes, this is the `cache` value from route context).
+- `options.tags` (optional): route-cache tags to invalidate when `options.cache?.enabled` is `true`.
+- `options.path` (optional): route path to invalidate when `options.cache?.enabled` is `true`.
+
+### Behavior
+
+- Invalidates the server query store only when `options.queryKey` is provided.
+- Route-cache invalidation runs only when:
+  - `options.cache?.enabled === true`, and
+  - at least one of `options.tags` or `options.path` is provided.
+
+### Returns
+
+- Resolves to `true` if a server query-store entry was invalidated.
+- Resolves to `false` if no matching server query-store entry exists or no `options.queryKey` was provided.
+
+### Examples
+
+```ts
+// Invalidate only the server query-store entry.
+await invalidateServerQuery({ queryKey: ['users'] });
+
+// Route mode: invalidate matching route-cache tags.
+await invalidateServerQuery({
+  cache,
+  tags: ['users'],
+});
+
+// Route mode: invalidate a specific route path.
+await invalidateServerQuery({
+  cache,
+  path: '/query-system/server-route-query',
+});
+
+// Optional: invalidate query store and route cache in one call.
+await invalidateServerQuery({
+  queryKey: ['users'],
+  cache,
+  tags: ['users'],
+});
+```
+
 ## `useServerQuery`
 
 Create a server query controller and optionally auto-execute it.
@@ -570,6 +631,22 @@ Quick check pattern:
 1. Make two immediate requests to the same route-mode endpoint.
 2. First response commonly shows `x-astro-cache: MISS`.
 3. Second response should show `x-astro-cache: HIT` when Astro route cache is active.
+
+### Reading HIT stale vs MISS
+
+When your environment exposes cache state labels, interpret them as follows:
+
+- `HIT` (fresh): served from route cache inside `maxAge`.
+- `HIT` (stale): served from route cache inside `swr` while revalidation runs in the background.
+- `MISS`: no usable route-cache entry for this execution (first request, expired entry, cold runtime instance, or runtime restart).
+
+With `maxAge: 10_000` and `swr: 50_000`, the expected timeline on a single warm runtime is:
+
+1. `0-10s`: usually `HIT` (fresh).
+2. `10-60s`: usually `HIT` (stale).
+3. `>60s`: more likely `MISS`.
+
+On Netlify preview, requests can still alternate between `HIT` and `MISS` inside the same window because different requests may land on different serverless instances with different in-memory cache state.
 
 ## `queryOptions`
 

@@ -33,6 +33,10 @@ type MutationSnapshot<TData, TError = unknown> = {
   isFetching?: boolean;
 };
 
+type InvalidateServerQueryArgs = InvalidateServerQueryOptions & {
+  queryKey?: QueryKey;
+};
+
 /**
  * Convert internal query state into the mutation-focused public state.
  *
@@ -247,23 +251,34 @@ export const invalidateQuery: ClientInvalidate = (...args) => clientQuery.invali
  * When an Astro route cache invalidator is provided, this helper can also
  * invalidate route-cache tags/path in the same call.
  *
- * @param queryKey - Query key used to clear the server query store entry.
- * @param options - Optional Astro route-cache invalidation options.
- * @returns `true` when the server query store entry existed and was removed.
+ * @param args - Server query invalidation arguments.
+ * @param args.queryKey - Optional key used to clear the server query store entry.
+ * @param args.cache - Optional Astro route-cache invalidator.
+ * @param args.tags - Optional route-cache tags for invalidation.
+ * @param args.path - Optional route path for invalidation.
+ * @returns `true` when a server query store entry was invalidated; `false` when no key was provided or no matching entry exists.
  * @example
- * invalidateServerQuery(['users']);
+ * invalidateServerQuery({ queryKey: ['users'] });
  *
  * @example
- * await invalidateServerQuery(['users'], {
+ * await invalidateServerQuery({
+ *   queryKey: ['users'],
+ *   cache,
+ *   tags: ['users'],
+ * });
+ *
+ * @example
+ * await invalidateServerQuery({
  *   cache,
  *   tags: ['users'],
  * });
  */
 export async function invalidateServerQuery(
-  queryKey: QueryKey,
-  options: InvalidateServerQueryOptions = {},
+  args: InvalidateServerQueryArgs = {},
 ): Promise<boolean> {
-  const invalidated = serverQuery.invalidate(queryKey);
+  const { queryKey, ...options } = args;
+
+  const invalidated = queryKey ? serverQuery.invalidate(queryKey) : false;
 
   const hasTags = Boolean(options.tags?.length);
   const hasPath = typeof options.path === 'string' && options.path.length > 0;

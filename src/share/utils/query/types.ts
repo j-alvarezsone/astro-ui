@@ -1,4 +1,4 @@
-export type QueryKey = string | readonly unknown[];
+export type QueryKey = readonly unknown[];
 
 export type QueryDedupeMode = 'join' | 'cancel' | 'none';
 

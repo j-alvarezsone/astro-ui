@@ -72,7 +72,8 @@ export const POST: APIRoute = async ({ request, cache }) => {
 
   USERS.push(newUser);
 
-  await invalidateServerQuery(['users'], {
+  await invalidateServerQuery({
+    queryKey: ['users'],
     cache,
     tags: ['users'],
   });
