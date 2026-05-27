@@ -4,19 +4,11 @@ import { BASE_URL } from './netlifyCache';
 type NetlifyCacheProviderRuntimeConfig = {
   enabled?: boolean;
   siteId?: string;
-  siteSlug?: string;
   purgeToken?: string;
   apiBaseUrl?: string;
   durable?: boolean;
   debug?: boolean;
-  deployAlias?: string;
-  domain?: string;
   purgeByPathAsTag?: boolean;
-};
-
-type PurgePayloadScope = {
-  key: 'domain' | 'site_id' | 'site_slug';
-  value: string;
 };
 
 /**
@@ -73,30 +65,6 @@ function buildCacheControlValues(
 }
 
 /**
- * Resolve the most specific Netlify purge scope available for this config.
- *
- * Domain takes priority for preview deploys, then site slug, then site ID.
- *
- * @param config - Netlify provider runtime configuration.
- * @returns The purge scope key/value pair or `undefined` when no scope exists.
- */
-function resolvePurgePayloadScope(config: NetlifyCacheProviderRuntimeConfig): PurgePayloadScope | undefined {
-  if (config.domain) {
-    return { key: 'domain', value: config.domain };
-  }
-
-  if (config.siteSlug) {
-    return { key: 'site_slug', value: config.siteSlug };
-  }
-
-  if (config.siteId) {
-    return { key: 'site_id', value: config.siteId };
-  }
-
-  return undefined;
-}
-
-/**
  * Build request payload for Netlify purge API.
  *
  * @param config - Netlify provider runtime configuration.
@@ -106,17 +74,10 @@ function resolvePurgePayloadScope(config: NetlifyCacheProviderRuntimeConfig): Pu
  * buildPurgePayload({ siteId: 'abc' }, ['users']);
  */
 function buildPurgePayload(config: NetlifyCacheProviderRuntimeConfig, tags: string[]): Record<string, unknown> {
-  const payload: Record<string, unknown> = {
-    cache_tags: tags,
-  };
+  const payload: Record<string, unknown> = { cache_tags: tags };
 
-  if (config.deployAlias) {
-    payload.deploy_alias = config.deployAlias;
-  }
-
-  const scope = resolvePurgePayloadScope(config);
-  if (scope) {
-    payload[scope.key] = scope.value;
+  if (config.siteId) {
+    payload.site_id = config.siteId;
   }
 
   return payload;
@@ -178,9 +139,9 @@ const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRunt
         return;
       }
 
-      if (!config.purgeToken || (!config.siteId && !config.siteSlug)) {
+      if (!config.purgeToken || !config.siteId) {
         if (config.debug) {
-          console.warn('[netlify-cache-provider] Missing purgeToken and siteId/siteSlug. Invalidation request skipped.');
+          console.warn('[netlify-cache-provider] Missing purgeToken and siteId. Invalidation request skipped.');
         }
 
         return;

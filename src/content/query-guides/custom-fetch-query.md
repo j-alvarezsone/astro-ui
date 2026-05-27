@@ -479,7 +479,7 @@ await invalidateServerQuery({
 });
 ```
 
-When this runs on Netlify preview, make sure the cache provider is configured with `NETLIFY_AUTH_TOKEN` and a valid `siteId` plus cache tags, otherwise the edge cache can keep serving stale responses.
+When this runs on Netlify preview, make sure the cache provider is configured with `NETLIFY_AUTH_TOKEN`, `siteId`, and cache tags, otherwise the edge cache can keep serving stale responses.
 
 ## `useServerQuery`
 
