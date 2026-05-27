@@ -24,7 +24,6 @@ export const getAllUser: QueryFn<GetAllUserResponse> = async ({ signal, meta }) 
     input,
     {
       init: {
-        method: 'GET',
         signal,
       },
       validate: isGetAllUserResponse,

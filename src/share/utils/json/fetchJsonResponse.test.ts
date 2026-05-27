@@ -9,9 +9,11 @@ describe('fetchJsonResponse', () => {
   });
 
   it('returns parsed JSON for ok responses', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => new Response('{"ok":true}')));
+    const fetchMock = vi.fn(() => new Response('{"ok":true}'));
+    vi.stubGlobal('fetch', fetchMock);
 
     await expect(fetchJsonResponse('/api/test')).resolves.toEqual({ ok: true });
+    expect(fetchMock).toHaveBeenCalledWith('/api/test', { method: 'GET' });
   });
 
   it('throws HttpError for non-ok responses', async () => {

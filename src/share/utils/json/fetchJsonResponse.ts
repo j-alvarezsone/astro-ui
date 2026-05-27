@@ -39,7 +39,12 @@ export async function fetchJsonResponse<T>(
   input: RequestInfo | URL,
   options: FetchJsonResponseOptions<T> = {},
 ): Promise<unknown> {
-  const response = await fetch(input, options.init);
+  const init: RequestInit = {
+    method: 'GET',
+    ...options.init,
+  };
+
+  const response = await fetch(input, init);
 
   if (!response.ok) {
     throw new HttpError(response.status, `HTTP ${response.status}`);

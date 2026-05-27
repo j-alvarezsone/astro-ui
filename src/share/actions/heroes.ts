@@ -24,7 +24,6 @@ export const getAllHeroes: QueryFn<GetAllHeroesResponse> = async ({ signal, meta
     input,
     {
       init: {
-        method: 'GET',
         signal,
       },
       validate: isGetAllHeroesResponse,

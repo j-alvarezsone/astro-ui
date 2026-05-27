@@ -20,7 +20,6 @@ import type { CreatePetBody, CreatePetResponse, GetAllPetsResponse } from '../ty
 export const getAllPets: QueryFn<GetAllPetsResponse> = async ({ signal }) => {
   return await fetchJsonResponse<GetAllPetsResponse>('/api/pets', {
     init: {
-      method: 'GET',
       signal,
     },
     validate: isGetAllPetsResponse,
