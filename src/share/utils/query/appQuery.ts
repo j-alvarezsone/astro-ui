@@ -99,6 +99,7 @@ export const useMutationQuery = <TData, TPayload = unknown, TError = unknown>(
   });
 
   const listeners = new Set<(state: MutationState<TData, TError>) => void>();
+  let bridgeUnsubscribe: (() => void) | null = null;
 
   let mutationState = toMutationState({
     status: controller.status,
@@ -112,23 +113,47 @@ export const useMutationQuery = <TData, TPayload = unknown, TError = unknown>(
     }
   };
 
-  controller.subscribe((state) => {
-    mutationState = toMutationState({
-      status: state.status,
-      data: state.data,
-      error: state.error,
-      isFetching: state.isFetching,
+  const ensureBridgeSubscription = (): void => {
+    if (bridgeUnsubscribe) {
+      return;
+    }
+
+    bridgeUnsubscribe = controller.subscribe((state) => {
+      mutationState = toMutationState({
+        status: state.status,
+        data: state.data,
+        error: state.error,
+        isFetching: state.isFetching,
+      });
+      notify();
     });
-    notify();
-  });
+  };
+
+  const maybeDisposeBridgeSubscription = (): void => {
+    if (listeners.size > 0 || !bridgeUnsubscribe) {
+      return;
+    }
+
+    bridgeUnsubscribe();
+    bridgeUnsubscribe = null;
+  };
 
   return {
     subscribe: (listener) => {
+      ensureBridgeSubscription();
       listeners.add(listener);
 
-      return () => listeners.delete(listener);
+      return () => {
+        listeners.delete(listener);
+        maybeDisposeBridgeSubscription();
+      };
     },
     mutate: async (payload?: TPayload): Promise<MutationState<TData, TError>> => {
+      const hadBridgeSubscription = Boolean(bridgeUnsubscribe);
+      if (!hadBridgeSubscription) {
+        ensureBridgeSubscription();
+      }
+
       const state = await controller.execute({ force: true, payload });
       mutationState = toMutationState({
         status: state.status,
@@ -136,6 +161,9 @@ export const useMutationQuery = <TData, TPayload = unknown, TError = unknown>(
         error: state.error,
       });
       notify();
+      if (!hadBridgeSubscription) {
+        maybeDisposeBridgeSubscription();
+      }
 
       return mutationState;
     },

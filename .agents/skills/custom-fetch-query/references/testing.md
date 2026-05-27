@@ -4,7 +4,7 @@
 
 - Key hashing is stable across object key order.
 - staleTime behavior:
-  - undefined staleTime keeps data fresh
+  - undefined staleTime is immediately stale
   - staleTime expiry marks entry stale
   - staleTime zero is immediately stale
 - Dedupe behavior:

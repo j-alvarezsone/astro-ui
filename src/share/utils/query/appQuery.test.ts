@@ -1,4 +1,4 @@
-import { useClientQuery, useMutationQuery, useServerQuery } from '@utils/query/appQuery';
+import { invalidateQuery, useClientQuery, useMutationQuery, useServerQuery } from '@utils/query/appQuery';
 import type { AstroRouteCacheLike, AstroRouteCacheSetOptions } from '@utils/query/types';
 
 const NOOP_STRING_RESOLVER = (_value: string): void => {};
@@ -138,6 +138,28 @@ describe('query app wrapper', () => {
     expect(mutation.isPending).toBe(false);
     expect(mutation.isSuccess).toBe(false);
     expect(mutation.isError).toBe(false);
+  });
+
+  it('does not keep mutation query active after unsubscribe', async () => {
+    const mutationFn = vi.fn(async () => await Promise.resolve('mutation-idle'));
+
+    const mutation = useMutationQuery({
+      queryKey: ['app-mutation-unsubscribe'],
+      queryFn: mutationFn,
+    });
+
+    await mutation.mutate();
+    expect(mutationFn).toHaveBeenCalledTimes(1);
+
+    const unsubscribe = mutation.subscribe(() => {});
+
+    unsubscribe();
+
+    invalidateQuery(['app-mutation-unsubscribe'], {
+      refetchType: 'active',
+    });
+
+    expect(mutationFn).toHaveBeenCalledTimes(1);
   });
 
   it('sets pending state again on a second mutate call', async () => {

@@ -23,6 +23,21 @@ function isArrayKey(queryKey: QueryOptions<unknown>['queryKey']): queryKey is re
   return Array.isArray(queryKey);
 }
 
+/**
+ * Compare two query-key segments using deterministic key hashing.
+ *
+ * @param left - Segment from the partial key.
+ * @param right - Segment from the full key.
+ * @returns `true` when both segments serialize to the same stable representation.
+ * @example
+ * ```ts
+ * areQueryKeySegmentsEqual({ id: 1 }, { id: 1 }); // true
+ * ```
+ */
+function areQueryKeySegmentsEqual(left: unknown, right: unknown): boolean {
+  return hashQueryKey([left]) === hashQueryKey([right]);
+}
+
 function matchesPartialKey(
   partial: QueryOptions<unknown>['queryKey'],
   full: QueryOptions<unknown>['queryKey'],
@@ -36,7 +51,7 @@ function matchesPartialKey(
   }
 
   for (let index = 0; index < partial.length; index += 1) {
-    if (!Object.is(partial[index], full[index])) {
+    if (!areQueryKeySegmentsEqual(partial[index], full[index])) {
       return false;
     }
   }

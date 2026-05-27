@@ -160,6 +160,38 @@ describe('client query adapter', () => {
     unsubscribe();
   });
 
+  it('matches equivalent object segments during partial invalidation', async () => {
+    const queryFn = vi.fn(async () => {
+      await Promise.resolve();
+
+      return { ok: true };
+    });
+
+    const client = createClientQuery();
+    const query = client.createQuery({
+      queryKey: ['user', { id: 1 }],
+      queryFn,
+      autoExecute: false,
+      staleTime: Number.POSITIVE_INFINITY,
+    });
+
+    const unsubscribe = query.subscribe(() => {});
+
+    await query.execute();
+
+    expect(queryFn).toHaveBeenCalledTimes(1);
+
+    const invalidated = client.invalidate(['user', { id: 1 }], { exact: false });
+
+    expect(invalidated).toBe(true);
+
+    await vi.waitFor(() => {
+      expect(queryFn).toHaveBeenCalledTimes(2);
+    });
+
+    unsubscribe();
+  });
+
   it('does not refetch active queries when invalidate refetchType is none', async () => {
     const queryFn = vi.fn(async () => {
       await Promise.resolve();
