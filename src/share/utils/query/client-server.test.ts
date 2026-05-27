@@ -64,45 +64,39 @@ describe('query adapters: client and server behavior', () => {
     expect(queryFn).toHaveBeenCalledTimes(1);
   });
 
-  it('server query exposes isStale and resets to stale after invalidate', async () => {
+  it('server route query reports non-stale execution and invalidate is a no-op', async () => {
     const server = createServerQuery({
       now: () => Date.now(),
     });
 
+    const set = vi.fn();
+
     const query = server.createQuery({
-      queryKey: ['server-stale-flag'],
       queryFn: async () => {
         await Promise.resolve();
 
         return { ok: true };
       },
       autoExecute: false,
-      staleTime: 5_000,
+      routeCache: {
+        cache: {
+          enabled: true,
+          set,
+        },
+      },
     });
 
-    expect(query.isStale).toBe(true);
+    expect(query.isStale).toBe(false);
 
     await query.execute();
 
     expect(query.isStale).toBe(false);
+    expect(set).toHaveBeenCalledTimes(1);
 
-    expect(server.invalidate(['server-stale-flag'])).toBe(true);
-
-    const queryAfterInvalidate = server.createQuery({
-      queryKey: ['server-stale-flag'],
-      queryFn: async () => {
-        await Promise.resolve();
-
-        return { ok: true };
-      },
-      autoExecute: false,
-      staleTime: 5_000,
-    });
-
-    expect(queryAfterInvalidate.isStale).toBe(true);
+    expect(server.invalidate(['server-stale-flag'])).toBe(false);
   });
 
-  it('server query treats Infinity staleTime as fresh unless invalidated', async () => {
+  it('server route query executes uncached on repeated execute calls', async () => {
     const server = createServerQuery();
     const queryFn = vi.fn(async () => {
       await Promise.resolve();
@@ -111,27 +105,21 @@ describe('query adapters: client and server behavior', () => {
     });
 
     const query = server.createQuery({
-      queryKey: ['server-infinity-stale'],
       queryFn,
       autoExecute: false,
-      staleTime: Number.POSITIVE_INFINITY,
+      routeCache: {
+        cache: {
+          enabled: true,
+          set: vi.fn(),
+        },
+      },
     });
 
     await query.execute();
     await query.execute();
 
     expect(query.isStale).toBe(false);
-    expect(queryFn).toHaveBeenCalledTimes(1);
-
-    expect(server.invalidate(['server-infinity-stale'])).toBe(true);
-    const queryAfterInvalidate = server.createQuery({
-      queryKey: ['server-infinity-stale'],
-      queryFn,
-      autoExecute: false,
-      staleTime: Number.POSITIVE_INFINITY,
-    });
-
-    expect(queryAfterInvalidate.isStale).toBe(true);
+    expect(queryFn).toHaveBeenCalledTimes(2);
   });
 
   it('client query exposes pending/fetching state transitions', async () => {
@@ -195,9 +183,14 @@ describe('query adapters: client and server behavior', () => {
     });
 
     const query = server.createQuery({
-      queryKey: ['server-manual-execute'],
       queryFn,
       autoExecute: false,
+      routeCache: {
+        cache: {
+          enabled: true,
+          set: vi.fn(),
+        },
+      },
     });
 
     expect(queryFn).not.toHaveBeenCalled();
@@ -217,8 +210,13 @@ describe('query adapters: client and server behavior', () => {
     });
 
     const query = server.createQuery({
-      queryKey: ['server-auto-execute'],
       queryFn,
+      routeCache: {
+        cache: {
+          enabled: true,
+          set: vi.fn(),
+        },
+      },
     });
 
     await vi.waitFor(() => {
@@ -239,7 +237,6 @@ describe('query adapters: client and server behavior', () => {
         return { ok: true };
       },
       autoExecute: false,
-      cacheMode: 'route',
       routeCache: {
         cache: {
           enabled: true,

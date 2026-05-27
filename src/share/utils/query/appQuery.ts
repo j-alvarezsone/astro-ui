@@ -7,11 +7,7 @@ import type {
   MutationState,
   QueryKey,
   ServerQueryController,
-  ServerQueryDefaultModeOptions,
   ServerQueryOptions,
-  ServerQueryQueryModeOptions,
-  ServerQueryRouteController,
-  ServerQueryRouteModeOptions,
 } from './types';
 
 
@@ -210,14 +206,21 @@ export const useMutationQuery = <TData, TPayload = unknown, TError = unknown>(
  * controller is returned so `data` is populated at destructuring time:
  *
  * ```ts
- * const { data, execute, refetch } = await useServerQuery({ queryKey, queryFn });
+ * const { data, execute, refetch } = await useServerQuery({
+ *   queryFn,
+ *   routeCache: { cache: Astro.cache },
+ * });
  * ```
  *
  * Set `autoExecute: false` to defer fetching and call `execute()` yourself.
  * `data` is always read from the controller, never from `execute()`:
  *
  * ```ts
- * const query = await useServerQuery({ queryKey, queryFn, autoExecute: false });
+ * const query = await useServerQuery({
+ *   queryFn,
+ *   routeCache: { cache: Astro.cache },
+ *   autoExecute: false,
+ * });
  * await query.execute();
  * const { data } = query;
  * ```
@@ -226,31 +229,15 @@ export const useMutationQuery = <TData, TPayload = unknown, TError = unknown>(
  * @returns A promise that resolves to the server query controller.
  */
 export async function useServerQuery<TData, TError = unknown>(
-  queryOptions: ServerQueryDefaultModeOptions<TData, TError>,
+  queryOptions: ServerQueryOptions<TData, TError>,
 ): Promise<ServerQueryController<TData, TError>>;
-export async function useServerQuery<TData, TError = unknown>(
-  queryOptions: ServerQueryQueryModeOptions<TData, TError>,
-): Promise<ServerQueryController<TData, TError>>;
-export async function useServerQuery<TData, TError = unknown>(
-  queryOptions: ServerQueryRouteModeOptions<TData, TError>,
-): Promise<ServerQueryRouteController<TData, TError>>;
 export async function useServerQuery<TData, TError = unknown>(
   queryOptions: ServerQueryOptions<TData, TError>,
-): Promise<ServerQueryController<TData, TError> | ServerQueryRouteController<TData, TError>> {
-  const query = queryOptions.cacheMode === 'route'
-    ? serverQuery.createQuery({
-      ...queryOptions,
-      autoExecute: false,
-    })
-    : queryOptions.cacheMode === 'query'
-      ? serverQuery.createQuery({
-        ...queryOptions,
-        autoExecute: false,
-      })
-      : serverQuery.createQuery({
-        ...queryOptions,
-        autoExecute: false,
-      });
+): Promise<ServerQueryController<TData, TError>> {
+  const query = serverQuery.createQuery({
+    ...queryOptions,
+    autoExecute: false,
+  });
 
   if (queryOptions.autoExecute !== false) {
     await query.execute();

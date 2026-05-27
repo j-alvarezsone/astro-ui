@@ -16,8 +16,10 @@ describe('query app wrapper', () => {
     const serverFn = vi.fn(async () => await Promise.resolve('server-ok'));
 
     const { data, execute, refetch } = await useServerQuery({
-      queryKey: ['app-server'],
       queryFn: serverFn,
+      routeCache: {
+        cache: makeAstroCache(),
+      },
     });
 
     expect(serverFn).toHaveBeenCalledTimes(1);
@@ -30,8 +32,10 @@ describe('query app wrapper', () => {
     const serverFn = vi.fn(async () => await Promise.resolve('manual-ok'));
 
     const { execute } = await useServerQuery({
-      queryKey: ['app-server-manual'],
       queryFn: serverFn,
+      routeCache: {
+        cache: makeAstroCache(),
+      },
       autoExecute: false,
     });
 
@@ -222,7 +226,6 @@ describe('query app wrapper', () => {
 
       const { data } = await useServerQuery({
         queryFn: serverFn,
-        cacheMode: 'route',
         routeCache: {
           cache,
           maxAge: 30_000,
@@ -244,7 +247,6 @@ describe('query app wrapper', () => {
 
       const { data } = await useServerQuery({
         queryFn: serverFn,
-        cacheMode: 'route',
         routeCache: {
           cache,
           maxAge: 30_000,
@@ -261,7 +263,6 @@ describe('query app wrapper', () => {
 
       const { data } = await useServerQuery({
         queryFn: serverFn,
-        cacheMode: 'route',
         routeCache: {
           cache,
           maxAge: 'static',
@@ -272,13 +273,16 @@ describe('query app wrapper', () => {
       expect(cache.set).not.toHaveBeenCalled();
     });
 
-    it('still executes successfully in query mode without route cache options', async () => {
+    it('still executes successfully with route cache options', async () => {
+      const cache = makeAstroCache();
       const serverFn = vi.fn(async () => await Promise.resolve('no-cache'));
 
       const { data } = await useServerQuery({
-        queryKey: ['app-server-no-cache'],
         queryFn: serverFn,
-        staleTime: 10_000,
+        routeCache: {
+          cache,
+          maxAge: 10_000,
+        },
       });
 
       expect(data).toBe('no-cache');
