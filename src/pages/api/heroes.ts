@@ -3,15 +3,9 @@ import { z } from 'astro/zod';
 import type { CreateHeroResponse, GetAllHeroesResponse, HeroContact } from '../../share/types/hero-contact';
 import { sleep } from '@utils/time/sleep';
 import { invalidateServerQuery } from '@utils/query';
+import { appendDemoHero, getDemoHeroes } from '@utils/data/demoContactsStore';
 
 export const prerender = false;
-
-const HEROES: HeroContact[] = [
-  { id: 'h-1', name: 'Storm', power: 'Weather control' },
-  { id: 'h-2', name: 'Nightcrawler', power: 'Teleportation' },
-  { id: 'h-3', name: 'Jean Grey', power: 'Telepathy' },
-  { id: 'h-4', name: 'Cyclops', power: 'Optic blasts' },
-];
 
 let fetchCount = 0;
 
@@ -29,7 +23,8 @@ const createHeroBodySchema = z.object({
  * // GET /api/heroes
  * // -> { items: [{ id: 'h-1', name: 'Storm', power: 'Weather control' }, ...] }
  */
-export const GET: APIRoute = () => {
+export const GET: APIRoute = async () => {
+  const heroes = await getDemoHeroes();
   fetchCount += 1;
 
   const debugHero: HeroContact = {
@@ -39,14 +34,14 @@ export const GET: APIRoute = () => {
   };
 
   const responsePayload: GetAllHeroesResponse = {
-    items: [...HEROES, debugHero],
+    items: [...heroes, debugHero],
   };
 
   return Response.json(responsePayload, { status: 200 });
 };
 
 /**
- * Creates a new hero and appends it to the in-memory store.
+ * Creates a new hero and appends it to the durable demo store.
  *
  * @param context - Astro API context.
  * @returns JSON payload with the created hero.
@@ -69,7 +64,7 @@ export const POST: APIRoute = async ({ request, cache }) => {
     power: result.data.power,
   };
 
-  HEROES.push(newHero);
+  await appendDemoHero(newHero);
 
   await invalidateServerQuery({
     cache,

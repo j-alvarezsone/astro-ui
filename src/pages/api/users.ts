@@ -3,15 +3,9 @@ import { z } from 'astro/zod';
 import type { CreateUserResponse, GetAllUserResponse, UserContact } from '../../share/types/user-contact';
 import { sleep } from '@utils/time/sleep';
 import { invalidateServerQuery } from '@utils/query';
+import { appendDemoUser, getDemoUsers } from '@utils/data/demoContactsStore';
 
 export const prerender = false;
-
-const USERS: UserContact[] = [
-  { id: 'u-1', name: 'Ava Martinez', email: 'ava.martinez@example.com' },
-  { id: 'u-2', name: 'Liam Chen', email: 'liam.chen@example.com' },
-  { id: 'u-3', name: 'Noah Patel', email: 'noah.patel@example.com' },
-  { id: 'u-4', name: 'Sofia Nguyen', email: 'sofia.nguyen@example.com' },
-];
 
 let fetchCount = 0;
 
@@ -30,7 +24,8 @@ const createUserBodySchema = z.object({
  * // GET /api/users
  * // -> { items: [{ id: 'u-1', name: 'Ava Martinez', email: 'ava.martinez@example.com' }, ...] }
  */
-export const GET: APIRoute = () => {
+export const GET: APIRoute = async () => {
+  const users = await getDemoUsers();
   fetchCount += 1;
 
   const debugUser: UserContact = {
@@ -40,14 +35,14 @@ export const GET: APIRoute = () => {
   };
 
   const responsePayload: GetAllUserResponse = {
-    items: [...USERS, debugUser],
+    items: [...users, debugUser],
   };
 
   return Response.json(responsePayload, { status: 200 });
 };
 
 /**
- * Creates a new user and appends it to the in-memory store.
+ * Creates a new user and appends it to the durable demo store.
  *
  * @param context - Astro API context.
  * @returns JSON payload with the created user.
@@ -70,7 +65,7 @@ export const POST: APIRoute = async ({ request }) => {
     email: result.data.email,
   };
 
-  USERS.push(newUser);
+  await appendDemoUser(newUser);
 
   await invalidateServerQuery({
     queryKey: ['users'],

@@ -1,4 +1,5 @@
 import type { CreateUserBody, CreateUserResponse } from '../share/types/user-contact';
+import { navigate } from 'astro:transitions/client';
 import { applyButtonLoadingState } from '@utils/dom/applyButtonLoadingState';
 import type { MutationController } from '@utils/query';
 import { useMutationQuery } from '@utils/query';
@@ -33,10 +34,8 @@ class AddUserElement extends HTMLElement {
   connectedCallback(): void {
     this.#mutation = useMutationQuery({
       ...createUserOptions,
-      onSuccess: () => {
-        const url = new URL(window.location.href);
-        url.searchParams.set('refresh', `${Date.now()}`);
-        window.location.assign(url.toString());
+      onSuccess: async () => {
+        await navigate(window.location.href);
       },
     });
 

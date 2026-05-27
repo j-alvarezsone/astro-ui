@@ -1,4 +1,5 @@
 import type { CreateHeroBody, CreateHeroResponse } from '../share/types/hero-contact';
+import { navigate } from 'astro:transitions/client';
 import { applyButtonLoadingState } from '@utils/dom/applyButtonLoadingState';
 import type { MutationController } from '@utils/query';
 import { useMutationQuery } from '@utils/query';
@@ -33,10 +34,8 @@ class AddHeroElement extends HTMLElement {
   connectedCallback(): void {
     this.#mutation = useMutationQuery({
       ...createHeroOptions,
-      onSuccess: () => {
-        const url = new URL(window.location.href);
-        url.searchParams.set('refresh', `${Date.now()}`);
-        window.location.assign(url.toString());
+      onSuccess: async () => {
+        await navigate(window.location.href);
       },
     });
 
