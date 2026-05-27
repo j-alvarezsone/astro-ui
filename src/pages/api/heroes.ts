@@ -72,7 +72,6 @@ export const POST: APIRoute = async ({ request, cache }) => {
   HEROES.push(newHero);
 
   await invalidateServerQuery({
-    queryKey: ['heroes'],
     cache,
     tags: ['heroes'],
   });

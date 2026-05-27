@@ -56,7 +56,7 @@ export const GET: APIRoute = () => {
  * // POST /api/users  { name: 'Alice', email: 'alice@example.com' }
  * // -> { item: { id: 'u-1234567890', name: 'Alice', email: 'alice@example.com' } }
  */
-export const POST: APIRoute = async ({ request, cache }) => {
+export const POST: APIRoute = async ({ request }) => {
   await sleep(3000);
   const result = createUserBodySchema.safeParse(await request.json().catch(() => null));
 
@@ -74,8 +74,6 @@ export const POST: APIRoute = async ({ request, cache }) => {
 
   await invalidateServerQuery({
     queryKey: ['users'],
-    cache,
-    tags: ['users'],
   });
 
   const responsePayload: CreateUserResponse = { item: newUser };
