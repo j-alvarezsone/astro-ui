@@ -1,5 +1,5 @@
-import { invalidateQuery, useClientQuery, useMutationQuery, useServerQuery } from '@utils/query/appQuery';
-import type { AstroRouteCacheLike, AstroRouteCacheSetOptions } from '@utils/query/types';
+import { invalidateQuery, invalidateServerQuery, useClientQuery, useMutationQuery, useServerQuery } from '@utils/query/appQuery';
+import type { AstroRouteCacheInvalidatorLike, AstroRouteCacheLike, AstroRouteCacheSetOptions } from '@utils/query/types';
 
 const NOOP_STRING_RESOLVER = (_value: string): void => {};
 
@@ -160,6 +160,24 @@ describe('query app wrapper', () => {
     });
 
     expect(mutationFn).toHaveBeenCalledTimes(1);
+  });
+
+  it('forwards route-cache tags and path invalidation options', async () => {
+    const cache = {
+      enabled: true,
+      invalidate: vi.fn(async () => await Promise.resolve()),
+    } satisfies AstroRouteCacheInvalidatorLike;
+
+    await invalidateServerQuery({
+      cache,
+      tags: ['users'],
+      path: '/query-system/server-query',
+    });
+
+    expect(cache.invalidate).toHaveBeenCalledWith({
+      tags: ['users'],
+      path: '/query-system/server-query',
+    });
   });
 
   it('sets pending state again on a second mutate call', async () => {

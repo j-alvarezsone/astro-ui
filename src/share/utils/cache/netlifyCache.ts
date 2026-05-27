@@ -4,7 +4,7 @@ type NetlifyCacheProviderOptions = {
   enabled?: boolean;
   siteId?: string;
   siteSlug?: string;
-  authToken?: string;
+  purgeToken?: string;
   apiBaseUrl?: string;
   durable?: boolean;
   debug?: boolean;
@@ -22,7 +22,7 @@ export const BASE_URL = 'https://api.netlify.com/api/v1/purge' as const;
  * @param options.enabled - Whether provider behavior is active.
  * @param options.siteId - Netlify site ID used by the purge API.
  * @param options.siteSlug - Netlify site slug used by the purge API.
- * @param options.authToken - Netlify personal access token for purge API calls.
+ * @param options.purgeToken - Netlify purge API token for purge API calls.
  * @param options.apiBaseUrl - Purge API endpoint.
  * @param options.durable - Whether to include the durable directive in CDN caching.
  * @param options.debug - Whether to log provider warnings/errors.
@@ -35,7 +35,7 @@ export const BASE_URL = 'https://api.netlify.com/api/v1/purge' as const;
  *   enabled: true,
  *   siteId: process.env.NETLIFY_SITE_ID,
  *   siteSlug: 'my-netlify-site',
- *   authToken: process.env.NETLIFY_AUTH_TOKEN,
+ *   purgeToken: process.env.NETLIFY_AUTH_TOKEN,
  *   apiBaseUrl: 'https://api.netlify.com/api/v1/purge',
  *   durable: true,
  *   debug: process.env.NODE_ENV !== 'production',
@@ -51,7 +51,7 @@ export function netlifyCache(options: NetlifyCacheProviderOptions = {}): CachePr
       enabled: options.enabled ?? true,
       siteId: options.siteId,
       siteSlug: options.siteSlug,
-      authToken: options.authToken,
+      purgeToken: options.purgeToken,
       apiBaseUrl: options.apiBaseUrl ?? BASE_URL,
       durable: options.durable ?? true,
       debug: options.debug ?? false,

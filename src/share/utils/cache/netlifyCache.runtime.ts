@@ -5,13 +5,18 @@ type NetlifyCacheProviderRuntimeConfig = {
   enabled?: boolean;
   siteId?: string;
   siteSlug?: string;
-  authToken?: string;
+  purgeToken?: string;
   apiBaseUrl?: string;
   durable?: boolean;
   debug?: boolean;
   deployAlias?: string;
   domain?: string;
   purgeByPathAsTag?: boolean;
+};
+
+type PurgePayloadScope = {
+  key: 'domain' | 'site_id' | 'site_slug';
+  value: string;
 };
 
 /**
@@ -29,9 +34,7 @@ function normalizeTags(tags: InvalidateOptions['tags']): string[] {
 
   const values = Array.isArray(tags) ? tags : [tags];
 
-  return values
-    .map((tag) => tag.trim())
-    .filter(Boolean);
+  return values.map((tag) => tag.trim()).filter(Boolean);
 }
 
 /**
@@ -43,7 +46,10 @@ function normalizeTags(tags: InvalidateOptions['tags']): string[] {
  * @example
  * buildCacheControlValues({ maxAge: 60, swr: 120 }, true);
  */
-function buildCacheControlValues(options: CacheOptions, durable: boolean): {
+function buildCacheControlValues(
+  options: CacheOptions,
+  durable: boolean,
+): {
   netlify: string;
   cdn: string;
 } {
@@ -67,6 +73,30 @@ function buildCacheControlValues(options: CacheOptions, durable: boolean): {
 }
 
 /**
+ * Resolve the most specific Netlify purge scope available for this config.
+ *
+ * Domain takes priority for preview deploys, then site slug, then site ID.
+ *
+ * @param config - Netlify provider runtime configuration.
+ * @returns The purge scope key/value pair or `undefined` when no scope exists.
+ */
+function resolvePurgePayloadScope(config: NetlifyCacheProviderRuntimeConfig): PurgePayloadScope | undefined {
+  if (config.domain) {
+    return { key: 'domain', value: config.domain };
+  }
+
+  if (config.siteSlug) {
+    return { key: 'site_slug', value: config.siteSlug };
+  }
+
+  if (config.siteId) {
+    return { key: 'site_id', value: config.siteId };
+  }
+
+  return undefined;
+}
+
+/**
  * Build request payload for Netlify purge API.
  *
  * @param config - Netlify provider runtime configuration.
@@ -76,13 +106,20 @@ function buildCacheControlValues(options: CacheOptions, durable: boolean): {
  * buildPurgePayload({ siteId: 'abc' }, ['users']);
  */
 function buildPurgePayload(config: NetlifyCacheProviderRuntimeConfig, tags: string[]): Record<string, unknown> {
-  return {
-    ...(config.siteId ? { site_id: config.siteId } : {}),
-    ...(config.siteSlug ? { site_slug: config.siteSlug } : {}),
-    ...(config.deployAlias ? { deploy_alias: config.deployAlias } : {}),
-    ...(config.domain ? { domain: config.domain } : {}),
+  const payload: Record<string, unknown> = {
     cache_tags: tags,
   };
+
+  if (config.deployAlias) {
+    payload.deploy_alias = config.deployAlias;
+  }
+
+  const scope = resolvePurgePayloadScope(config);
+  if (scope) {
+    payload[scope.key] = scope.value;
+  }
+
+  return payload;
 }
 
 /**
@@ -94,7 +131,7 @@ function buildPurgePayload(config: NetlifyCacheProviderRuntimeConfig, tags: stri
  * @param rawConfig - Serialized provider config from `astro.config.*`.
  * @returns Astro cache provider implementation.
  * @example
- * const provider = netlifyCacheProviderFactory({ siteId: 'site-id', authToken: 'token' });
+ * const provider = netlifyCacheProviderFactory({ siteId: 'site-id', purgeToken: 'token' });
  */
 const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRuntimeConfig> = (rawConfig) => {
   const config: NetlifyCacheProviderRuntimeConfig = {
@@ -141,11 +178,9 @@ const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRunt
         return;
       }
 
-      if (!config.authToken || (!config.siteId && !config.siteSlug)) {
+      if (!config.purgeToken || (!config.siteId && !config.siteSlug)) {
         if (config.debug) {
-          console.warn(
-            '[netlify-cache-provider] Missing authToken and siteId/siteSlug. Invalidation request skipped.',
-          );
+          console.warn('[netlify-cache-provider] Missing purgeToken and siteId/siteSlug. Invalidation request skipped.');
         }
 
         return;
@@ -154,7 +189,7 @@ const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRunt
       const response = await fetch(config.apiBaseUrl!, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${config.authToken}`,
+          Authorization: `Bearer ${config.purgeToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(buildPurgePayload(config, [...new Set(tags)])),
@@ -162,9 +197,7 @@ const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRunt
 
       if (!response.ok) {
         const body = await response.text();
-        throw new Error(
-          `Netlify purge failed (${response.status} ${response.statusText}): ${body}`,
-        );
+        throw new Error(`Netlify purge failed (${response.status} ${response.statusText}): ${body}`);
       }
     },
   };

@@ -74,6 +74,7 @@ export const POST: APIRoute = async ({ request, cache }) => {
   await invalidateServerQuery({
     cache,
     tags: ['heroes'],
+    path: '/query-system/server-route-query',
   });
 
   const responsePayload: CreateHeroResponse = { item: newHero };
