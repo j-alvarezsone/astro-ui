@@ -29,7 +29,6 @@ export default defineConfig({
         purgeToken: process.env.NETLIFY_AUTH_TOKEN,
         durable: true,
         debug: process.env.NODE_ENV !== 'production',
-        strictMissingCredentials: Boolean(process.env.CONTEXT && process.env.CONTEXT !== 'dev'),
       }),
     },
   },
