@@ -3,7 +3,7 @@ import netlify from '@astrojs/netlify';
 
 import vue from '@astrojs/vue';
 import icon from "astro-icon";
-import { netlifyCache } from '@utils/cache/netlifyCache';
+import { netlifyCache } from './src/share/utils/cache/netlifyCache.ts';
 
 // https://astro.build/config
 export default defineConfig({
