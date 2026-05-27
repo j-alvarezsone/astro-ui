@@ -3,7 +3,6 @@ import { applyButtonLoadingState } from '@utils/dom/applyButtonLoadingState';
 import type { MutationController } from '@utils/query';
 import { useMutationQuery } from '@utils/query';
 import { createHeroOptions } from '@queries/heroes';
-import { navigate } from 'astro:transitions/client';
 
 const SAMPLE_HEROES: CreateHeroBody[] = [
   { name: 'Rogue', power: 'Power absorption' },
@@ -34,8 +33,10 @@ class AddHeroElement extends HTMLElement {
   connectedCallback(): void {
     this.#mutation = useMutationQuery({
       ...createHeroOptions,
-      onSuccess: async () => {
-        await navigate(window.location.href);
+      onSuccess: () => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('refresh', `${Date.now()}`);
+        window.location.assign(url.toString());
       },
     });
 
@@ -96,7 +97,6 @@ class AddHeroElement extends HTMLElement {
     if (this.#mutation.isPending) return;
 
     const payload = pickRandomSampleHero();
-
     await this.#mutation.mutate(payload);
   }
 

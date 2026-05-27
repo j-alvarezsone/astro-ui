@@ -8,6 +8,7 @@ type NetlifyCacheProviderOptions = {
   durable?: boolean;
   debug?: boolean;
   purgeByPathAsTag?: boolean;
+  strictMissingCredentials?: boolean;
 };
 
 export const BASE_URL = 'https://api.netlify.com/api/v1/purge' as const;
@@ -23,6 +24,7 @@ export const BASE_URL = 'https://api.netlify.com/api/v1/purge' as const;
  * @param options.durable - Whether to include the durable directive in CDN caching.
  * @param options.debug - Whether to log provider warnings/errors.
  * @param options.purgeByPathAsTag - Map `invalidate({ path })` to a synthetic tag.
+ * @param options.strictMissingCredentials - Throw when purge credentials are missing instead of skipping invalidation.
  * @returns Astro cache-provider config.
  * @example
  * const provider = netlifyCache({
@@ -33,6 +35,7 @@ export const BASE_URL = 'https://api.netlify.com/api/v1/purge' as const;
  *   durable: true,
  *   debug: process.env.NODE_ENV !== 'production',
  *   purgeByPathAsTag: true,
+ *   strictMissingCredentials: process.env.CONTEXT === 'production',
  * });
  */
 export function netlifyCache(options: NetlifyCacheProviderOptions = {}): CacheProviderConfig<NetlifyCacheProviderOptions> {
@@ -46,6 +49,7 @@ export function netlifyCache(options: NetlifyCacheProviderOptions = {}): CachePr
       durable: options.durable ?? true,
       debug: options.debug ?? false,
       purgeByPathAsTag: options.purgeByPathAsTag ?? true,
+      strictMissingCredentials: options.strictMissingCredentials ?? false,
     },
   };
 }

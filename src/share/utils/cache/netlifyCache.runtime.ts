@@ -9,6 +9,7 @@ type NetlifyCacheProviderRuntimeConfig = {
   durable?: boolean;
   debug?: boolean;
   purgeByPathAsTag?: boolean;
+  strictMissingCredentials?: boolean;
 };
 
 /**
@@ -84,6 +85,22 @@ function buildPurgePayload(config: NetlifyCacheProviderRuntimeConfig, tags: stri
 }
 
 /**
+ * Build a lightweight diagnostics object for provider debug logs.
+ *
+ * @param config - Netlify provider runtime configuration.
+ * @param tags - Normalized cache tags for invalidation.
+ * @returns A serializable diagnostics payload safe for logs.
+ */
+function buildDiagnostics(config: NetlifyCacheProviderRuntimeConfig, tags: string[]): Record<string, unknown> {
+  return {
+    apiBaseUrl: config.apiBaseUrl,
+    tags,
+    hasSiteId: Boolean(config.siteId),
+    hasPurgeToken: Boolean(config.purgeToken),
+  };
+}
+
+/**
  * Create a Netlify-backed Astro cache provider.
  *
  * This provider maps Astro route-cache hints to Netlify cache headers and
@@ -102,6 +119,7 @@ const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRunt
     durable: rawConfig?.durable ?? true,
     debug: rawConfig?.debug ?? false,
     purgeByPathAsTag: rawConfig?.purgeByPathAsTag ?? true,
+    strictMissingCredentials: rawConfig?.strictMissingCredentials ?? false,
   };
 
   return {
@@ -131,6 +149,8 @@ const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRunt
         tags.push(`path:${options.path}`);
       }
 
+      const uniqueTags = [...new Set(tags)];
+
       if (!tags.length) {
         if (config.debug) {
           console.warn('[netlify-cache-provider] Skipping invalidate without tags.');
@@ -140,11 +160,23 @@ const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRunt
       }
 
       if (!config.purgeToken || !config.siteId) {
+        const details = JSON.stringify(buildDiagnostics(config, uniqueTags));
+        const message = `[netlify-cache-provider] Missing purgeToken and siteId. Invalidation request skipped. ${details}`;
+
+        if (config.strictMissingCredentials) {
+          throw new Error(message);
+        }
+
         if (config.debug) {
-          console.warn('[netlify-cache-provider] Missing purgeToken and siteId. Invalidation request skipped.');
+          console.warn(message);
         }
 
         return;
+      }
+
+      if (config.debug) {
+        const details = JSON.stringify(buildDiagnostics(config, uniqueTags));
+        console.warn(`[netlify-cache-provider] Running invalidate. ${details}`);
       }
 
       const response = await fetch(config.apiBaseUrl!, {
@@ -153,7 +185,7 @@ const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRunt
           Authorization: `Bearer ${config.purgeToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(buildPurgePayload(config, [...new Set(tags)])),
+        body: JSON.stringify(buildPurgePayload(config, uniqueTags)),
       });
 
       if (!response.ok) {

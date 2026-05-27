@@ -3,7 +3,6 @@ import { applyButtonLoadingState } from '@utils/dom/applyButtonLoadingState';
 import type { MutationController } from '@utils/query';
 import { useMutationQuery } from '@utils/query';
 import { createUserOptions } from '@queries/users';
-import { navigate } from 'astro:transitions/client';
 
 const SAMPLE_USERS: CreateUserBody[] = [
   { name: 'Alice Foster', email: 'alice.foster@example.com' },
@@ -34,8 +33,10 @@ class AddUserElement extends HTMLElement {
   connectedCallback(): void {
     this.#mutation = useMutationQuery({
       ...createUserOptions,
-      onSuccess: async () => {
-        await navigate(window.location.href)
+      onSuccess: () => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('refresh', `${Date.now()}`);
+        window.location.assign(url.toString());
       },
     });
 
@@ -89,7 +90,6 @@ class AddUserElement extends HTMLElement {
     if (this.#mutation.isPending) return;
 
     const payload = pickRandomSampleUser();
-
     await this.#mutation.mutate(payload);
   }
 

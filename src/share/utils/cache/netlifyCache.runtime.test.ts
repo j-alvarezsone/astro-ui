@@ -51,4 +51,39 @@ describe('netlify cache provider runtime', () => {
 
     expect(fetch).not.toHaveBeenCalled();
   });
+
+  it('throws when strictMissingCredentials is enabled and credentials are missing', async () => {
+    const fetch = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
+      await Promise.resolve(new Response('', { status: 200, statusText: 'OK' }))
+    );
+    vi.stubGlobal('fetch', fetch);
+
+    const provider = netlifyCacheProviderFactory({
+      strictMissingCredentials: true,
+    });
+
+    await expect(provider.invalidate({ tags: ['heroes'] })).rejects.toThrow(/Missing purgeToken and siteId/);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('logs invalidate diagnostics when debug is enabled', async () => {
+    const fetch = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
+      await Promise.resolve(new Response('', { status: 200, statusText: 'OK' }))
+    );
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+      // no-op
+    });
+    vi.stubGlobal('fetch', fetch);
+
+    const provider = netlifyCacheProviderFactory({
+      siteId: 'site-id',
+      purgeToken: 'purge-token',
+      debug: true,
+    });
+
+    await provider.invalidate({ tags: ['users'] });
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(String(warnSpy.mock.calls[0]?.[0])).toContain('Running invalidate');
+  });
 });
