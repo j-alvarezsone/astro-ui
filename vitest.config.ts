@@ -10,6 +10,11 @@ export default defineConfig({
       '@web-components': fileURLToPath(new URL('./src/web-components', import.meta.url)),
       '@/types': fileURLToPath(new URL('./src/share/types', import.meta.url)),
       '@utils': fileURLToPath(new URL('./src/share/utils', import.meta.url)),
+      '@assets': fileURLToPath(new URL('./src/assets', import.meta.url)),
+      '@content': fileURLToPath(new URL('./src/content', import.meta.url)),
+      '@constants': fileURLToPath(new URL('./src/share/constants', import.meta.url)),
+      '@queries': fileURLToPath(new URL('./src/share/queries', import.meta.url)),
+      '@actions': fileURLToPath(new URL('./src/share/actions', import.meta.url)),
     },
   },
   test: {
