@@ -1,8 +1,9 @@
-import { defineConfig, fontProviders, memoryCache } from 'astro/config';
+import { defineConfig, fontProviders } from 'astro/config';
 import netlify from '@astrojs/netlify';
 
 import vue from '@astrojs/vue';
 import icon from "astro-icon";
+import { netlifyCache } from '@utils/cache/netlifyCache';
 
 // https://astro.build/config
 export default defineConfig({
@@ -23,7 +24,12 @@ export default defineConfig({
   }],
   experimental: {
     cache: {
-      provider: memoryCache(),
+      provider: netlifyCache({
+        siteId: process.env.NETLIFY_SITE_ID,
+        authToken: process.env.NETLIFY_AUTH_TOKEN,
+        durable: true,
+        debug: process.env.NODE_ENV !== 'production',
+      }),
     },
   },
 });
