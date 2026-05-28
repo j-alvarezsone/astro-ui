@@ -58,7 +58,9 @@ class AddHeroElement extends HTMLElement {
     this.#mutation = useMutationQuery({
       ...createHeroOptions,
       onSuccess: async () => {
-        await navigate(window.location.href);
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.set('__refresh', String(Date.now()));
+        await navigate(nextUrl.toString());
       },
     });
 
