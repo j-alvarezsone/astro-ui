@@ -1,4 +1,4 @@
-import type { CreateHeroBody, CreateHeroResponse, GetAllHeroesResponse, HeroContact } from '../share/types/hero-contact';
+import type { CreateHeroBody, CreateHeroResponse, GetAllHeroesResponse } from '../share/types/hero-contact';
 import { navigate } from 'astro:transitions/client';
 import { applyButtonLoadingState } from '@utils/dom/applyButtonLoadingState';
 import type { MutationController } from '@utils/query';
@@ -59,9 +59,7 @@ class AddHeroElement extends HTMLElement {
   connectedCallback(): void {
     const createMutation = useMutationQuery({
       ...createHeroOptions,
-      onSuccess: async (data) => {
-        this.#prependHero(data.item);
-
+      onSuccess: async () => {
         const nextUrl = new URL(window.location.href);
         nextUrl.searchParams.set('__refresh', String(Date.now()));
         await navigate(nextUrl.toString());
@@ -69,9 +67,7 @@ class AddHeroElement extends HTMLElement {
     });
     const resetMutation = useMutationQuery({
       ...resetHeroesOptions,
-      onSuccess: async (data) => {
-        this.#replaceHeroes(data.items);
-
+      onSuccess: async () => {
         const nextUrl = new URL(window.location.href);
         nextUrl.searchParams.set('__refresh', String(Date.now()));
         await navigate(nextUrl.toString());
@@ -169,66 +165,6 @@ class AddHeroElement extends HTMLElement {
     if (this.#createMutation?.isPending) return;
 
     await this.#resetMutation.mutate();
-  }
-
-  /**
-   * Replace the visible heroes list with a full collection.
-   *
-   * @param heroes - Hero collection to render in order.
-   * @returns Nothing.
-   * @example
-   * this.#replaceHeroes([{ id: 'h-1', name: 'Storm', power: 'Weather control' }]);
-   */
-  #replaceHeroes(heroes: HeroContact[]): void {
-    const list = this.#resolveHeroesList();
-    if (!list) return;
-
-    list.innerHTML = '';
-
-    for (const hero of heroes) {
-      list.append(this.#createHeroItem(hero));
-    }
-  }
-
-  /**
-   * Prepend one hero to the visible list after a successful create.
-   *
-   * @param hero - Newly created hero payload.
-   * @returns Nothing.
-   * @example
-   * this.#prependHero({ id: 'h-5', name: 'Rogue', power: 'Power absorption' });
-   */
-  #prependHero(hero: HeroContact): void {
-    const list = this.#resolveHeroesList();
-    if (!list) return;
-
-    list.prepend(this.#createHeroItem(hero));
-  }
-
-  /**
-   * Resolve the heroes list element from the page.
-   *
-   * @returns The heroes list element when present.
-   * @example
-   * const list = this.#resolveHeroesList();
-   */
-  #resolveHeroesList(): HTMLUListElement | null {
-    return document.querySelector<HTMLUListElement>('[data-heroes-list]');
-  }
-
-  /**
-   * Build one list item element from hero data.
-   *
-   * @param hero - Hero data used for text rendering.
-   * @returns A populated list item node.
-   * @example
-   * const item = this.#createHeroItem({ id: 'h-1', name: 'Storm', power: 'Weather control' });
-   */
-  #createHeroItem(hero: HeroContact): HTMLLIElement {
-    const item = document.createElement('li');
-    item.className = 'query-demo__item';
-    item.textContent = `${hero.name} - ${hero.power}`;
-    return item;
   }
 
   #resolveActionButton(action: 'add' | 'reset'): HTMLElement | null {
