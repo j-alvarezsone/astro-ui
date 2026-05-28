@@ -3,6 +3,7 @@ import { isUnknownRecord } from '@utils/object/isUnknownRecord';
 import type { QueryFn } from '@utils/query';
 import { z } from 'astro/zod';
 import type { CreatePetBody, CreatePetResponse, GetAllPetsResponse } from '../types/pet-contact';
+import { resolveBaseUrl } from '@utils/url/resolveBaseUrl';
 
 /**
  * Fetches all pets from the API.
@@ -17,8 +18,11 @@ import type { CreatePetBody, CreatePetResponse, GetAllPetsResponse } from '../ty
  * });
  * ```
  */
-export const getAllPets: QueryFn<GetAllPetsResponse> = async ({ signal }) => {
-  return await fetchJsonResponse<GetAllPetsResponse>('/api/pets', {
+export const getAllPets: QueryFn<GetAllPetsResponse> = async ({ signal, meta }) => {
+  const baseUrl = resolveBaseUrl(meta);
+  const input = baseUrl ? new URL('/api/pets', baseUrl) : '/api/pets';
+
+  return await fetchJsonResponse<GetAllPetsResponse>(input, {
     init: {
       signal,
     },
@@ -51,9 +55,11 @@ function isPetContactShape(value: unknown): boolean {
     return false;
   }
 
-  return typeof value.id === 'string'
-    && typeof value.name === 'string'
-    && (value.type === 'dog' || value.type === 'cat' || value.type === 'bird');
+  return (
+    typeof value.id === 'string' &&
+    typeof value.name === 'string' &&
+    (value.type === 'dog' || value.type === 'cat' || value.type === 'bird')
+  );
 }
 
 const createPetResponseSchema = z.object({

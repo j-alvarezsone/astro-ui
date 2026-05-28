@@ -184,6 +184,21 @@ describe('query app wrapper', () => {
     });
   });
 
+  it('treats route-cache invalidator enabled as true when omitted', async () => {
+    const cache = {
+      invalidate: vi.fn(async () => await Promise.resolve()),
+    } satisfies AstroRouteCacheInvalidatorLike;
+
+    await invalidateServerQuery({
+      cache,
+      tags: ['users'],
+    });
+
+    expect(cache.invalidate).toHaveBeenCalledWith({
+      tags: ['users'],
+    });
+  });
+
   it('sets pending state again on a second mutate call', async () => {
     let secondResolve: (value: string) => void = NOOP_STRING_RESOLVER;
     const secondResult = new Promise<string>((resolve) => {

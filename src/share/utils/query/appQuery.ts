@@ -307,7 +307,7 @@ export async function invalidateServerQuery(
   const hasTags = Boolean(options.tags?.length);
   const hasPath = typeof options.path === 'string' && options.path.length > 0;
 
-  if (options.cache?.enabled && (hasTags || hasPath)) {
+  if (options.cache && options.cache.enabled !== false && (hasTags || hasPath)) {
     await options.cache.invalidate({
       ...(hasPath ? { path: options.path } : {}),
       ...(hasTags ? { tags: options.tags } : {}),

@@ -16,6 +16,7 @@ const MAX_TIMEOUT_MS = 2_147_483_647; // Maximum delay for setTimeout in most br
 
 export interface RunQueryAttemptOptions<TData, TError = unknown> {
   attempt: number;
+  executionId: number;
   entry: QueryCacheEntry<TData, TError>;
   options: QueryExecutionOptions<TData, TError>;
   mergedInterceptors: QueryInterceptor<TData, TError>[];
@@ -106,7 +107,10 @@ export async function executeQuery<TData, TError = unknown>(
     }
   }
 
-  const executionPromise = executeWithLifecycle<TData, TError>(entry, options, coreOptions, now);
+  const executionId = (entry.executionId ?? 0) + 1;
+  entry.executionId = executionId;
+
+  const executionPromise = executeWithLifecycle<TData, TError>(entry, options, coreOptions, now, executionId);
   entry.promise = executionPromise;
 
   store.set(options.keyHash, entry);
@@ -171,12 +175,14 @@ export async function executeQueryUncached<TData, TError = unknown>(
   };
 
   entry.abortController = controller;
+  entry.executionId = 1;
   entry.status = 'pending';
 
   await runOnRequestInterceptors(mergedInterceptors, context);
 
   return await runQueryAttempt({
     attempt: 1,
+    executionId: 1,
     entry,
     options: executionOptions,
     mergedInterceptors,
@@ -289,6 +295,7 @@ async function executeWithLifecycle<TData, TError = unknown>(
   options: QueryExecutionOptions<TData, TError>,
   coreOptions: QueryCoreOptions,
   now: () => number,
+  executionId: number,
 ): Promise<QueryExecutionResult<TData, TError>> {
   const mergedInterceptors = mergeInterceptors<TData, TError>(
     coreOptions.interceptors,
@@ -311,6 +318,7 @@ async function executeWithLifecycle<TData, TError = unknown>(
 
   return await runQueryAttempt({
     attempt: 1,
+    executionId,
     entry,
     options,
     mergedInterceptors,
@@ -345,6 +353,7 @@ export async function runQueryAttempt<TData, TError = unknown>(
 ): Promise<QueryExecutionResult<TData, TError>> {
   const {
     attempt,
+    executionId,
     entry,
     options,
     mergedInterceptors,
@@ -365,6 +374,15 @@ export async function runQueryAttempt<TData, TError = unknown>(
       meta: options.meta,
     });
 
+    if (entry.executionId !== executionId) {
+      return {
+        keyHash: options.keyHash,
+        isFromCache: false,
+        status: 'success',
+        data,
+      };
+    }
+
     entry.hasData = true;
     entry.data = data;
     entry.error = undefined;
@@ -382,6 +400,15 @@ export async function runQueryAttempt<TData, TError = unknown>(
     };
   } catch (error: unknown) {
     const typedError = toTypedError<TError>(error);
+
+    if (entry.executionId !== executionId) {
+      return {
+        keyHash: options.keyHash,
+        isFromCache: false,
+        status: 'error',
+        error: typedError,
+      };
+    }
 
     if (isResponseError(error)) {
       await runOnResponseErrorInterceptors(mergedInterceptors, context, typedError);

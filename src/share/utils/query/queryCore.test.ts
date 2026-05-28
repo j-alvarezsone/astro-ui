@@ -79,6 +79,140 @@ describe('query core execution', () => {
     expect(result2.data).toBe('ok');
   });
 
+  it('does not let a superseded canceled request overwrite newer cache data', async () => {
+    const store = createQueryCacheStore();
+    const queryKey = ['dedupe-cancel-supersede'];
+    const keyHash = hashQueryKey(queryKey);
+    let firstRelease: () => void;
+    let secondRelease: () => void;
+    const firstGate = new Promise<void>((resolve) => {
+      firstRelease = resolve;
+    });
+    const secondGate = new Promise<void>((resolve) => {
+      secondRelease = resolve;
+    });
+    let callCount = 0;
+
+    const queryFn = async () => {
+      callCount += 1;
+
+      if (callCount === 1) {
+        await firstGate;
+        return 'old-result';
+      }
+
+      await secondGate;
+      return 'new-result';
+    };
+
+    const firstRun = executeQuery(
+      store,
+      {
+        queryKey,
+        keyHash,
+        queryFn,
+        staleTime: 0,
+        dedupe: 'cancel',
+        client: true,
+      },
+      {},
+    );
+
+    const secondRun = executeQuery(
+      store,
+      {
+        queryKey,
+        keyHash,
+        queryFn,
+        staleTime: 0,
+        dedupe: 'cancel',
+        client: true,
+      },
+      {},
+    );
+
+    secondRelease!();
+    const secondResult = await secondRun;
+
+    expect(secondResult.status).toBe('success');
+    expect(secondResult.data).toBe('new-result');
+
+    firstRelease!();
+    const firstResult = await firstRun;
+
+    expect(firstResult.status).toBe('success');
+    expect(firstResult.data).toBe('old-result');
+
+    const entry = store.get<string>(keyHash);
+    expect(entry?.data).toBe('new-result');
+    expect(entry?.status).toBe('success');
+  });
+
+  it('does not run stale onSuccess for a superseded canceled request', async () => {
+    const store = createQueryCacheStore();
+    const queryKey = ['dedupe-cancel-supersede-on-success'];
+    const keyHash = hashQueryKey(queryKey);
+    let firstRelease: () => void;
+    let secondRelease: () => void;
+    const firstGate = new Promise<void>((resolve) => {
+      firstRelease = resolve;
+    });
+    const secondGate = new Promise<void>((resolve) => {
+      secondRelease = resolve;
+    });
+    let callCount = 0;
+    const onSuccess = vi.fn();
+
+    const queryFn = async () => {
+      callCount += 1;
+
+      if (callCount === 1) {
+        await firstGate;
+        return 'old-result';
+      }
+
+      await secondGate;
+      return 'new-result';
+    };
+
+    const firstRun = executeQuery(
+      store,
+      {
+        queryKey,
+        keyHash,
+        queryFn,
+        staleTime: 0,
+        dedupe: 'cancel',
+        onSuccess,
+        client: true,
+      },
+      {},
+    );
+
+    const secondRun = executeQuery(
+      store,
+      {
+        queryKey,
+        keyHash,
+        queryFn,
+        staleTime: 0,
+        dedupe: 'cancel',
+        onSuccess,
+        client: true,
+      },
+      {},
+    );
+
+    secondRelease!();
+    await secondRun;
+
+    firstRelease!();
+    await firstRun;
+
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+    expect(onSuccess).toHaveBeenCalledWith('new-result');
+  });
+
   it('retries failed requests when retry options allow it', async () => {
     const store = createQueryCacheStore();
     const queryKey = ['retry-test'];
@@ -120,6 +254,7 @@ describe('query core execution', () => {
     const queryKey = ['attempt-success'];
     const keyHash = hashQueryKey(queryKey);
     const entry = getOrCreateEntry<string>(store, keyHash, 1_000);
+    entry.executionId = 1;
 
     const options = {
       queryKey,
@@ -139,6 +274,7 @@ describe('query core execution', () => {
 
     const result = await runQueryAttempt({
       attempt: 1,
+      executionId: 1,
       entry,
       options,
       mergedInterceptors: [],
@@ -159,6 +295,7 @@ describe('query core execution', () => {
     const queryKey = ['attempt-retry'];
     const keyHash = hashQueryKey(queryKey);
     const entry = getOrCreateEntry<string>(store, keyHash, 1_000);
+    entry.executionId = 1;
     let attempts = 0;
 
     const options = {
@@ -190,6 +327,7 @@ describe('query core execution', () => {
 
     const result = await runQueryAttempt({
       attempt: 1,
+      executionId: 1,
       entry,
       options,
       mergedInterceptors: [],

@@ -98,6 +98,7 @@ export interface QueryCacheEntry<TData, TError = unknown> {
   error?: TError;
   updatedAt: number;
   status: QueryStateStatus;
+  executionId?: number;
   promise?: Promise<QueryExecutionResult<TData, TError>>;
   abortController?: AbortController;
   gcTime?: number;
