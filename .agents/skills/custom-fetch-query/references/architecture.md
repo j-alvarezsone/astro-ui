@@ -30,8 +30,9 @@
 
 ## Cache Semantics
 
-- `staleTime` is optional and has no default.
-- If `staleTime` is undefined and cache has data, data remains fresh until invalidated.
+- `staleTime` is optional at the API boundary.
+- For cache freshness checks, an omitted or `undefined` `staleTime` is resolved to `0`.
+- This means cached data is immediately stale unless a positive `staleTime` is provided.
 - `staleTime: 0` means immediately stale.
 - Dedupe policy:
   - `join`: share one in-flight promise for same key.
