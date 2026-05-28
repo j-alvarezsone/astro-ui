@@ -5,13 +5,32 @@ import type { MutationController } from '@utils/query';
 import { useMutationQuery } from '@utils/query';
 import { createHeroOptions } from '@queries/heroes';
 
-const SAMPLE_HEROES: CreateHeroBody[] = [
+interface SampleHeroTemplate {
+  name: string;
+  power: string;
+}
+
+const SAMPLE_HEROES: SampleHeroTemplate[] = [
   { name: 'Rogue', power: 'Power absorption' },
   { name: 'Wolverine', power: 'Regeneration' },
   { name: 'Iceman', power: 'Cryokinesis' },
   { name: 'Magik', power: 'Portal stepping' },
   { name: 'Colossus', power: 'Organic steel form' },
 ];
+
+/**
+ * Build a unique hero name value for demo API writes.
+ *
+ * @param name - Base hero name from the selected sample hero.
+ * @returns A unique hero name string for repeated test writes.
+ * @example
+ * const uniqueName = buildUniqueHeroName('Rogue');
+ */
+function buildUniqueHeroName(name: string): string {
+  const uniqueToken = `${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
+
+  return `${name} ${uniqueToken}`;
+}
 
 /**
  * Pick a random sample hero payload for the add-hero demo.
@@ -22,8 +41,12 @@ const SAMPLE_HEROES: CreateHeroBody[] = [
  */
 function pickRandomSampleHero(): CreateHeroBody {
   const index = Math.floor(Math.random() * SAMPLE_HEROES.length);
+  const sample = SAMPLE_HEROES[index];
 
-  return SAMPLE_HEROES[index];
+  return {
+    name: buildUniqueHeroName(sample.name),
+    power: sample.power,
+  };
 }
 
 class AddHeroElement extends HTMLElement {
