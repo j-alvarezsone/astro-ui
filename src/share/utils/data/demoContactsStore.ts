@@ -1,11 +1,9 @@
 import { getStore } from '@netlify/blobs';
 import { isUnknownRecord } from '@utils/object/isUnknownRecord';
 import type { HeroContact } from '@/types/hero-contact';
-import type { UserContact } from '@/types/user-contact';
 
 const DEMO_STORE_NAME = 'astro-ui-demo-contacts';
 const HEROES_KEY = 'heroes';
-const USERS_KEY = 'users';
 
 const DEFAULT_HEROES: HeroContact[] = [
   { id: 'h-1', name: 'Storm', power: 'Weather control' },
@@ -14,16 +12,8 @@ const DEFAULT_HEROES: HeroContact[] = [
   { id: 'h-4', name: 'Cyclops', power: 'Optic blasts' },
 ];
 
-const DEFAULT_USERS: UserContact[] = [
-  { id: 'u-1', name: 'Ava Martinez', email: 'ava.martinez@example.com' },
-  { id: 'u-2', name: 'Liam Chen', email: 'liam.chen@example.com' },
-  { id: 'u-3', name: 'Noah Patel', email: 'noah.patel@example.com' },
-  { id: 'u-4', name: 'Sofia Nguyen', email: 'sofia.nguyen@example.com' },
-];
-
 const memoryStore = {
   heroes: [...DEFAULT_HEROES],
-  users: [...DEFAULT_USERS],
 };
 
 let hasLoggedBlobsFallback = false;
@@ -51,31 +41,6 @@ export async function getDemoHeroes(): Promise<HeroContact[]> {
  */
 export async function appendDemoHero(hero: HeroContact): Promise<HeroContact[]> {
   return await appendCollection<HeroContact>(HEROES_KEY, memoryStore.heroes, hero, isHeroContact);
-}
-
-/**
- * Reads the users demo dataset from durable storage when available.
- *
- * @returns Current user records from Blobs (or local memory fallback).
- *
- * @example
- * const users = await getDemoUsers();
- */
-export async function getDemoUsers(): Promise<UserContact[]> {
-  return await readCollection<UserContact>(USERS_KEY, memoryStore.users, isUserContact);
-}
-
-/**
- * Appends one user to the demo dataset in durable storage.
- *
- * @param user - User item to append.
- * @returns Updated users collection.
- *
- * @example
- * const updated = await appendDemoUser({ id: 'u-10', name: 'Alice', email: 'alice@example.com' });
- */
-export async function appendDemoUser(user: UserContact): Promise<UserContact[]> {
-  return await appendCollection<UserContact>(USERS_KEY, memoryStore.users, user, isUserContact);
 }
 
 /**
@@ -125,7 +90,7 @@ async function readCollection<T>(
  * @returns Updated collection after append.
  *
  * @example
- * const users = await appendCollection('users', DEFAULT_USERS, newUser, isUserContact);
+ * const heroes = await appendCollection('heroes', DEFAULT_HEROES, newHero, isHeroContact);
  */
 async function appendCollection<T>(
   key: string,
@@ -210,24 +175,6 @@ function isHeroContact(value: unknown): value is HeroContact {
     typeof value.id === 'string' &&
     typeof value.name === 'string' &&
     typeof value.power === 'string'
-  );
-}
-
-/**
- * Type guard for a user contact payload.
- *
- * @param value - Unknown value to validate.
- * @returns True when the value matches the user shape.
- *
- * @example
- * const valid = isUserContact({ id: 'u-1', name: 'Ava Martinez', email: 'ava.martinez@example.com' });
- */
-function isUserContact(value: unknown): value is UserContact {
-  return (
-    isUnknownRecord(value) &&
-    typeof value.id === 'string' &&
-    typeof value.name === 'string' &&
-    typeof value.email === 'string'
   );
 }
 

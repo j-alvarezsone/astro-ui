@@ -5,25 +5,51 @@ import type { MutationController } from '@utils/query';
 import { useMutationQuery } from '@utils/query';
 import { createUserOptions } from '@queries/users';
 
-const SAMPLE_USERS: CreateUserBody[] = [
-  { name: 'Alice Foster', email: 'alice.foster@example.com' },
-  { name: 'Ben Harlow', email: 'ben.harlow@example.com' },
-  { name: 'Cara Moss', email: 'cara.moss@example.com' },
-  { name: 'Diego Reyes', email: 'diego.reyes@example.com' },
-  { name: 'Eve Barton', email: 'eve.barton@example.com' },
+interface SampleUserTemplate {
+  name: string;
+  emailPrefix: string;
+}
+
+const SAMPLE_USERS: SampleUserTemplate[] = [
+  { name: 'Alice Foster', emailPrefix: 'alice.foster' },
+  { name: 'Ben Harlow', emailPrefix: 'ben.harlow' },
+  { name: 'Cara Moss', emailPrefix: 'cara.moss' },
+  { name: 'Diego Reyes', emailPrefix: 'diego.reyes' },
+  { name: 'Eve Barton', emailPrefix: 'eve.barton' },
 ];
 
 /**
- * Pick a random sample user payload for the add-user demo.
+ * Build a unique email value for demo API writes.
  *
- * @returns A random sample user from the predefined demo list.
+ * GoREST requires unique emails, so each click appends a timestamp/random
+ * suffix to avoid duplicate-address 422 errors.
+ *
+ * @param emailPrefix - The local-part prefix from the selected sample user.
+ * @returns A unique email string safe for repeated test writes.
+ * @example
+ * const email = buildUniqueEmail('alice.foster');
+ */
+function buildUniqueEmail(emailPrefix: string): string {
+  const uniqueToken = `${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
+
+  return `${emailPrefix}+${uniqueToken}@example.com`;
+}
+
+/**
+ * Pick a random sample user payload with a unique email for the add-user demo.
+ *
+ * @returns A random sample user from the predefined demo list with unique email.
  * @example
  * const payload = pickRandomSampleUser();
  */
 function pickRandomSampleUser(): CreateUserBody {
   const index = Math.floor(Math.random() * SAMPLE_USERS.length);
+  const sample = SAMPLE_USERS[index];
 
-  return SAMPLE_USERS[index];
+  return {
+    name: sample.name,
+    email: buildUniqueEmail(sample.emailPrefix),
+  };
 }
 
 class AddUserElement extends HTMLElement {
