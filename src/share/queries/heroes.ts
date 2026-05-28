@@ -1,7 +1,7 @@
 import { queryOptions } from '@utils/query/queryOptions';
 import { mutationOptions } from '@utils/query/mutationOptions';
-import type { CreateHeroBody, CreateHeroResponse } from '@/types/hero-contact';
-import { getAllHeroes, postNewHero } from '@actions/heroes';
+import type { CreateHeroBody, CreateHeroResponse, GetAllHeroesResponse } from '@/types/hero-contact';
+import { getAllHeroes, postNewHero, postResetHeroes } from '@actions/heroes';
 
 /**
  * Query options for fetching all heroes.
@@ -31,4 +31,16 @@ export const createHeroOptions = mutationOptions<CreateHeroResponse, CreateHeroB
 
     return await postNewHero(payload);
   },
+});
+
+/**
+ * Mutation options for resetting the heroes list.
+ *
+ * @example
+ * const mutation = useMutationQuery<GetAllHeroesResponse, void>(resetHeroesOptions);
+ * await mutation.mutate();
+ */
+export const resetHeroesOptions = mutationOptions<GetAllHeroesResponse, void>({
+  mutationKey: ['reset-heroes'],
+  mutationFn: async () => await postResetHeroes(),
 });

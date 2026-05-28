@@ -1,9 +1,8 @@
-import type { CreateHeroBody, CreateHeroResponse } from '../share/types/hero-contact';
-import { navigate } from 'astro:transitions/client';
+import type { CreateHeroBody, CreateHeroResponse, GetAllHeroesResponse, HeroContact } from '../share/types/hero-contact';
 import { applyButtonLoadingState } from '@utils/dom/applyButtonLoadingState';
 import type { MutationController } from '@utils/query';
 import { useMutationQuery } from '@utils/query';
-import { createHeroOptions } from '@queries/heroes';
+import { createHeroOptions, resetHeroesOptions } from '@queries/heroes';
 
 interface SampleHeroTemplate {
   name: string;
@@ -51,28 +50,42 @@ function pickRandomSampleHero(): CreateHeroBody {
 
 class AddHeroElement extends HTMLElement {
   #controller: AbortController | null = null;
-  #mutation: MutationController<CreateHeroResponse, CreateHeroBody> | null = null;
-  #unsubscribe: (() => void) | null = null;
+  #createMutation: MutationController<CreateHeroResponse, CreateHeroBody> | null = null;
+  #resetMutation: MutationController<GetAllHeroesResponse, void> | null = null;
+  #createUnsubscribe: (() => void) | null = null;
+  #resetUnsubscribe: (() => void) | null = null;
 
   connectedCallback(): void {
-    this.#mutation = useMutationQuery({
+    const createMutation = useMutationQuery({
       ...createHeroOptions,
-      onSuccess: async () => {
-        const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.set('__refresh', String(Date.now()));
-        await navigate(nextUrl.toString());
+      onSuccess: (data) => {
+        this.#prependHero(data.item);
+      },
+    });
+    const resetMutation = useMutationQuery({
+      ...resetHeroesOptions,
+      onSuccess: (data) => {
+        this.#replaceHeroes(data.items);
       },
     });
 
-    const mutation = this.#mutation;
+    this.#createMutation = createMutation;
+    this.#resetMutation = resetMutation;
     this.#controller = new AbortController();
     const { signal } = this.#controller;
 
-    this.#unsubscribe = mutation.subscribe(() => {
-      const button = this.#resolveButton();
-      if (button) {
-        applyButtonLoadingState(button, mutation.isPending);
-      }
+    this.#createUnsubscribe = createMutation.subscribe(() => {
+      const button = this.#resolveActionButton('add');
+      if (!button) return;
+
+      applyButtonLoadingState(button, createMutation.isPending);
+    });
+
+    this.#resetUnsubscribe = resetMutation.subscribe(() => {
+      const button = this.#resolveActionButton('reset');
+      if (!button) return;
+
+      applyButtonLoadingState(button, resetMutation.isPending);
     });
 
     this.addEventListener(
@@ -85,9 +98,12 @@ class AddHeroElement extends HTMLElement {
   }
 
   disconnectedCallback(): void {
-    this.#unsubscribe?.();
-    this.#unsubscribe = null;
-    this.#mutation = null;
+    this.#createUnsubscribe?.();
+    this.#createUnsubscribe = null;
+    this.#resetUnsubscribe?.();
+    this.#resetUnsubscribe = null;
+    this.#createMutation = null;
+    this.#resetMutation = null;
     this.#controller?.abort();
     this.#controller = null;
   }
@@ -123,11 +139,12 @@ class AddHeroElement extends HTMLElement {
    * await this.#addHero();
    */
   async #addHero(): Promise<void> {
-    if (!this.#mutation) return;
-    if (this.#mutation.isPending) return;
+    if (!this.#createMutation) return;
+    if (this.#createMutation.isPending) return;
+    if (this.#resetMutation?.isPending) return;
 
     const payload = pickRandomSampleHero();
-    await this.#mutation.mutate(payload);
+    await this.#createMutation.mutate(payload);
   }
 
   /**
@@ -138,23 +155,75 @@ class AddHeroElement extends HTMLElement {
    * await this.#resetHeroes();
    */
   async #resetHeroes(): Promise<void> {
-    if (this.#mutation?.isPending) return;
+    if (!this.#resetMutation) return;
+    if (this.#resetMutation.isPending) return;
+    if (this.#createMutation?.isPending) return;
 
-    const response = await fetch('/api/heroes-reset', {
-      method: 'POST',
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to reset heroes: HTTP ${response.status}`);
-    }
-
-    const nextUrl = new URL(window.location.href);
-    nextUrl.searchParams.set('__refresh', String(Date.now()));
-    await navigate(nextUrl.toString());
+    await this.#resetMutation.mutate();
   }
 
-  #resolveButton(): HTMLElement | null {
-    return this.querySelector<HTMLElement>('.button');
+  /**
+   * Replace the visible heroes list with a full collection.
+   *
+   * @param heroes - Hero collection to render in order.
+   * @returns Nothing.
+   * @example
+   * this.#replaceHeroes([{ id: 'h-1', name: 'Storm', power: 'Weather control' }]);
+   */
+  #replaceHeroes(heroes: HeroContact[]): void {
+    const list = this.#resolveHeroesList();
+    if (!list) return;
+
+    list.innerHTML = '';
+
+    for (const hero of heroes) {
+      list.append(this.#createHeroItem(hero));
+    }
+  }
+
+  /**
+   * Prepend one hero to the visible list after a successful create.
+   *
+   * @param hero - Newly created hero payload.
+   * @returns Nothing.
+   * @example
+   * this.#prependHero({ id: 'h-5', name: 'Rogue', power: 'Power absorption' });
+   */
+  #prependHero(hero: HeroContact): void {
+    const list = this.#resolveHeroesList();
+    if (!list) return;
+
+    list.prepend(this.#createHeroItem(hero));
+  }
+
+  /**
+   * Resolve the heroes list element from the page.
+   *
+   * @returns The heroes list element when present.
+   * @example
+   * const list = this.#resolveHeroesList();
+   */
+  #resolveHeroesList(): HTMLUListElement | null {
+    return document.querySelector<HTMLUListElement>('[data-heroes-list]');
+  }
+
+  /**
+   * Build one list item element from hero data.
+   *
+   * @param hero - Hero data used for text rendering.
+   * @returns A populated list item node.
+   * @example
+   * const item = this.#createHeroItem({ id: 'h-1', name: 'Storm', power: 'Weather control' });
+   */
+  #createHeroItem(hero: HeroContact): HTMLLIElement {
+    const item = document.createElement('li');
+    item.className = 'query-demo__item';
+    item.textContent = `${hero.name} - ${hero.power}`;
+    return item;
+  }
+
+  #resolveActionButton(action: 'add' | 'reset'): HTMLElement | null {
+    return this.querySelector<HTMLElement>(`[data-hero-action="${action}"] .button`);
   }
 }
 

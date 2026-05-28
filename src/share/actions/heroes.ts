@@ -55,6 +55,25 @@ export async function postNewHero(body: CreateHeroBody): Promise<CreateHeroRespo
 }
 
 /**
+ * Resets heroes data by sending a POST request to the reset endpoint.
+ *
+ * @returns The full heroes list returned after reset.
+ * @example
+ * const resetPayload = await postResetHeroes();
+ */
+export async function postResetHeroes(): Promise<GetAllHeroesResponse> {
+  return await fetchJsonResponse<GetAllHeroesResponse>(
+    '/api/heroes-reset',
+    {
+      init: {
+        method: 'POST',
+      },
+      validate: isGetAllHeroesResponse,
+    },
+  );
+}
+
+/**
  * Validates the shape of the heroes list API response.
  *
  * @param value - Unknown JSON value to validate.
