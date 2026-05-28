@@ -55,23 +55,14 @@ class AddHeroElement extends HTMLElement {
   #resetMutation: MutationController<GetAllHeroesResponse, void> | null = null;
   #createUnsubscribe: (() => void) | null = null;
   #resetUnsubscribe: (() => void) | null = null;
+  #isNavigating = false;
 
   connectedCallback(): void {
     const createMutation = useMutationQuery({
       ...createHeroOptions,
-      onSuccess: async () => {
-        const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.set('__refresh', String(Date.now()));
-        await navigate(nextUrl.toString());
-      },
     });
     const resetMutation = useMutationQuery({
       ...resetHeroesOptions,
-      onSuccess: async () => {
-        const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.set('__refresh', String(Date.now()));
-        await navigate(nextUrl.toString());
-      },
     });
 
     this.#createMutation = createMutation;
@@ -83,14 +74,14 @@ class AddHeroElement extends HTMLElement {
       const button = this.#resolveActionButton('add');
       if (!button) return;
 
-      applyButtonLoadingState(button, createMutation.isPending);
+      applyButtonLoadingState(button, createMutation.isPending || this.#isNavigating);
     });
 
     this.#resetUnsubscribe = resetMutation.subscribe(() => {
       const button = this.#resolveActionButton('reset');
       if (!button) return;
 
-      applyButtonLoadingState(button, resetMutation.isPending);
+      applyButtonLoadingState(button, resetMutation.isPending || this.#isNavigating);
     });
 
     this.addEventListener(
@@ -147,9 +138,11 @@ class AddHeroElement extends HTMLElement {
     if (!this.#createMutation) return;
     if (this.#createMutation.isPending) return;
     if (this.#resetMutation?.isPending) return;
+    if (this.#isNavigating) return;
 
     const payload = pickRandomSampleHero();
     await this.#createMutation.mutate(payload);
+    await this.#navigateWithRefreshParam();
   }
 
   /**
@@ -163,8 +156,52 @@ class AddHeroElement extends HTMLElement {
     if (!this.#resetMutation) return;
     if (this.#resetMutation.isPending) return;
     if (this.#createMutation?.isPending) return;
+    if (this.#isNavigating) return;
 
     await this.#resetMutation.mutate();
+    await this.#navigateWithRefreshParam();
+  }
+
+  /**
+   * Navigate to the current page with a unique refresh query key to force a cache-key miss.
+   *
+   * @returns A promise that resolves when navigation completes.
+   * @example
+   * await this.#navigateWithRefreshParam();
+   */
+  async #navigateWithRefreshParam(): Promise<void> {
+    if (this.#isNavigating) return;
+
+    this.#isNavigating = true;
+    this.#syncLoadingState();
+
+    try {
+      const nextUrl = new URL(window.location.href);
+      nextUrl.searchParams.set('__refresh', String(Date.now()));
+      await navigate(nextUrl.toString());
+    } finally {
+      this.#isNavigating = false;
+      this.#syncLoadingState();
+    }
+  }
+
+  /**
+   * Sync loading state for add/reset buttons based on mutation and navigation activity.
+   *
+   * @returns Nothing.
+   * @example
+   * this.#syncLoadingState();
+   */
+  #syncLoadingState(): void {
+    const addButton = this.#resolveActionButton('add');
+    if (addButton) {
+      applyButtonLoadingState(addButton, Boolean(this.#createMutation?.isPending) || this.#isNavigating);
+    }
+
+    const resetButton = this.#resolveActionButton('reset');
+    if (resetButton) {
+      applyButtonLoadingState(resetButton, Boolean(this.#resetMutation?.isPending) || this.#isNavigating);
+    }
   }
 
   #resolveActionButton(action: 'add' | 'reset'): HTMLElement | null {
