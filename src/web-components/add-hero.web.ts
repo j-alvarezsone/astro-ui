@@ -1,4 +1,5 @@
 import type { CreateHeroBody, CreateHeroResponse, GetAllHeroesResponse, HeroContact } from '../share/types/hero-contact';
+import { navigate } from 'astro:transitions/client';
 import { applyButtonLoadingState } from '@utils/dom/applyButtonLoadingState';
 import type { MutationController } from '@utils/query';
 import { useMutationQuery } from '@utils/query';
@@ -58,14 +59,22 @@ class AddHeroElement extends HTMLElement {
   connectedCallback(): void {
     const createMutation = useMutationQuery({
       ...createHeroOptions,
-      onSuccess: (data) => {
+      onSuccess: async (data) => {
         this.#prependHero(data.item);
+
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.set('__refresh', String(Date.now()));
+        await navigate(nextUrl.toString());
       },
     });
     const resetMutation = useMutationQuery({
       ...resetHeroesOptions,
-      onSuccess: (data) => {
+      onSuccess: async (data) => {
         this.#replaceHeroes(data.items);
+
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.set('__refresh', String(Date.now()));
+        await navigate(nextUrl.toString());
       },
     });
 

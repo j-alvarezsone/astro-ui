@@ -89,6 +89,20 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
                 </dd>
               </div>
               <div>
+                <dt>Why first add can look stale</dt>
+                <dd>
+                  This page uses route caching with <strong>maxAge=1000ms</strong> and <strong>swr=5000ms</strong>.
+                  After adding a hero, tag invalidation is triggered, but edge cache propagation is not always immediate
+                  across nodes. A request to the same base URL can still return a cached HIT or stale-forwarded response
+                  for a short window.
+                  <span class="query-cache-debug__hint">
+                    Navigating to the same page with a unique query parameter (for example <code>?__refresh=...</code>)
+                    creates a different cache key when query variation is enabled, which commonly forces a MISS and
+                    shows the newly created hero right away.
+                  </span>
+                </dd>
+              </div>
+              <div>
                 <dt>Rendered at</dt>
                 <dd>{renderedAt}</dd>
               </div>
