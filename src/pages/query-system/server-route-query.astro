@@ -13,9 +13,9 @@ const { data: heroes } = await useServerQuery({
   queryFn: getAllHeroesOptions.queryFn,
   routeCache: {
     cache: Astro.cache,
-    maxAge: 10000,
+    maxAge: 1000,
     tags: ['heroes'],
-    swr: 50000,
+    swr: 5000,
   },
   meta: { baseUrl: Astro.url },
 });
@@ -82,19 +82,9 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
                 <dd>
                   HIT (fresh): served within maxAge. HIT (stale): served within swr while revalidating. MISS: no usable
                   entry for this execution.
-                </dd>
-              </div>
-              <div>
-                <dt>Why first add can look stale</dt>
-                <dd>
-                  This page uses route caching with <strong>maxAge=10000ms</strong> and <strong>swr=50000ms</strong>.
-                  After adding a hero, tag invalidation is triggered, but edge cache propagation is not always immediate
-                  across nodes. A request to the same base URL can still return a cached HIT or stale-forwarded response
-                  for a short window.
                   <span class="query-cache-debug__hint">
-                    Navigating to the same page with a unique query parameter (for example <code>?__refresh=...</code>)
-                    creates a different cache key when query variation is enabled, which commonly forces a MISS and
-                    shows the newly created hero right away.
+                    Right after tag/path invalidation, edge nodes can still respond with a stale status briefly during
+                    propagation and revalidation. This is expected with route cache + SWR.
                   </span>
                 </dd>
               </div>
@@ -114,7 +104,7 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
               <div>
                 <dt>maxAge</dt>
                 <dd>
-                  10000ms
+                  1000ms
                   <span class="query-cache-debug__hint">
                     How long route cache marks responses fresh before serving stale via SWR.
                   </span>
@@ -123,7 +113,7 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
               <div>
                 <dt>swr</dt>
                 <dd>
-                  50000ms
+                  5000ms
                   <span class="query-cache-debug__hint">
                     Additional stale-while-revalidate window after maxAge expires.
                   </span>
