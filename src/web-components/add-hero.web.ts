@@ -102,9 +102,15 @@ class AddHeroElement extends HTMLElement {
    */
   #handleClick(event: Event): void {
     if (!(event.target instanceof Element)) return;
+    const actionHost = event.target.closest<HTMLElement>('[data-hero-action]');
+    if (!actionHost) return;
     if (!event.target.closest('.button')) return;
 
-    this.#addHero().catch((error: unknown) => {
+    const action = actionHost.dataset.heroAction;
+
+    const runAction = action === 'reset' ? this.#resetHeroes() : this.#addHero();
+
+    runAction.catch((error: unknown) => {
       console.error(error);
     });
   }
@@ -122,6 +128,29 @@ class AddHeroElement extends HTMLElement {
 
     const payload = pickRandomSampleHero();
     await this.#mutation.mutate(payload);
+  }
+
+  /**
+   * Resets heroes data through the reset API endpoint.
+   *
+   * @returns A promise that resolves once reset and navigation complete.
+   * @example
+   * await this.#resetHeroes();
+   */
+  async #resetHeroes(): Promise<void> {
+    if (this.#mutation?.isPending) return;
+
+    const response = await fetch('/api/heroes-reset', {
+      method: 'POST',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to reset heroes: HTTP ${response.status}`);
+    }
+
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set('__refresh', String(Date.now()));
+    await navigate(nextUrl.toString());
   }
 
   #resolveButton(): HTMLElement | null {

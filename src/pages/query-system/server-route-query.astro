@@ -43,7 +43,14 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
           </ul>
 
           <add-hero class="add-hero">
-            <Button label="Add Hero" variant="primary" size="sm" />
+            <div class="query-demo__actions">
+              <span data-hero-action="add">
+                <Button label="Add Hero" variant="primary" size="sm" />
+              </span>
+              <span data-hero-action="reset">
+                <Button label="Reset Heroes" variant="danger" size="sm" />
+              </span>
+            </div>
           </add-hero>
 
           <section class="query-cache-debug" aria-labelledby="heroes-query-cache-debug-title">
@@ -75,6 +82,20 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
                 <dd>
                   HIT (fresh): served within maxAge. HIT (stale): served within swr while revalidating. MISS: no usable
                   entry for this execution.
+                </dd>
+              </div>
+              <div>
+                <dt>Why first add can look stale</dt>
+                <dd>
+                  This page uses route caching with <strong>maxAge=10000ms</strong> and <strong>swr=50000ms</strong>.
+                  After adding a hero, tag invalidation is triggered, but edge cache propagation is not always immediate
+                  across nodes. A request to the same base URL can still return a cached HIT or stale-forwarded response
+                  for a short window.
+                  <span class="query-cache-debug__hint">
+                    Navigating to the same page with a unique query parameter (for example <code>?__refresh=...</code>)
+                    creates a different cache key when query variation is enabled, which commonly forces a MISS and
+                    shows the newly created hero right away.
+                  </span>
                 </dd>
               </div>
               <div>
@@ -147,6 +168,12 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
 
   .query-demo__item {
     display: grid;
+  }
+
+  .query-demo__actions {
+    display: flex;
+    gap: var(--spacing-2);
+    flex-wrap: wrap;
   }
 
   .query-cache-debug {

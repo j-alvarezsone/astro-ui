@@ -54,6 +54,31 @@ export async function appendDemoHero(hero: HeroContact): Promise<HeroContact[]> 
 }
 
 /**
+ * Resets heroes demo dataset back to the default seed values.
+ *
+ * @returns Reset heroes collection.
+ *
+ * @example
+ * const reset = await resetDemoHeroes();
+ */
+export async function resetDemoHeroes(): Promise<HeroContact[]> {
+  memoryStore.heroes = [...DEFAULT_HEROES];
+  const store = resolveBlobStore();
+
+  if (!store) {
+    return [...memoryStore.heroes];
+  }
+
+  try {
+    await store.setJSON(HEROES_KEY, memoryStore.heroes);
+    return [...memoryStore.heroes];
+  } catch {
+    logBlobsFallbackOnce();
+    return [...memoryStore.heroes];
+  }
+}
+
+/**
  * Reads the users demo dataset from durable storage when available.
  *
  * @returns Current user records from Blobs (or local memory fallback).
