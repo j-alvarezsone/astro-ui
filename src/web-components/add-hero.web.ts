@@ -55,11 +55,17 @@ class AddHeroElement extends HTMLElement {
   #resetMutation: MutationController<GetAllHeroesResponse, void> | null = null;
   #createUnsubscribe: (() => void) | null = null;
   #resetUnsubscribe: (() => void) | null = null;
+  #isActionPending = false;
+  #pendingReset = false;
 
   connectedCallback(): void {
     const createMutation = useMutationQuery({
       ...createHeroOptions,
       onSuccess: async () => {
+        if (this.#pendingReset) {
+          return;
+        }
+
         const nextUrl = new URL(window.location.href);
         nextUrl.searchParams.set('__refresh', String(Date.now()));
         await navigate(nextUrl.toString());
@@ -83,14 +89,14 @@ class AddHeroElement extends HTMLElement {
       const button = this.#resolveActionButton('add');
       if (!button) return;
 
-      applyButtonLoadingState(button, createMutation.isPending);
+      applyButtonLoadingState(button, createMutation.isPending || this.#isActionPending);
     });
 
     this.#resetUnsubscribe = resetMutation.subscribe(() => {
       const button = this.#resolveActionButton('reset');
       if (!button) return;
 
-      applyButtonLoadingState(button, resetMutation.isPending);
+      applyButtonLoadingState(button, resetMutation.isPending || this.#isActionPending);
     });
 
     this.addEventListener(
@@ -129,6 +135,15 @@ class AddHeroElement extends HTMLElement {
 
     const action = actionHost.dataset.heroAction;
 
+    if (this.#isActionPending && action === 'reset') {
+      this.#pendingReset = true;
+      return;
+    }
+
+    if (this.#isActionPending) {
+      return;
+    }
+
     const runAction = action === 'reset' ? this.#resetHeroes() : this.#addHero();
 
     runAction.catch((error: unknown) => {
@@ -147,9 +162,20 @@ class AddHeroElement extends HTMLElement {
     if (!this.#createMutation) return;
     if (this.#createMutation.isPending) return;
     if (this.#resetMutation?.isPending) return;
+    if (this.#isActionPending) return;
 
     const payload = pickRandomSampleHero();
-    await this.#createMutation.mutate(payload);
+    this.#isActionPending = true;
+
+    try {
+      await this.#createMutation.mutate(payload);
+    } finally {
+      this.#isActionPending = false;
+      if (this.#pendingReset) {
+        this.#pendingReset = false;
+        await this.#resetHeroes();
+      }
+    }
   }
 
   /**
@@ -163,8 +189,15 @@ class AddHeroElement extends HTMLElement {
     if (!this.#resetMutation) return;
     if (this.#resetMutation.isPending) return;
     if (this.#createMutation?.isPending) return;
+    if (this.#isActionPending) return;
 
-    await this.#resetMutation.mutate();
+    this.#isActionPending = true;
+
+    try {
+      await this.#resetMutation.mutate();
+    } finally {
+      this.#isActionPending = false;
+    }
   }
 
   #resolveActionButton(action: 'add' | 'reset'): HTMLElement | null {
