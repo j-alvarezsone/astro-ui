@@ -13,9 +13,9 @@ const { data: heroes } = await useServerQuery({
   queryFn: getAllHeroesOptions.queryFn,
   routeCache: {
     cache: Astro.cache,
-    maxAge: 1000,
+    maxAge: 10000,
     tags: ['heroes'],
-    swr: 5000,
+    swr: 50000,
   },
   meta: { baseUrl: Astro.url },
 });
@@ -91,7 +91,7 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
               <div>
                 <dt>Why first add can look stale</dt>
                 <dd>
-                  This page uses route caching with <strong>maxAge=1000ms</strong> and <strong>swr=5000ms</strong>.
+                  This page uses route caching with <strong>maxAge=10000ms</strong> and <strong>swr=50000ms</strong>.
                   After adding a hero, tag invalidation is triggered, but edge cache propagation is not always immediate
                   across nodes. A request to the same base URL can still return a cached HIT or stale-forwarded response
                   for a short window.
@@ -118,7 +118,7 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
               <div>
                 <dt>maxAge</dt>
                 <dd>
-                  1000ms
+                  10000ms
                   <span class="query-cache-debug__hint">
                     How long route cache marks responses fresh before serving stale via SWR.
                   </span>
@@ -127,7 +127,7 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
               <div>
                 <dt>swr</dt>
                 <dd>
-                  5000ms
+                  50000ms
                   <span class="query-cache-debug__hint">
                     Additional stale-while-revalidate window after maxAge expires.
                   </span>
