@@ -7,15 +7,19 @@ import type { MutationOptions } from './types';
  * and typically represent data mutations (POST/PUT/DELETE).
  *
  * @param options - Mutation options including queryKey and mutation function.
+ * @param options - Mutation options including mutationKey and mutation function.
  * @returns The mutation options object.
  *
  * @example
  * // In queries/users.ts
  * export const createUserOptions = mutationOptions({
- *   queryKey: ['users', 'create'],
- *   queryFn: async (context) => {
- *     const userData = context.payload as CreateUserBody;
- *     return postNewUser(userData);
+ *   mutationKey: ['users', 'create'],
+ *   mutationFn: async (payload) => {
+ *    if (!payload) {
+ *     throw new Error('User payload is required');
+ *   }
+
+ *     return postNewUser(payload);
  *   },
  *   onSuccess: () => invalidateQuery(['users']),
  * });

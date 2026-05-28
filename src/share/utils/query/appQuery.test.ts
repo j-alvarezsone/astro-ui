@@ -62,14 +62,14 @@ describe('query app wrapper', () => {
     expect(data).toBe('client-ok');
   });
 
-  it('forwards typed payload to context.payload on mutate', async () => {
+  it('forwards typed payload to mutationFn on mutate', async () => {
     type Payload = { name: string; email: string };
     let capturedPayload: unknown;
 
-    const mutation = useMutationQuery<string, unknown, Payload>({
-      queryKey: ['app-mutation-payload'],
-      queryFn: async (context) => {
-        capturedPayload = context.payload;
+    const mutation = useMutationQuery<string, Payload>({
+      mutationKey: ['app-mutation-payload'],
+      mutationFn: async (payload) => {
+        capturedPayload = payload;
         return await Promise.resolve('payload-ok');
       },
     });
@@ -83,8 +83,8 @@ describe('query app wrapper', () => {
     const mutationFn = vi.fn(async () => await Promise.resolve('mutation-ok'));
 
     const mutation = useMutationQuery({
-      queryKey: ['app-mutation'],
-      queryFn: mutationFn,
+      mutationKey: ['app-mutation'],
+      mutationFn,
     });
 
     expect(mutationFn).toHaveBeenCalledTimes(0);
@@ -102,8 +102,8 @@ describe('query app wrapper', () => {
     const mutationFn = vi.fn(async () => await Promise.resolve('mutation-execute'));
 
     const mutation = useMutationQuery({
-      queryKey: ['app-mutation-execute-refetch'],
-      queryFn: mutationFn,
+      mutationKey: ['app-mutation-execute-refetch'],
+      mutationFn,
       staleTime: Number.POSITIVE_INFINITY,
     });
 
@@ -125,8 +125,8 @@ describe('query app wrapper', () => {
     const mutationFn = vi.fn(async () => await Promise.resolve('mutation-reset'));
 
     const mutation = useMutationQuery({
-      queryKey: ['app-mutation-reset'],
-      queryFn: mutationFn,
+      mutationKey: ['app-mutation-reset'],
+      mutationFn,
     });
 
     await mutation.mutate();
@@ -148,8 +148,8 @@ describe('query app wrapper', () => {
     const mutationFn = vi.fn(async () => await Promise.resolve('mutation-idle'));
 
     const mutation = useMutationQuery({
-      queryKey: ['app-mutation-unsubscribe'],
-      queryFn: mutationFn,
+      mutationKey: ['app-mutation-unsubscribe'],
+      mutationFn,
     });
 
     await mutation.mutate();
@@ -200,8 +200,8 @@ describe('query app wrapper', () => {
     });
 
     const mutation = useMutationQuery({
-      queryKey: ['app-mutation-second-pending'],
-      queryFn: mutationFn,
+      mutationKey: ['app-mutation-second-pending'],
+      mutationFn,
     });
 
     await mutation.mutate();

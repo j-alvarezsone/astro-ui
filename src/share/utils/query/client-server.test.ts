@@ -64,7 +64,7 @@ describe('query adapters: client and server behavior', () => {
     expect(queryFn).toHaveBeenCalledTimes(1);
   });
 
-  it('server route query reports non-stale execution and invalidate is a no-op', async () => {
+  it('server route query stays non-stale, invalidate is a no-op, and cache.set is skipped without directives', async () => {
     const server = createServerQuery({
       now: () => Date.now(),
     });
@@ -91,7 +91,7 @@ describe('query adapters: client and server behavior', () => {
     await query.execute();
 
     expect(query.isStale).toBe(false);
-    expect(set).toHaveBeenCalledTimes(1);
+    expect(set).toHaveBeenCalledTimes(0);
 
     expect(server.invalidate(['server-stale-flag'])).toBe(false);
   });

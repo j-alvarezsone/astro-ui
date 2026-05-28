@@ -26,39 +26,38 @@ export type QueryStaleTimeOption<TData = unknown, TError = unknown> =
   | QueryStaleTimeValue
   | QueryStaleTimeResolver<TData, TError>;
 
-export interface QueryFnContext<TPayload = unknown> {
+export interface QueryFnContext {
   queryKey: QueryKey;
   signal: AbortSignal;
   attempt: number;
   client: boolean;
-  payload?: TPayload;
   meta?: Record<string, unknown>;
 }
 
-export type QueryFn<TData, TPayload = unknown> = (context: QueryFnContext<TPayload>) => Promise<TData>;
+export type QueryFn<TData> = (context: QueryFnContext) => Promise<TData>;
 
 export type QueryRetryPredicate = (error: unknown, attempt: number) => boolean;
 
 export type QueryRetryDelay = (attempt: number, error: unknown) => number;
 
-export interface QueryLifecycleContext<TData, TError = unknown, TPayload = unknown> {
+export interface QueryLifecycleContext<TData, TError = unknown> {
   queryKey: QueryKey;
   keyHash: string;
-  options: Omit<QueryOptions<TData, TError, TPayload>, 'queryFn'>;
+  options: Omit<QueryOptions<TData, TError>, 'queryFn'>;
   attempt: number;
   client: boolean;
 }
 
-export interface QueryInterceptor<TData, TError = unknown, TPayload = unknown> {
-  onRequest?: (context: QueryLifecycleContext<TData, TError, TPayload>) => Promise<void> | void;
-  onRequestError?: (context: QueryLifecycleContext<TData, TError, TPayload>, error: TError) => Promise<void> | void;
-  onResponse?: (context: QueryLifecycleContext<TData, TError, TPayload>, data: TData) => Promise<void> | void;
-  onResponseError?: (context: QueryLifecycleContext<TData, TError, TPayload>, error: TError) => Promise<void> | void;
+export interface QueryInterceptor<TData, TError = unknown> {
+  onRequest?: (context: QueryLifecycleContext<TData, TError>) => Promise<void> | void;
+  onRequestError?: (context: QueryLifecycleContext<TData, TError>, error: TError) => Promise<void> | void;
+  onResponse?: (context: QueryLifecycleContext<TData, TError>, data: TData) => Promise<void> | void;
+  onResponseError?: (context: QueryLifecycleContext<TData, TError>, error: TError) => Promise<void> | void;
 }
 
-export interface QueryOptions<TData, TError = unknown, TPayload = unknown> {
+export interface QueryOptions<TData, TError = unknown> {
   queryKey: QueryKey;
-  queryFn: QueryFn<TData, TPayload>;
+  queryFn: QueryFn<TData>;
   autoExecute?: boolean;
   staleTime?: QueryStaleTimeOption<TData, TError>;
   gcTime?: number;
@@ -69,15 +68,19 @@ export interface QueryOptions<TData, TError = unknown, TPayload = unknown> {
   meta?: Record<string, unknown>;
   onSuccess?: (data: TData) => Promise<void> | void;
   onError?: (error: TError) => Promise<void> | void;
-  interceptors?: QueryInterceptor<TData, TError, TPayload>[];
+  interceptors?: QueryInterceptor<TData, TError>[];
 }
 
-export type MutationOptions<TData, TPayload = unknown, TError = unknown> = QueryOptions<TData, TError, TPayload>;
+export type MutationFn<TData, TPayload = unknown> = (payload: TPayload | undefined, context: QueryFnContext) => Promise<TData>;
 
-export interface QueryExecutionOptions<TData, TError = unknown, TPayload = unknown> extends QueryOptions<TData, TError, TPayload> {
+export interface MutationOptions<TData, TPayload = unknown, TError = unknown> extends Omit<QueryOptions<TData, TError>, 'queryFn' | 'queryKey'> {
+  mutationKey: QueryKey;
+  mutationFn: MutationFn<TData, TPayload>;
+}
+
+export interface QueryExecutionOptions<TData, TError = unknown> extends QueryOptions<TData, TError> {
   client: boolean;
   keyHash: string;
-  payload?: TPayload;
   signal?: AbortSignal;
 }
 
@@ -126,9 +129,9 @@ export interface ClientQueryState<TData, TError = unknown> {
   isError: boolean;
 }
 
-export interface ClientQueryController<TData, TError = unknown, TPayload = unknown> extends ClientQueryState<TData, TError> {
+export interface ClientQueryController<TData, TError = unknown> extends ClientQueryState<TData, TError> {
   subscribe: (listener: (state: ClientQueryState<TData, TError>) => void) => () => void;
-  execute: (options?: { force?: boolean; payload?: TPayload }) => Promise<ClientQueryState<TData, TError>>;
+  execute: (options?: { force?: boolean }) => Promise<ClientQueryState<TData, TError>>;
   refetch: () => Promise<ClientQueryState<TData, TError>>;
   cancel: () => void;
 }
@@ -154,7 +157,7 @@ export interface ClientQueryClientOptions extends QueryCoreOptions {
 }
 
 export interface ClientQueryClient {
-  createQuery: <TData, TError = unknown, TPayload = unknown>(queryOptions: QueryOptions<TData, TError, TPayload>) => ClientQueryController<TData, TError, TPayload>;
+  createQuery: <TData, TError = unknown>(queryOptions: QueryOptions<TData, TError>) => ClientQueryController<TData, TError>;
   invalidate: (queryKey: QueryKey, options?: { exact?: boolean; refetchType?: QueryInvalidateRefetchType }) => boolean;
   clear: () => void;
 }

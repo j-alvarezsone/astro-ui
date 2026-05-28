@@ -1,33 +1,33 @@
 import { describe, expect, it, vi } from 'vitest';
 import { mutationOptions } from '@utils/query/mutationOptions';
 
-const preservedQueryFn = async () => await Promise.resolve({ ok: true });
+const preservedMutationFn = async () => await Promise.resolve({ ok: true });
 
 describe('mutationOptions', () => {
   it('returns the same options object passed in', () => {
     const options = {
-      queryKey: ['users', 'create'],
-      queryFn: async () => await Promise.resolve({ id: '1', name: 'Alice' }),
+      mutationKey: ['create-users'],
+      mutationFn: async () => await Promise.resolve({ id: '1', name: 'Alice' }),
     };
 
     const result = mutationOptions(options);
 
     expect(result).toBe(options);
-    expect(result.queryKey).toEqual(['users', 'create']);
+    expect(result.mutationKey).toEqual(['create-users']);
   });
 
   it('preserves all mutation configuration', () => {
-    const queryFn = preservedQueryFn;
+    const mutationFn = preservedMutationFn;
     const onSuccess = vi.fn();
 
     const result = mutationOptions({
-      queryKey: ['users', 'create'],
-      queryFn,
+      mutationKey: ['create-users'],
+      mutationFn,
       retry: 2,
       onSuccess,
     });
 
-    expect(result.queryFn).toBe(queryFn);
+    expect(result.mutationFn).toBe(mutationFn);
     expect(result.retry).toBe(2);
     expect(result.onSuccess).toBe(onSuccess);
   });
@@ -43,10 +43,8 @@ describe('mutationOptions', () => {
     }
 
     const result = mutationOptions<CreateUserResponse, CreateUserPayload>({
-      queryKey: ['users', 'create'],
-      queryFn: async (context) => {
-        const payload = context.payload;
-
+      mutationKey: ['create-users'],
+      mutationFn: async (payload) => {
         if (!payload) {
           throw new Error('Payload is required');
         }
@@ -57,15 +55,17 @@ describe('mutationOptions', () => {
       },
     });
 
-    const response = await result.queryFn({
-      queryKey: ['users', 'create'],
+    const response = await result.mutationFn(
+      { name: 'Alice', email: 'alice@example.com' },
+      {
+      queryKey: ['create-users'],
       signal: new AbortController().signal,
       attempt: 1,
       client: true,
-      payload: { name: 'Alice', email: 'alice@example.com' },
-    });
+      },
+    );
 
-    expect(result.queryKey).toEqual(['users', 'create']);
+    expect(result.mutationKey).toEqual(['create-users']);
     expect(response.item.email).toBe('alice@example.com');
   });
 
@@ -73,8 +73,8 @@ describe('mutationOptions', () => {
     const onSuccess = vi.fn();
 
     const options = mutationOptions({
-      queryKey: ['users', 'create'],
-      queryFn: async () => await Promise.resolve({ id: '1' }),
+      mutationKey: ['create-users'],
+      mutationFn: async () => await Promise.resolve({ id: '1' }),
       onSuccess,
     });
 

@@ -23,12 +23,12 @@ export const getAllHeroesOptions = queryOptions({
  * await mutation.mutate({ name: 'Storm', power: 'Weather control' });
  */
 export const createHeroOptions = mutationOptions<CreateHeroResponse, CreateHeroBody>({
-  queryKey: ['heroes', 'create'],
-  queryFn: async (context) => {
-    if (!context.payload) {
+  mutationKey: ['create-heroes'],
+  mutationFn: async (payload) => {
+    if (!payload) {
       throw new Error('Hero payload is required');
     }
 
-    return await postNewHero(context.payload);
+    return await postNewHero(payload);
   },
 });

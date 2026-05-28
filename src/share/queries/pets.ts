@@ -24,13 +24,13 @@ export const getAllPetsOptions = queryOptions({
  * await mutation.mutate({ name: 'Buddy', type: 'dog' });
  */
 export const createPetOptions = mutationOptions<CreatePetResponse, CreatePetBody>({
-  queryKey: ['pets', 'create'],
-  queryFn: async (context) => {
-    if (!context.payload) {
+  mutationKey: ['create-pets'],
+  mutationFn: async (payload) => {
+    if (!payload) {
       throw new Error('Pet payload is required');
     }
 
-    return await postNewPet(context.payload);
+    return await postNewPet(payload);
   },
   onSuccess: () => {
     invalidateQuery(['pets']);

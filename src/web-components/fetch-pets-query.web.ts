@@ -9,7 +9,6 @@ class FetchPetsQueryElement extends HTMLElement {
 
   connectedCallback(): void {
     this.#query = useClientQuery(getAllPetsOptions);
-
     this.#unsubscribe = this.#query.subscribe(() => {
       this.#render();
     });

@@ -23,12 +23,12 @@ export const getAllUsersOptions = queryOptions({
  * await mutation.mutate({ name: 'Alice', email: 'alice@example.com' });
  */
 export const createUserOptions = mutationOptions<CreateUserResponse, CreateUserBody>({
-  queryKey: ['users', 'create'],
-  queryFn: async (context) => {
-    if (!context.payload) {
+  mutationKey: ['create-users'],
+  mutationFn: async (payload) => {
+    if (!payload) {
       throw new Error('User payload is required');
     }
 
-    return await postNewUser(context.payload);
+    return await postNewUser(payload);
   },
 });

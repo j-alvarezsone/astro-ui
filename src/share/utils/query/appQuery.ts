@@ -78,10 +78,13 @@ export const useClientQuery: ClientCreateQuery = (...args) => clientQuery.create
  *
  * @example
  * const addUser = useMutationQuery({
- *   queryKey: ['users', 'add'],
- *   queryFn: async (context) => {
- *     const userData = context.payload as CreateUserBody;
- *     return postNewUser(userData);
+ *   mutationKey: ['users', 'add'],
+ *   mutationFn: async (payload) => {
+ *   if (!payload) {
+ *    throw new Error('User payload is required');
+ *  }
+ *
+ *     return postNewUser(payload);
  *   },
  * });
  * await addUser.mutate({ name: 'Alice', email: 'alice@example.com' });
@@ -89,8 +92,13 @@ export const useClientQuery: ClientCreateQuery = (...args) => clientQuery.create
 export const useMutationQuery = <TData, TPayload = unknown, TError = unknown>(
   mutationOptions: MutationOptions<TData, TPayload, TError>,
 ): MutationController<TData, TPayload, TError> => {
+  let currentPayload: TPayload | undefined;
+  const { mutationFn, mutationKey, ...restMutationOptions } = mutationOptions;
+
   const controller = clientQuery.createQuery({
-    ...mutationOptions,
+    ...restMutationOptions,
+    queryKey: mutationKey,
+    queryFn: async (context) => await mutationFn(currentPayload, context),
     autoExecute: false,
   });
 
@@ -150,7 +158,8 @@ export const useMutationQuery = <TData, TPayload = unknown, TError = unknown>(
         ensureBridgeSubscription();
       }
 
-      const state = await controller.execute({ force: true, payload });
+      currentPayload = payload;
+      const state = await controller.execute({ force: true });
       mutationState = toMutationState({
         status: state.status,
         data: state.data,
