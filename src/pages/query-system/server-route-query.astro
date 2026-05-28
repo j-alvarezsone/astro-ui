@@ -3,18 +3,18 @@ import Button from '@components/Button.astro';
 import Heading from '@components/typography/Heading.astro';
 import Layout from '@layouts/Layout.astro';
 import { useServerQuery } from '@utils/query';
-import { getAllUsersOptions } from '@queries/users';
+import { getAllHeroesOptions } from '@queries/heroes';
 
 export const prerender = false;
 
 const renderedAt = new Date().toISOString();
 
-const { data: users } = await useServerQuery({
-  queryFn: getAllUsersOptions.queryFn,
+const { data: heroes } = await useServerQuery({
+  queryFn: getAllHeroesOptions.queryFn,
   routeCache: {
     cache: Astro.cache,
     maxAge: 10000,
-    tags: ['users'],
+    tags: ['heroes'],
     swr: 50000,
   },
   meta: { baseUrl: Astro.url },
@@ -26,28 +26,28 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
 <Layout title="Server Route Query Demo" uiTheme="warm">
   <div class="container">
     {
-      users && (
-        <section class="query-demo" aria-label="Users server route query demo">
+      heroes && (
+        <section class="query-demo" aria-label="Heroes server route query demo">
           <Heading as="h3" weight="semibold">
-            Server Route Query: Users
+            Server Route Query: Heroes
           </Heading>
 
-          <ul data-users-list class="query-demo__list">
-            {users.items.map((user) => (
+          <ul data-heroes-list class="query-demo__list">
+            {heroes.items.map((hero) => (
               <li class="query-demo__item">
-                {user.name}
+                {hero.name}
                 {' - '}
-                {user.email}
+                {hero.power}
               </li>
             ))}
           </ul>
 
-          <add-user class="add-user-demo">
-            <Button label="Add User" variant="primary" size="sm" />
-          </add-user>
+          <add-hero class="add-hero">
+            <Button label="Add Hero" variant="primary" size="sm" />
+          </add-hero>
 
-          <section class="query-cache-debug" aria-labelledby="users-query-cache-debug-title">
-            <Heading as="h4" id="users-query-cache-debug-title" weight="semibold">
+          <section class="query-cache-debug" aria-labelledby="heroes-query-cache-debug-title">
+            <Heading as="h4" id="heroes-query-cache-debug-title" weight="semibold">
               Query Cache Debug
             </Heading>
 
@@ -84,7 +84,7 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
               <div>
                 <dt>Tags</dt>
                 <dd>
-                  {['users'].join(', ')}
+                  {['heroes'].join(', ')}
                   <span class="query-cache-debug__hint">
                     Labels used to invalidate related cached responses together.
                   </span>
@@ -117,7 +117,7 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
 </Layout>
 
 <script>
-  import '@web-components/add-user.web';
+  import '@web-components/add-hero.web';
 </script>
 
 <style>
