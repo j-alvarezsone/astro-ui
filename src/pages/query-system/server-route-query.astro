@@ -15,7 +15,7 @@ const { data: heroes } = await useServerQuery({
     cache: Astro.cache,
     maxAge: 10000,
     tags: ['heroes'],
-    swr: 50000,
+    swr: 0,
   },
   meta: { baseUrl: Astro.url },
 });
@@ -102,9 +102,9 @@ const isRouteCacheBridgeEnabled = Astro.cache.enabled !== false;
               <div>
                 <dt>swr</dt>
                 <dd>
-                  50000ms
+                  0ms
                   <span class="query-cache-debug__hint">
-                    Additional stale-while-revalidate window after maxAge expires.
+                    Stale-while-revalidate is disabled; expired entries are not served stale.
                   </span>
                 </dd>
               </div>
