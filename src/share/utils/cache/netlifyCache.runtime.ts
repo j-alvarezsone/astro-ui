@@ -45,6 +45,7 @@ function buildCacheControlValues(
 ): {
   netlify: string;
   cdn: string;
+  browser: string;
 } {
   const directives = ['public'];
   if (durable) {
@@ -52,7 +53,7 @@ function buildCacheControlValues(
   }
 
   if (options.maxAge !== undefined) {
-    directives.push(`max-age=${options.maxAge}`);
+    directives.push(`s-maxage=${options.maxAge}`);
   }
 
   if (options.swr !== undefined) {
@@ -61,8 +62,9 @@ function buildCacheControlValues(
 
   const netlify = directives.join(', ');
   const cdn = directives.filter((directive) => directive !== 'durable').join(', ');
+  const browser = 'public, max-age=0, must-revalidate';
 
-  return { netlify, cdn };
+  return { netlify, cdn, browser };
 }
 
 /**
@@ -126,10 +128,11 @@ const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRunt
     name: 'netlify-cache-provider',
     setHeaders(options: CacheOptions): Headers {
       const headers = new Headers();
-      const { netlify, cdn } = buildCacheControlValues(options, config.durable ?? true);
+      const { netlify, cdn, browser } = buildCacheControlValues(options, config.durable ?? true);
 
       headers.set('Netlify-CDN-Cache-Control', netlify);
       headers.set('CDN-Cache-Control', cdn);
+      headers.set('Cache-Control', browser);
 
       if (options.tags?.length) {
         const tagHeader = options.tags.join(',');
