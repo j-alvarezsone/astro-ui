@@ -15,6 +15,7 @@ const { data: heroes } = await useServerQuery({
     cache: Astro.cache,
     maxAge: 10000,
     tags: ['heroes'],
+    swr: 50000,
   },
   meta: { baseUrl: Astro.url },
 });
