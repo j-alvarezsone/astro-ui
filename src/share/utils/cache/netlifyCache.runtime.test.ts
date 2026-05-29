@@ -1,9 +1,63 @@
+import type { CacheOptions } from 'astro';
 import netlifyCacheProviderFactory from './netlifyCache.runtime';
+import { netlifyCache } from './netlifyCache';
+
+/**
+ * Invoke the provider `setHeaders` method without returning an unbound method reference.
+ *
+ * @param provider - Netlify cache provider returned from the runtime factory.
+ * @param options - Cache options forwarded to the provider.
+ * @returns The generated response headers.
+ * @example
+ * const headers = callSetHeaders(netlifyCacheProviderFactory({}), { maxAge: 60, swr: 120, tags: ['heroes'] });
+ */
+function callSetHeaders(
+  provider: ReturnType<typeof netlifyCacheProviderFactory>,
+  options: CacheOptions,
+): Headers {
+  if (!provider.setHeaders) {
+    throw new TypeError('Expected provider.setHeaders to be defined.');
+  }
+
+  return provider.setHeaders(options);
+}
+
+function requireConfig(config: ReturnType<typeof netlifyCache>['config']): NonNullable<typeof config> {
+  if (!config) {
+    throw new TypeError('Expected provider config to be defined.');
+  }
+
+  return config;
+}
 
 describe('netlify cache provider runtime', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+  });
+
+  it('does not include the durable directive unless explicitly enabled', () => {
+    const provider = netlifyCacheProviderFactory({});
+    const headers = callSetHeaders(provider, { maxAge: 60, swr: 120, tags: ['heroes'] });
+
+    expect(headers.get('Netlify-CDN-Cache-Control')).toBe('public, s-maxage=60, stale-while-revalidate=120');
+    expect(headers.get('CDN-Cache-Control')).toBe('public, s-maxage=60, stale-while-revalidate=120');
+  });
+
+  it('includes the durable directive only when astro config provides it', () => {
+    const providerConfig = requireConfig(netlifyCache({ durable: true }).config);
+    const provider = netlifyCacheProviderFactory(providerConfig);
+    const headers = callSetHeaders(provider, { maxAge: 60, swr: 120, tags: ['heroes'] });
+
+    expect(providerConfig.durable).toBe(true);
+    expect(headers.get('Netlify-CDN-Cache-Control')).toBe('public, durable, s-maxage=60, stale-while-revalidate=120');
+    expect(headers.get('CDN-Cache-Control')).toBe('public, s-maxage=60, stale-while-revalidate=120');
+  });
+
+  it('keeps durable undefined when astro config does not provide it', () => {
+    const providerConfig = requireConfig(netlifyCache({}).config);
+
+    expect(providerConfig.durable).toBeUndefined();
   });
 
   it('uses site_id when provided', async () => {

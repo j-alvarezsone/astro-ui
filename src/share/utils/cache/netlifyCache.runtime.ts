@@ -96,6 +96,7 @@ function buildPurgePayload(config: NetlifyCacheProviderRuntimeConfig, tags: stri
 function buildDiagnostics(config: NetlifyCacheProviderRuntimeConfig, tags: string[]): Record<string, unknown> {
   return {
     apiBaseUrl: config.apiBaseUrl,
+    durable: config.durable === true,
     tags,
     hasSiteId: Boolean(config.siteId),
     hasPurgeToken: Boolean(config.purgeToken),
@@ -118,7 +119,7 @@ const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRunt
     ...rawConfig,
     enabled: rawConfig?.enabled ?? true,
     apiBaseUrl: rawConfig?.apiBaseUrl ?? BASE_URL,
-    durable: rawConfig?.durable ?? false,
+    durable: rawConfig?.durable,
     debug: rawConfig?.debug ?? false,
     purgeByPathAsTag: rawConfig?.purgeByPathAsTag ?? true,
     strictMissingCredentials: rawConfig?.strictMissingCredentials ?? false,
@@ -128,7 +129,7 @@ const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRunt
     name: 'netlify-cache-provider',
     setHeaders(options: CacheOptions): Headers {
       const headers = new Headers();
-      const { netlify, cdn, browser } = buildCacheControlValues(options, config.durable ?? false);
+      const { netlify, cdn, browser } = buildCacheControlValues(options, config.durable === true);
 
       headers.set('Netlify-CDN-Cache-Control', netlify);
       headers.set('CDN-Cache-Control', cdn);
