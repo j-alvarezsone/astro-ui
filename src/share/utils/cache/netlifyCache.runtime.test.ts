@@ -43,6 +43,7 @@ function requireConfig(config: ReturnType<typeof netlifyCache>['config']): NonNu
 describe('netlify cache provider runtime', () => {
   afterEach(() => {
     purgeCacheMock.mockClear();
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
@@ -114,8 +115,42 @@ describe('netlify cache provider runtime', () => {
 
     await provider.invalidate({ tags: ['users'] });
 
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-    expect(String(warnSpy.mock.calls[0]?.[0])).toContain('Running invalidate');
+    expect(warnSpy).toHaveBeenCalledTimes(2);
+    expect(String(warnSpy.mock.calls[0]?.[0])).toContain('Loaded config');
+    expect(String(warnSpy.mock.calls[1]?.[0])).toContain('Running invalidate');
     expect(purgeCacheMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to direct purge API when helper purge fails', async () => {
+    purgeCacheMock.mockRejectedValueOnce(new Error('helper purge failed'));
+    const fetchMock = vi.fn(async () => await Promise.resolve(new Response('', { status: 200, statusText: 'OK' })));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const provider = netlifyCacheProviderFactory({
+      siteId: 'site-id',
+      purgeToken: 'purge-token',
+      apiBaseUrl: 'https://api.netlify.com/api/v1/purge',
+    });
+
+    await provider.invalidate({ tags: ['heroes'] });
+
+    expect(purgeCacheMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not throw when both purge paths fail and strict mode is disabled', async () => {
+    purgeCacheMock.mockRejectedValueOnce(new Error('helper purge failed'));
+    const fetchMock = vi.fn(async () => await Promise.resolve(new Response('boom', { status: 500, statusText: 'Internal Server Error' })));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const provider = netlifyCacheProviderFactory({
+      siteId: 'site-id',
+      purgeToken: 'purge-token',
+      debug: true,
+    });
+
+    await expect(provider.invalidate({ tags: ['heroes'] })).resolves.toBeUndefined();
+    expect(purgeCacheMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

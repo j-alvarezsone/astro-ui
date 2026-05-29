@@ -86,6 +86,76 @@ function buildDiagnostics(config: NetlifyCacheProviderRuntimeConfig, tags: strin
 }
 
 /**
+ * Build a diagnostics object that reflects the effective runtime config.
+ *
+ * @param config - Netlify provider runtime configuration.
+ * @returns A serializable config diagnostics payload safe for logs.
+ * @example
+ * const details = buildConfigDiagnostics({ durable: false, debug: true });
+ */
+function buildConfigDiagnostics(config: NetlifyCacheProviderRuntimeConfig): Record<string, unknown> {
+  return {
+    apiBaseUrl: config.apiBaseUrl,
+    durable: config.durable === true,
+    enabled: config.enabled !== false,
+    purgeByPathAsTag: config.purgeByPathAsTag !== false,
+    strictMissingCredentials: config.strictMissingCredentials === true,
+    hasSiteId: Boolean(config.siteId),
+    hasPurgeToken: Boolean(config.purgeToken),
+  };
+}
+
+/**
+ * Build options for Netlify `purgeCache` helper from provider configuration.
+ *
+ * @param config - Netlify provider runtime configuration.
+ * @param tags - Unique cache tags to invalidate.
+ * @returns Helper options payload.
+ * @example
+ * const options = buildPurgeCacheOptions({ siteId: 'site-id' }, ['heroes']);
+ */
+function buildPurgeCacheOptions(config: NetlifyCacheProviderRuntimeConfig, tags: string[]): Parameters<typeof purgeCache>[0] {
+  return {
+    tags,
+    ...(config.apiBaseUrl ? { apiURL: config.apiBaseUrl } : {}),
+    ...(config.siteId ? { siteID: config.siteId } : {}),
+    ...(config.purgeToken ? { token: config.purgeToken } : {}),
+  };
+}
+
+/**
+ * Purge Netlify cache via direct API call when explicit credentials are available.
+ *
+ * @param config - Netlify provider runtime configuration.
+ * @param tags - Unique cache tags to invalidate.
+ * @returns Promise that resolves when purge completes.
+ * @example
+ * await purgeViaApi({ siteId: 'site-id', purgeToken: 'token' }, ['heroes']);
+ */
+async function purgeViaApi(config: NetlifyCacheProviderRuntimeConfig, tags: string[]): Promise<void> {
+  if (!config.siteId || !config.purgeToken) {
+    throw new Error('Missing siteId or purgeToken for direct purge API fallback.');
+  }
+
+  const response = await fetch(config.apiBaseUrl ?? BASE_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${config.purgeToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      cache_tags: tags,
+      site_id: config.siteId,
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Netlify purge failed (${response.status} ${response.statusText}): ${body}`);
+  }
+}
+
+/**
  * Create a Netlify-backed Astro cache provider.
  *
  * This provider maps Astro route-cache hints to Netlify cache headers and
@@ -106,6 +176,11 @@ const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRunt
     purgeByPathAsTag: rawConfig?.purgeByPathAsTag ?? true,
     strictMissingCredentials: rawConfig?.strictMissingCredentials ?? false,
   };
+
+  if (config.debug) {
+    const details = JSON.stringify(buildConfigDiagnostics(config));
+    console.warn(`[netlify-cache-provider] Loaded config. ${details}`);
+  }
 
   return {
     name: 'netlify-cache-provider',
@@ -151,23 +226,23 @@ const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRunt
       }
 
       try {
-        await purgeCache({
-          tags: uniqueTags,
-          ...(config.apiBaseUrl ? { apiURL: config.apiBaseUrl } : {}),
-          ...(config.siteId ? { siteID: config.siteId } : {}),
-          ...(config.purgeToken ? { token: config.purgeToken } : {}),
-        });
+        await purgeCache(buildPurgeCacheOptions(config, uniqueTags));
       } catch (error: unknown) {
-        const details = JSON.stringify(buildDiagnostics(config, uniqueTags));
-        const reason = error instanceof Error ? error.message : String(error);
-        const message = `[netlify-cache-provider] Purge failed. ${details}; reason=${reason}`;
+        try {
+          await purgeViaApi(config, uniqueTags);
+        } catch (fallbackError: unknown) {
+          const details = JSON.stringify(buildDiagnostics(config, uniqueTags));
+          const helperReason = error instanceof Error ? error.message : String(error);
+          const fallbackReason = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+          const message = `[netlify-cache-provider] Purge failed. ${details}; helperReason=${helperReason}; fallbackReason=${fallbackReason}`;
 
-        if (config.strictMissingCredentials) {
-          throw new Error(message, { cause: error });
-        }
+          if (config.strictMissingCredentials) {
+            throw new Error(message, { cause: fallbackError });
+          }
 
-        if (config.debug) {
-          console.warn(message);
+          if (config.debug) {
+            console.warn(message);
+          }
         }
       }
     },
