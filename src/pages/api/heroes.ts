@@ -5,6 +5,8 @@ import { sleep } from '@utils/time/sleep';
 import { invalidateServerQuery } from '@utils/query';
 import { appendDemoHero, getDemoHeroes } from '@utils/data/demoContactsStore';
 
+export const prerender = false;
+
 let fetchCount = 0;
 
 const createHeroBodySchema = z.object({

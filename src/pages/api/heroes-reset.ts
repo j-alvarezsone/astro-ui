@@ -3,6 +3,8 @@ import { invalidateServerQuery } from '@utils/query';
 import { resetDemoHeroes } from '@utils/data/demoContactsStore';
 import type { GetAllHeroesResponse } from '@/types/hero-contact';
 
+export const prerender = false;
+
 /**
  * Resets heroes data to the default seed list.
  *
