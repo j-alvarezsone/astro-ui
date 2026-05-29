@@ -150,12 +150,26 @@ const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRunt
         console.warn(`[netlify-cache-provider] Running invalidate. ${details}`);
       }
 
-      await purgeCache({
-        tags: uniqueTags,
-        ...(config.apiBaseUrl ? { apiURL: config.apiBaseUrl } : {}),
-        ...(config.siteId ? { siteID: config.siteId } : {}),
-        ...(config.purgeToken ? { token: config.purgeToken } : {}),
-      });
+      try {
+        await purgeCache({
+          tags: uniqueTags,
+          ...(config.apiBaseUrl ? { apiURL: config.apiBaseUrl } : {}),
+          ...(config.siteId ? { siteID: config.siteId } : {}),
+          ...(config.purgeToken ? { token: config.purgeToken } : {}),
+        });
+      } catch (error: unknown) {
+        const details = JSON.stringify(buildDiagnostics(config, uniqueTags));
+        const reason = error instanceof Error ? error.message : String(error);
+        const message = `[netlify-cache-provider] Purge failed. ${details}; reason=${reason}`;
+
+        if (config.strictMissingCredentials) {
+          throw new Error(message, { cause: error });
+        }
+
+        if (config.debug) {
+          console.warn(message);
+        }
+      }
     },
   };
 };
