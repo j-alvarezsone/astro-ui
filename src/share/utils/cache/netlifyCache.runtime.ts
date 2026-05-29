@@ -118,7 +118,7 @@ const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRunt
     ...rawConfig,
     enabled: rawConfig?.enabled ?? true,
     apiBaseUrl: rawConfig?.apiBaseUrl ?? BASE_URL,
-    durable: rawConfig?.durable ?? true,
+    durable: rawConfig?.durable ?? false,
     debug: rawConfig?.debug ?? false,
     purgeByPathAsTag: rawConfig?.purgeByPathAsTag ?? true,
     strictMissingCredentials: rawConfig?.strictMissingCredentials ?? false,
@@ -128,7 +128,7 @@ const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRunt
     name: 'netlify-cache-provider',
     setHeaders(options: CacheOptions): Headers {
       const headers = new Headers();
-      const { netlify, cdn, browser } = buildCacheControlValues(options, config.durable ?? true);
+      const { netlify, cdn, browser } = buildCacheControlValues(options, config.durable ?? false);
 
       headers.set('Netlify-CDN-Cache-Control', netlify);
       headers.set('CDN-Cache-Control', cdn);

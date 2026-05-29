@@ -27,7 +27,6 @@ export default defineConfig({
       provider: netlifyCache({
         siteId: process.env.NETLIFY_SITE_ID,
         purgeToken: process.env.NETLIFY_AUTH_TOKEN,
-        durable: false,
         debug: true,
       }),
     },
