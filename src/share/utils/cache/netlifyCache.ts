@@ -46,7 +46,7 @@ export function netlifyCache(options: NetlifyCacheProviderOptions = {}): CachePr
       siteId: options.siteId,
       purgeToken: options.purgeToken,
       apiBaseUrl: options.apiBaseUrl ?? BASE_URL,
-      durable: options.durable ?? true,
+      durable: options.durable ?? false,
       debug: options.debug ?? false,
       purgeByPathAsTag: options.purgeByPathAsTag ?? true,
       strictMissingCredentials: options.strictMissingCredentials ?? false,
