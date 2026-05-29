@@ -1,4 +1,3 @@
-import { purgeCache } from '@netlify/functions';
 import type { CacheOptions, CacheProviderFactory, InvalidateOptions } from 'astro';
 import { BASE_URL } from './netlifyCache';
 
@@ -66,6 +65,25 @@ function buildCacheControlValues(
   const browser = 'public, max-age=0, must-revalidate';
 
   return { netlify, cdn, browser };
+}
+
+/**
+ * Build request payload for Netlify purge API.
+ *
+ * @param config - Netlify provider runtime configuration.
+ * @param tags - Cache tags to invalidate.
+ * @returns A Netlify purge request payload.
+ * @example
+ * buildPurgePayload({ siteId: 'abc' }, ['users']);
+ */
+function buildPurgePayload(config: NetlifyCacheProviderRuntimeConfig, tags: string[]): Record<string, unknown> {
+  const payload: Record<string, unknown> = { cache_tags: tags };
+
+  if (config.siteId) {
+    payload.site_id = config.siteId;
+  }
+
+  return payload;
 }
 
 /**
@@ -145,17 +163,39 @@ const netlifyCacheProviderFactory: CacheProviderFactory<NetlifyCacheProviderRunt
         return;
       }
 
+      if (!config.purgeToken || !config.siteId) {
+        const details = JSON.stringify(buildDiagnostics(config, uniqueTags));
+        const message = `[netlify-cache-provider] Missing purgeToken and siteId. Invalidation request skipped. ${details}`;
+
+        if (config.strictMissingCredentials) {
+          throw new Error(message);
+        }
+
+        if (config.debug) {
+          console.warn(message);
+        }
+
+        return;
+      }
+
       if (config.debug) {
         const details = JSON.stringify(buildDiagnostics(config, uniqueTags));
         console.warn(`[netlify-cache-provider] Running invalidate. ${details}`);
       }
 
-      await purgeCache({
-        tags: uniqueTags,
-        ...(config.apiBaseUrl ? { apiURL: config.apiBaseUrl } : {}),
-        ...(config.siteId ? { siteID: config.siteId } : {}),
-        ...(config.purgeToken ? { token: config.purgeToken } : {}),
+      const response = await fetch(config.apiBaseUrl!, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${config.purgeToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(buildPurgePayload(config, uniqueTags)),
       });
+
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`Netlify purge failed (${response.status} ${response.statusText}): ${body}`);
+      }
     },
   };
 };

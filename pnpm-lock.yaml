@@ -17,9 +17,6 @@ importers:
       '@netlify/blobs':
         specifier: ^10.7.8
         version: 10.7.8
-      '@netlify/functions':
-        specifier: ^5.3.0
-        version: 5.3.0
       astro:
         specifier: ^6.2.1
         version: 6.2.1(@netlify/blobs@10.7.8)(@types/node@25.3.5)(jiti@2.7.0)(rollup@4.57.1)(tsx@4.21.0)(typescript@6.0.2)(yaml@2.8.2)
@@ -924,10 +921,6 @@ packages:
     resolution: {integrity: sha512-F1CCXeWC/4E/mj8La38WwFJ6oyymTBeIWYO87nyjN0L8mvb0tugcMsu+V6QkUllMtnBezdM0ApCaY+eWGmnj+g==}
     engines: {node: '>=18.0.0'}
 
-  '@netlify/functions@5.3.0':
-    resolution: {integrity: sha512-FP+xCoZMkMOUsKa4UdG/oiK/2md1/TxuXvqqieaMVMgDbFFMaHI8h0oHCViUY73kPbKV6HyzayaSXGYXKpBSoQ==}
-    engines: {node: '>=18.0.0'}
-
   '@netlify/headers-parser@9.0.3':
     resolution: {integrity: sha512-KNzC9RaKDwJVS44iTK6JxNA6LeXH0PUw0pLktWpmMVI/0FR98bvxaHcAisjHqbThAjxL9QjL1UZh0KzHCkxpNQ==}
     engines: {node: '>=18.14.0'}
@@ -978,10 +971,6 @@ packages:
 
   '@netlify/types@2.6.0':
     resolution: {integrity: sha512-yD20EizHJDQxajJ66Vo8RTwLwR2jMNVxufPG8MHd2AScX8jW4z0VPnnJHArq2GYPFTFZRHmiAhDrXr5m8zof6w==}
-    engines: {node: ^18.14.0 || >=20}
-
-  '@netlify/types@2.8.0':
-    resolution: {integrity: sha512-8/g0Pt6y6wXj5Ia5eeYLiXhRfWeqZXGXpGFeCiiQdUOem+FPtXdA4+YdGxqzWc7D0AvptKSO01KGeeVWHSu8Kg==}
     engines: {node: ^18.14.0 || >=20}
 
   '@netlify/vite-plugin@2.12.5':
@@ -5084,7 +5073,7 @@ snapshots:
       '@astrojs/internal-helpers': 0.9.1
       '@astrojs/underscore-redirects': 1.0.3
       '@netlify/blobs': 10.7.8
-      '@netlify/functions': 5.3.0
+      '@netlify/functions': 5.2.1
       '@netlify/vite-plugin': 2.12.5(rollup@4.57.1)(vite@7.3.2(@types/node@25.3.5)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.8.2))
       '@vercel/nft': 1.5.0(rollup@4.57.1)
       astro: 6.2.1(@netlify/blobs@10.7.8)(@types/node@25.3.5)(jiti@2.7.0)(rollup@4.57.1)(tsx@4.21.0)(typescript@6.0.2)(yaml@2.8.2)
@@ -5980,10 +5969,6 @@ snapshots:
     dependencies:
       '@netlify/types': 2.6.0
 
-  '@netlify/functions@5.3.0':
-    dependencies:
-      '@netlify/types': 2.8.0
-
   '@netlify/headers-parser@9.0.3':
     dependencies:
       '@iarna/toml': 2.2.5
@@ -6078,8 +6063,6 @@ snapshots:
       mime-types: 3.0.2
 
   '@netlify/types@2.6.0': {}
-
-  '@netlify/types@2.8.0': {}
 
   '@netlify/vite-plugin@2.12.5(rollup@4.57.1)(vite@7.3.2(@types/node@25.3.5)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.8.2))':
     dependencies:
