@@ -2,6 +2,16 @@ import type { CacheOptions } from 'astro';
 import netlifyCacheProviderFactory from './netlifyCache.runtime';
 import { netlifyCache } from './netlifyCache';
 
+const purgeCacheMock = vi.hoisted(() =>
+  vi.fn(async () => {
+    await Promise.resolve();
+  }),
+);
+
+vi.mock('@netlify/functions', () => ({
+  purgeCache: purgeCacheMock,
+}));
+
 /**
  * Invoke the provider `setHeaders` method without returning an unbound method reference.
  *
@@ -32,7 +42,7 @@ function requireConfig(config: ReturnType<typeof netlifyCache>['config']): NonNu
 
 describe('netlify cache provider runtime', () => {
   afterEach(() => {
-    vi.unstubAllGlobals();
+    purgeCacheMock.mockClear();
     vi.restoreAllMocks();
   });
 
@@ -61,11 +71,6 @@ describe('netlify cache provider runtime', () => {
   });
 
   it('uses site_id when provided', async () => {
-    const fetch = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
-      await Promise.resolve(new Response('', { status: 200, statusText: 'OK' }))
-    );
-    vi.stubGlobal('fetch', fetch);
-
     const provider = netlifyCacheProviderFactory({
       siteId: 'site-id',
       purgeToken: 'purge-token',
@@ -73,61 +78,33 @@ describe('netlify cache provider runtime', () => {
 
     await provider.invalidate({ tags: ['users'] });
 
-    expect(fetch).toHaveBeenCalledTimes(1);
-
-    const request = fetch.mock.calls[0]?.[1];
-    expect(request).toBeDefined();
-    expect(typeof request?.body).toBe('string');
-
-    if (typeof request?.body !== 'string') {
-      throw new TypeError('Expected request body to be a JSON string.');
-    }
-
-    const payload: unknown = JSON.parse(request.body);
-
-    expect(payload).toEqual({
-      cache_tags: ['users'],
-      site_id: 'site-id',
+    expect(purgeCacheMock).toHaveBeenCalledTimes(1);
+    expect(purgeCacheMock).toHaveBeenCalledWith({
+      apiURL: 'https://api.netlify.com/api/v1/purge',
+      siteID: 'site-id',
+      tags: ['users'],
+      token: 'purge-token',
     });
   });
 
-  it('skips invalidation without a site_id', async () => {
-    const fetch = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
-      await Promise.resolve(new Response('', { status: 200, statusText: 'OK' }))
-    );
-    vi.stubGlobal('fetch', fetch);
-
+  it('purges without explicit credentials', async () => {
     const provider = netlifyCacheProviderFactory({
-      purgeToken: 'purge-token',
+      debug: true,
     });
 
     await provider.invalidate({ tags: ['heroes'] });
 
-    expect(fetch).not.toHaveBeenCalled();
-  });
-
-  it('throws when strictMissingCredentials is enabled and credentials are missing', async () => {
-    const fetch = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
-      await Promise.resolve(new Response('', { status: 200, statusText: 'OK' }))
-    );
-    vi.stubGlobal('fetch', fetch);
-
-    const provider = netlifyCacheProviderFactory({
-      strictMissingCredentials: true,
+    expect(purgeCacheMock).toHaveBeenCalledTimes(1);
+    expect(purgeCacheMock).toHaveBeenCalledWith({
+      apiURL: 'https://api.netlify.com/api/v1/purge',
+      tags: ['heroes'],
     });
-
-    await expect(provider.invalidate({ tags: ['heroes'] })).rejects.toThrow(/Missing purgeToken and siteId/);
-    expect(fetch).not.toHaveBeenCalled();
   });
 
   it('logs invalidate diagnostics when debug is enabled', async () => {
-    const fetch = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
-      await Promise.resolve(new Response('', { status: 200, statusText: 'OK' }))
-    );
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
       // no-op
     });
-    vi.stubGlobal('fetch', fetch);
 
     const provider = netlifyCacheProviderFactory({
       siteId: 'site-id',
@@ -139,5 +116,6 @@ describe('netlify cache provider runtime', () => {
 
     expect(warnSpy).toHaveBeenCalledTimes(1);
     expect(String(warnSpy.mock.calls[0]?.[0])).toContain('Running invalidate');
+    expect(purgeCacheMock).toHaveBeenCalledTimes(1);
   });
 });
