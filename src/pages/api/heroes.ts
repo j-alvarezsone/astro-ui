@@ -5,21 +5,12 @@ import { sleep } from '@utils/time/sleep';
 import { invalidateServerQuery } from '@utils/query';
 import { appendDemoHero, getDemoHeroes } from '@utils/data/demoContactsStore';
 
-// This API route mutates runtime data and invalidates route cache tags, so it must run on demand.
-export const prerender = false;
-
 let fetchCount = 0;
 
 const createHeroBodySchema = z.object({
   name: z.string().min(1),
   power: z.string().min(1),
 });
-
-const NO_STORE_HEADERS: HeadersInit = {
-  'Cache-Control': 'no-store',
-  'CDN-Cache-Control': 'no-store',
-  'Netlify-CDN-Cache-Control': 'no-store',
-};
 
 /**
  * Returns all heroes.
@@ -66,7 +57,6 @@ export const POST: APIRoute = async ({ request, cache }) => {
       { error: 'name and power are required' },
       {
         status: 422,
-        headers: NO_STORE_HEADERS,
       },
     );
   }
@@ -88,6 +78,5 @@ export const POST: APIRoute = async ({ request, cache }) => {
   const responsePayload: CreateHeroResponse = { item: newHero };
   return Response.json(responsePayload, {
     status: 201,
-    headers: NO_STORE_HEADERS,
   });
 };

@@ -3,15 +3,6 @@ import { invalidateServerQuery } from '@utils/query';
 import { resetDemoHeroes } from '@utils/data/demoContactsStore';
 import type { GetAllHeroesResponse } from '@/types/hero-contact';
 
-// This API route mutates runtime data and invalidates route cache tags, so it must run on demand.
-export const prerender = false;
-
-const NO_STORE_HEADERS: HeadersInit = {
-  'Cache-Control': 'no-store',
-  'CDN-Cache-Control': 'no-store',
-  'Netlify-CDN-Cache-Control': 'no-store',
-};
-
 /**
  * Resets heroes data to the default seed list.
  *
@@ -34,6 +25,5 @@ export const POST: APIRoute = async ({ cache }) => {
   const responsePayload: GetAllHeroesResponse = { items: heroes };
   return Response.json(responsePayload, {
     status: 200,
-    headers: NO_STORE_HEADERS,
   });
 };
